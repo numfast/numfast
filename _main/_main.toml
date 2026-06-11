@@ -1,0 +1,11 @@
+[extension]
+name = "_main"
+version = "0.1.0"
+description = "Ядро фреймворка NumFast"
+entry = "_main.py"
+
+[dependencies]
+rich = ">=13.0"
+
+[loader]
+type = "framework_builder.extensions.python.PythonExtension"

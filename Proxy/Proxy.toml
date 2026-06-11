@@ -1,0 +1,10 @@
+[extension]
+name = "Proxy"
+version = "0.1.0"
+description = "Модуль ленивой загрузки через прокси"
+entry = "Proxy.py"
+
+[dependencies]
+
+[loader]
+type = "framework_builder.extensions.python.PythonExtension"

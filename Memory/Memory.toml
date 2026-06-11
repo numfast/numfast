@@ -1,0 +1,10 @@
+[extension]
+name = "Memory"
+version = "0.1.0"
+description = "Модуль кэширования с TTL"
+entry = "Memory.py"
+
+[dependencies]
+
+[loader]
+type = "framework_builder.extensions.python.PythonExtension"

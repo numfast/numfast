@@ -1,0 +1,18 @@
+[project]
+name = "numfast"
+version = "0.1.0"
+description = "NumFast — фреймворк для GPU-численных расчётов на CuPy"
+requires-python = ">=3.11"
+dependencies = [
+    "cupy>=13.0",
+    "rich>=13.0",
+    "framework-builder>=0.1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/numfast/numfast"
+Documentation = "https://numfast.readthedocs.io"
+
+[tool.numfast]
+loader = "framework_builder.ExtensionsLoader"
+root = "."

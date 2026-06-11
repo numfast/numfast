@@ -1,0 +1,11 @@
+[extension]
+name = "Series"
+version = "0.1.0"
+description = "Модуль для работы с рядами данных на CuPy (GPU)"
+entry = "Series.py"
+
+[dependencies]
+cupy = ">=13.0"
+
+[loader]
+type = "framework_builder.extensions.python.PythonExtension"

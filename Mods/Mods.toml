@@ -1,0 +1,10 @@
+[extension]
+name = "Mods"
+version = "0.1.0"
+description = "Модуль декораторов и Registry"
+entry = "Mods.py"
+
+[dependencies]
+
+[loader]
+type = "framework_builder.extensions.python.PythonExtension"

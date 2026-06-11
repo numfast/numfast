@@ -1,0 +1,11 @@
+[extension]
+name = "Tables"
+version = "0.1.0"
+description = "Модуль для работы с таблицами на CuPy (GPU)"
+entry = "Tables.py"
+
+[dependencies]
+cupy = ">=13.0"
+
+[loader]
+type = "framework_builder.extensions.python.PythonExtension"
