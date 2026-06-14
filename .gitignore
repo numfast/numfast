@@ -32,3 +32,5 @@ Thumbs.db
 *.ptx
 *.cubin
 *.fatbin
+docs_ru/
+AGENTS_ru.md
