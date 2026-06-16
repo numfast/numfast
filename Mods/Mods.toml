@@ -1,7 +1,7 @@
 [extension]
 name = "Mods"
 version = "0.1.0"
-description = "Модуль декораторов и Registry"
+description = "Decorators and function registry"
 entry = "Mods.py"
 
 [dependencies]

@@ -1,7 +1,7 @@
 [extension]
 name = "Tables"
 version = "0.1.0"
-description = "Модуль для работы с таблицами на CuPy (GPU)"
+description = "Table operations on CuPy (GPU)"
 entry = "Tables.py"
 
 [dependencies]

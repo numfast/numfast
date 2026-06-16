@@ -1,7 +1,7 @@
 [project]
 name = "numfast"
 version = "0.1.0"
-description = "NumFast — фреймворк для GPU-численных расчётов на CuPy"
+description = "NumFast — GPU-first numerical computing framework"
 requires-python = ">=3.11"
 dependencies = [
     "cupy>=13.0",

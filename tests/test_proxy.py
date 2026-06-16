@@ -1,4 +1,7 @@
-"""Тесты модуля Proxy."""
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+
+"""Tests for the Proxy module."""
 
 from Proxy._lib.proxy_lib import _LazyLoader
 

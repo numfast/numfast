@@ -1,4 +1,7 @@
-"""Тесты модуля Mods."""
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+
+"""Tests for the Mods module."""
 
 from Mods._lib.mods_lib import _Registry
 

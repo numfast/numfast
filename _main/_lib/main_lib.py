@@ -1,3 +1,6 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+
 from importlib.metadata import version, PackageNotFoundError
 import subprocess
 import os
@@ -16,7 +19,7 @@ def _get_status() -> dict:
             "_main",
             "Series",
             "Tables",
-            "Memory",
+            "Stats",
             "Mods",
             "Proxy",
         ],

@@ -1,8 +1,8 @@
 [extension]
-name = "Series"
+name = "Stats"
 version = "0.1.0"
-description = "Series data operations on CuPy (GPU)"
-entry = "Series.py"
+description = "Statistical methods: sum, min, max, mean, variance, std"
+entry = "Stats.py"
 
 [dependencies]
 cupy = ">=13.0"

@@ -1,7 +1,7 @@
 [extension]
 name = "Proxy"
 version = "0.1.0"
-description = "Модуль ленивой загрузки через прокси"
+description = "Lazy module loader via proxy"
 entry = "Proxy.py"
 
 [dependencies]

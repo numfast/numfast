@@ -1,7 +1,7 @@
 [extension]
 name = "_main"
 version = "0.1.0"
-description = "Ядро фреймворка NumFast"
+description = "NumFast core: info, status, diagnostics"
 entry = "_main.py"
 
 [dependencies]

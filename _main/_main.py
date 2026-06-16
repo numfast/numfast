@@ -1,3 +1,6 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+
 from _main._lib.main_lib import (
     _get_version,
     _get_status,

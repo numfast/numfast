@@ -1,3 +1,6 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+
 from Proxy._lib.proxy_lib import _LazyLoader
 
 _loader = _LazyLoader()
