@@ -1,78 +1,7 @@
 # Copyright (c) 2026 NumFast
 # SPDX-License-Identifier: AGPL-3.0-only
 
-from _core.backend import get_xp, set_active
-
-xp = get_xp()
-
-from Tables._lib.tables_lib import _to_dataframe, _merge, _aggregate
-
-
-def test_to_dataframe_returns_dict_of_arrays():
-    data = {"a": [1, 2, 3], "b": [4, 5, 6]}
-    result = _to_dataframe(data)
-    assert isinstance(result, dict)
-    assert "a" in result
-    assert "b" in result
-    assert isinstance(result["a"], xp.ndarray)
-    assert result["a"].shape == (3,)
-
-
-def test_merge_tables():
-    left = {"id": [1, 2], "x": [10, 20]}
-    right = {"id": [1, 2], "y": [100, 200]}
-    l_arr = _to_dataframe(left)
-    r_arr = _to_dataframe(right)
-    result = _merge(l_arr, r_arr, on="id")
-    assert "id" in result
-    assert "x" in result
-    assert "y" in result
-    assert len(result["id"]) == 2
-
-
-def test_aggregate_sum():
-    data = {"cat": [1, 1, 2], "val": [10, 20, 30]}
-    arr = _to_dataframe(data)
-    result = _aggregate(arr, group_by="cat", agg="sum")
-    assert "cat" in result
-    assert "val" in result
-    assert len(result["cat"]) == 2
-
-
-def test_aggregate_mean():
-    data = {"cat": [1, 1, 2], "val": [10, 20, 30]}
-    arr = _to_dataframe(data)
-    result = _aggregate(arr, group_by="cat", agg="mean")
-    assert "cat" in result
-    assert "val" in result
-    mask1 = result["cat"] == 1
-    mask2 = result["cat"] == 2
-    assert xp.allclose(result["val"][mask1], xp.float64(15.0))
-    assert xp.allclose(result["val"][mask2], xp.float64(30.0))
-
-
-def test_aggregate_min_max():
-    data = {"g": [1, 1, 2], "v": [5, 3, 9]}
-    arr = _to_dataframe(data)
-    r_min = _aggregate(arr, "g", "min")
-    r_max = _aggregate(arr, "g", "max")
-    assert len(r_min["v"]) == 2
-    assert len(r_max["v"]) == 2
-
-
-def test_aggregate_std():
-    data = {"g": [1, 1, 1], "v": [1.0, 2.0, 3.0]}
-    arr = _to_dataframe(data)
-    result = _aggregate(arr, "g", "std")
-    import math
-    assert abs(result["v"][0] - math.sqrt(2.0 / 3.0)) < 1e-12
-
-
-def test_aggregate_var():
-    data = {"g": [1, 1], "v": [4.0, 6.0]}
-    arr = _to_dataframe(data)
-    result = _aggregate(arr, "g", "var")
-    assert abs(result["v"][0] - 1.0) < 1e-12
+from _core.backend import set_active
 
 
 def _wgpu_available() -> bool:
@@ -81,21 +10,6 @@ def _wgpu_available() -> bool:
         return True
     except Exception:
         return False
-
-
-def test_aggregate_wgpu():
-    if not _wgpu_available():
-        import pytest
-        pytest.skip("WebGPU not available")
-    data = {"cat": [1, 1, 2], "val": [10, 20, 30]}
-    arr = _to_dataframe(data)
-    result = _aggregate(arr, group_by="cat", agg="sum")
-    assert abs(result["val"][0] - 30.0) < 1e-4
-    assert abs(result["val"][1] - 30.0) < 1e-4
-    result_min = _aggregate(arr, group_by="cat", agg="min")
-    assert abs(result_min["val"][0] - 10.0) < 1e-4
-    result_max = _aggregate(arr, group_by="cat", agg="max")
-    assert abs(result_max["val"][0] - 20.0) < 1e-4
 
 
 # ---- Container tests ----
@@ -384,6 +298,148 @@ def test_dynamic_compress_wgpu():
     assert abs(mean(cp) - float(np.mean(np_ref))) < 0.01
 
 
+# ── ColumnView zero-copy tests ──────────────────────────────────────
+
+
+def test_column_view_float32():
+    _kernel.clear_all()
+    schema = [{"name": "val", "dtype": "float32"}]
+    from Tables._lib.tables_lib import _container_table_create
+    tbl = _container_table_create(schema, {"val": [10.0, 20.0, 30.0]})
+    from Tables._lib.tables_lib import _column_view
+    cv = _column_view(tbl, "val")
+    assert len(cv) == 3
+    assert cv[0] == 10.0
+    assert cv[1] == 20.0
+    assert cv[2] == 30.0
+
+
+def test_column_view_scaled():
+    _kernel.clear_all()
+    schema = [{"name": "val", "dtype": "scaled", "bit_width": 16,
+               "scale": 0.01, "offset": 0.0, "min_int": -32768.0}]
+    from Tables._lib.tables_lib import _container_table_create
+    tbl = _container_table_create(schema, {"val": [10.0, 20.0, 30.0]})
+    from Tables._lib.tables_lib import _column_view
+    cv = _column_view(tbl, "val")
+    assert abs(cv[0] - 10.0) < 0.01
+    assert abs(cv[1] - 20.0) < 0.01
+    assert abs(cv[2] - 30.0) < 0.01
+
+
+def test_column_view_multi_column():
+    _kernel.clear_all()
+    schema = [
+        {"name": "price", "dtype": "float32"},
+        {"name": "vol", "dtype": "float32"},
+    ]
+    from Tables._lib.tables_lib import _container_table_create
+    tbl = _container_table_create(schema, {"price": [100.0, 101.5], "vol": [1000.0, 2000.0]})
+    from Tables._lib.tables_lib import _column_view
+    price = _column_view(tbl, "price")
+    vol = _column_view(tbl, "vol")
+    assert price[1] == 101.5
+    assert vol[0] == 1000.0
+
+
+def test_column_view_slice():
+    _kernel.clear_all()
+    schema = [{"name": "x", "dtype": "float32"}]
+    from Tables._lib.tables_lib import _container_table_create
+    raw = [float(i) for i in range(10)]
+    tbl = _container_table_create(schema, {"x": raw})
+    from Tables._lib.tables_lib import _column_view
+    cv = _column_view(tbl, "x")
+    assert cv[2:5] == [2.0, 3.0, 4.0]
+    assert cv[0:3] == [0.0, 1.0, 2.0]
+    assert cv[-1] == 9.0
+
+
+def test_column_view_to_list():
+    _kernel.clear_all()
+    schema = [{"name": "x", "dtype": "float32"}]
+    from Tables._lib.tables_lib import _container_table_create
+    raw = [1.0, 2.0, 3.0]
+    tbl = _container_table_create(schema, {"x": raw})
+    from Tables._lib.tables_lib import _column_view
+    cv = _column_view(tbl, "x")
+    assert cv.to_list() == raw
+
+
+def test_column_view_repr():
+    _kernel.clear_all()
+    schema = [{"name": "x", "dtype": "float32"}]
+    from Tables._lib.tables_lib import _container_table_create
+    tbl = _container_table_create(schema, {"x": [1.0, 2.0, 3.0, 4.0, 5.0]})
+    from Tables._lib.tables_lib import _column_view
+    cv = _column_view(tbl, "x")
+    r = repr(cv)
+    assert "ColumnView" in r
+    assert "float32" in r
+
+
+def test_column_view_iter():
+    _kernel.clear_all()
+    schema = [{"name": "x", "dtype": "float32"}]
+    from Tables._lib.tables_lib import _container_table_create
+    raw = [1.0, 2.0, 3.0]
+    tbl = _container_table_create(schema, {"x": raw})
+    from Tables._lib.tables_lib import _column_view
+    cv = _column_view(tbl, "x")
+    assert list(cv) == raw
+
+
+def test_column_view_index_error():
+    _kernel.clear_all()
+    schema = [{"name": "x", "dtype": "float32"}]
+    from Tables._lib.tables_lib import _container_table_create
+    tbl = _container_table_create(schema, {"x": [1.0]})
+    from Tables._lib.tables_lib import _column_view
+    cv = _column_view(tbl, "x")
+    try:
+        cv[10]
+        assert False, "should raise"
+    except IndexError:
+        pass
+
+
+def test_column_view_empty_table():
+    _kernel.clear_all()
+    schema = [{"name": "x", "dtype": "float32"}]
+    from Tables._lib.tables_lib import _container_table_create
+    tbl = _container_table_create(schema, {"x": []})
+    from Tables._lib.tables_lib import _column_view
+    cv = _column_view(tbl, "x")
+    assert len(cv) == 0
+    assert cv.to_list() == []
+
+
+def test_column_view_compressed_float():
+    _kernel.clear_all()
+    schema = [{"name": "price", "dtype": "float32",
+               "compression": {"scaled": True, "bits": 12, "scale": 0.1, "offset": 100.0}}]
+    from Tables._lib.tables_lib import _container_table_create
+    tbl = _container_table_create(schema, {"price": [150.0, 200.0, 175.0]})
+    from Tables._lib.tables_lib import _column_view
+    cv = _column_view(tbl, "price")
+    assert abs(cv[0] - 150.0) < 0.1
+    assert abs(cv[1] - 200.0) < 0.1
+    assert abs(cv[2] - 175.0) < 0.1
+
+
+def test_column_view_via_public_api():
+    _kernel.clear_all()
+    from Tables.Tables import container_table, column_view
+    tbl = container_table(
+        [{"name": "val", "dtype": "float32"}],
+        {"val": [1.0, 2.0, 3.0]},
+    )
+    cv = column_view(tbl, "val")
+    assert cv[0] == 1.0
+    assert cv[1] == 2.0
+    assert cv[2] == 3.0
+
+
 # ── Visualizer terminal test ──────────────────────────────────────────
 
 
@@ -391,7 +447,7 @@ def test_visualizer_cli_output():
     """Verify .info() CLI output contains expected sections (no crash)."""
     from _core import kernel
     from _core.context import create_context
-    from _core.series import make_series
+    from Series._lib import make_series
     from Tables._lib.tables_lib import _container_table_create
     import io
 

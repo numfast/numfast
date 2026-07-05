@@ -1,8 +1,7 @@
 # Copyright (c) 2026 NumFast
 # SPDX-License-Identifier: AGPL-3.0-only
 
-from Tables._lib.tables_lib import _to_dataframe, _merge, _aggregate
-from Tables._lib.tables_lib import _container_table_create, _get_column, _compress_column
+from Tables._lib.tables_lib import _container_table_create, _get_column, _compress_column, _column_view
 
 def container_table(schema: list[dict], data: dict) -> dict:
     return _container_table_create(schema, data)
@@ -14,14 +13,19 @@ def compress_column(table: dict, col_name: str,
                     target_bits: int, scale: float, offset: float) -> dict:
     return _compress_column(table, col_name, target_bits, scale, offset)
 
-def table_main(data: dict) -> dict:
-    return _to_dataframe(data)
+def column_view(table: dict, col_name: str):
+    """Return a zero-copy ColumnView for index access to a column.
 
-def merge_tables(left: dict, right: dict, on: str | None = None) -> dict:
-    left_df = _to_dataframe(left)
-    right_df = _to_dataframe(right)
-    return _merge(left_df, right_df, on)
+    Reads values directly from the bit-packed container via mask+shift,
+    without extracting all values to a Python list.
 
-def aggregate_table(data: dict, group_by: str, agg: str = "sum") -> dict:
-    df = _to_dataframe(data)
-    return _aggregate(df, group_by, agg)
+    Args:
+        table: container table dict
+        col_name: column name
+
+    Returns:
+        ColumnView instance
+    """
+    return _column_view(table, col_name)
+
+

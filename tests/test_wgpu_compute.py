@@ -127,7 +127,7 @@ def test_stats_via_wgpu_backend():
         pytest.skip("WebGPU backend not available on this system")
     from _core import kernel
     from _core.context import create_context
-    from _core.series import make_series
+    from Series._lib import make_series
     from Stats.Stats import total, minimum, maximum, mean
 
     kernel.clear_all()
@@ -147,7 +147,7 @@ def test_scaled_series_stats_wgpu():
         pytest.skip("WebGPU backend not available on this system")
     from _core import kernel
     from _core.context import create_context
-    from _core.series import make_series
+    from Series._lib import make_series
     from _core.compression import pack_scaled
     from Stats.Stats import total, minimum, maximum, mean, var
     import numpy as np

@@ -6,7 +6,7 @@ import math
 from _core.compression import pack_scaled, unpack_scaled, pack_enum, unpack_enum
 from _core import kernel
 from _core.context import create_context
-from _core.series import make_series
+from Series._lib import make_series
 from Stats.Stats import total, minimum, maximum, mean, var
 
 

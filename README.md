@@ -9,6 +9,8 @@ The public API exposes `NumericSeries` and `Tables` interfaces backed by lightwe
 ```
 numfast/
   _core/          — kernel, layout engine, visualizer, compression, series types
+  _main/          — внутренние служебные компоненты (не для прямого использования)
+  Vis/            — GPU-визуализация (WGPU Jupyter canvas, Chart)
   Tables/         — table creation, column proxy, dynamic compression
   Series/         — series extension (Builder)
   Stats/          — statistical functions (total, mean, min, max, var)
@@ -51,6 +53,16 @@ tbl.info()
 
 col = _get_column(tbl, "price")
 print(total(col), mean(col))
+```
+
+## Visualization (Jupyter)
+
+```python
+from numfast.Vis import Chart
+
+chart = Chart(width=1000, height=600)
+chart.show()          # WGPU canvas in Jupyter
+chart.draw_frame()    # manual render tick
 ```
 
 ## Requirements

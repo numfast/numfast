@@ -1,38 +1,7 @@
 # Copyright (c) 2026 NumFast
 # SPDX-License-Identifier: AGPL-3.0-only
 
-from _core.backend import get_xp, get_active_name
-
-xp = get_xp()
-
-
-_AGG_FUNCS = {
-    "sum": xp.sum,
-    "mean": xp.mean,
-    "min": xp.min,
-    "max": xp.max,
-    "std": xp.std,
-    "var": xp.var,
-}
-
-
-def _to_dataframe(data: dict) -> dict[str, xp.ndarray]:
-    return {key: xp.array(values, dtype=xp.float64) for key, values in data.items()}
-
-
-def _merge(left: dict, right: dict, on: str | None = None) -> dict:
-    left_keys = left[on]
-    right_keys = right[on]
-    matches = left_keys[:, None] == right_keys[None, :]
-    left_idx, right_idx = xp.where(matches)
-
-    result = {}
-    for key, arr in left.items():
-        result[key] = arr[left_idx]
-    for key, arr in right.items():
-        if key != on:
-            result[key] = arr[right_idx]
-    return result
+from _core.backend import get_active_name
 
 
 def _container_table_create(schema: list[dict], data: dict) -> dict:
@@ -158,6 +127,29 @@ def _compress_column(table: dict, col_name: str,
     }
 
 
+def _column_view(table: dict, col_name: str):
+    """Return a ColumnView for zero-copy index access to a column.
+
+    Reads values directly from the bit-packed container via mask+shift,
+    without extracting all values to a Python list.
+
+    Args:
+        table: container table dict (from container_table_create)
+        col_name: column name
+
+    Returns:
+        ColumnView instance
+    """
+    from _core import kernel as _kernel
+    from _core.column_view import ColumnView
+    entry = _kernel._get_table_entry(table["_table_id"])
+    if entry is None:
+        raise ValueError("Table not found in kernel")
+    if col_name not in entry["layout"]["columns"]:
+        raise KeyError(f"Column '{col_name}' not found")
+    return ColumnView(entry["rows"], col_name, entry["layout"])
+
+
 def _container_rows(table_id: str) -> tuple[list[list[int]], int, int] | None:
     """Retrieve container row data from kernel.
 
@@ -170,41 +162,4 @@ def _container_rows(table_id: str) -> tuple[list[list[int]], int, int] | None:
     return entry["rows"], entry["num_parts"], entry["num_rows"]
 
 
-def _agg_via_stats(values: list, agg: str) -> float:
-    from Stats._lib.stats_lib import _compute
-    m = _compute(values)
-    if agg == "sum":
-        return m["sum"]
-    if agg == "min":
-        return m["min"]
-    if agg == "max":
-        return m["max"]
-    if agg == "mean":
-        return m["sum"] / m["count"] if m["count"] else 0.0
-    if agg == "std":
-        from Stats._lib.stats_lib import _std
-        return _std(m, 0)
-    if agg == "var":
-        from Stats._lib.stats_lib import _var
-        return _var(m, 0)
-    return m["sum"]
 
-
-def _aggregate(df: dict, group_by: str, agg: str = "sum") -> dict:
-    groups = xp.unique(df[group_by])
-
-    other_cols = [k for k in df if k != group_by]
-    result = {group_by: groups}
-    for col in other_cols:
-        col_vals = xp.empty(len(groups), dtype=xp.float64)
-        for i, g in enumerate(groups):
-            mask = df[group_by] == g
-            filtered = df[col][mask]
-            if get_active_name() == "wgpu":
-                col_vals[i] = _agg_via_stats(filtered.tolist(), agg)
-            else:
-                agg_func = _AGG_FUNCS.get(agg, xp.sum)
-                col_vals[i] = agg_func(filtered)
-        result[col] = col_vals
-
-    return result

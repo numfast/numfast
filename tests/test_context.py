@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 
 from _core.context import create_context, context_id, check_context_compatible
-from _core.series import make_series, series_len, series_add, series_sub, series_data_proxy
+from Series._lib import make_series, series_len, series_add, series_sub, series_data_proxy
 from _core.backend import set_active
 
 

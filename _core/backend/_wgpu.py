@@ -1,5 +1,10 @@
 # Copyright (c) 2026 NumFast
 # SPDX-License-Identifier: AGPL-3.0-only
+#
+# ⚠️ LEGACY — Old GPU compute layer.
+# Superseded by: Runtime._lib.Drivers.WebGPU + Compute.Core.*
+# Still used by: Stats, Tables, Series, Vis (import directly).
+# New code should NOT import from here. Use Runtime + operations API instead.
 
 import math
 import numpy as np
@@ -713,6 +718,119 @@ fn main(
     }}
 }}
 """
+
+
+# ── Element-wise GPU operations ──────────────────────────────────────
+
+_ELEMENTWISE_UNARY_SRC = """
+struct Count { n: u32, _pad0: u32, _pad1: u32, _pad2: u32, };
+
+@group(0) @binding(0) var<storage, read> input: array<f32>;
+@group(0) @binding(1) var<storage, read_write> output: array<f32>;
+@group(0) @binding(2) var<storage, read> cnt: Count;
+
+@compute @workgroup_size(256)
+fn main(@builtin(global_invocation_id) id: vec3<u32>) {
+    let idx = id.x;
+    if (idx >= cnt.n) { return; }
+    output[idx] = __FUNC__(input[idx]);
+}
+"""
+
+_ARANGE_SRC = """
+struct Count { n: u32, _pad0: u32, _pad1: u32, _pad2: u32, };
+
+@group(0) @binding(0) var<storage, read_write> output: array<f32>;
+@group(0) @binding(1) var<storage, read> cnt: Count;
+
+@compute @workgroup_size(256)
+fn main(@builtin(global_invocation_id) id: vec3<u32>) {
+    let idx = id.x;
+    if (idx >= cnt.n) { return; }
+    output[idx] = f32(idx);
+}
+"""
+
+_MUL_SCALAR_SRC = """
+struct Params { n: u32, _pad0: u32, scalar: f32, _pad1: u32, };
+
+@group(0) @binding(0) var<storage, read> input: array<f32>;
+@group(0) @binding(1) var<storage, read_write> output: array<f32>;
+@group(0) @binding(2) var<storage, read> params: Params;
+
+@compute @workgroup_size(256)
+fn main(@builtin(global_invocation_id) id: vec3<u32>) {
+    let idx = id.x;
+    if (idx >= params.n) { return; }
+    output[idx] = input[idx] * params.scalar;
+}
+"""
+
+
+def wgpu_arange(n: int) -> np.ndarray:
+    """GPU-generated float32 range [0, n)."""
+    _ensure_device()
+    if not AVAILABLE:
+        raise RuntimeError("WebGPU backend is not available")
+    import wgpu
+
+    output_size = n * 4
+    info_bytes = np.array([n, 0, 0, 0], dtype=np.uint32).tobytes()
+
+    buffers = [
+        (b"\x00" * output_size, wgpu.BufferUsage.STORAGE | wgpu.BufferUsage.COPY_SRC | wgpu.BufferUsage.COPY_DST, True),
+        (info_bytes, wgpu.BufferUsage.STORAGE | wgpu.BufferUsage.COPY_DST, False),
+    ]
+
+    num_wg = max(1, (n + 255) // 256)
+    raw = _run_compute_shader(_DEVICE, _ARANGE_SRC, buffers, num_wg, output_size)
+    return np.frombuffer(raw, dtype=np.float32).copy()
+
+
+def wgpu_elementwise(data: np.ndarray, func: str) -> np.ndarray:
+    """Apply unary function (sin/cos/neg/abs) via GPU."""
+    _ensure_device()
+    if not AVAILABLE:
+        raise RuntimeError("WebGPU backend is not available")
+    import wgpu
+
+    n = len(data)
+    output_size = n * 4
+    info_bytes = np.array([n, 0, 0, 0], dtype=np.uint32).tobytes()
+    src = _ELEMENTWISE_UNARY_SRC.replace("__FUNC__", func)
+
+    buffers = [
+        (data.tobytes(), wgpu.BufferUsage.STORAGE | wgpu.BufferUsage.COPY_DST, False),
+        (b"\x00" * output_size, wgpu.BufferUsage.STORAGE | wgpu.BufferUsage.COPY_SRC | wgpu.BufferUsage.COPY_DST, True),
+        (info_bytes, wgpu.BufferUsage.STORAGE | wgpu.BufferUsage.COPY_DST, False),
+    ]
+
+    num_wg = max(1, (n + 255) // 256)
+    raw = _run_compute_shader(_DEVICE, src, buffers, num_wg, output_size)
+    return np.frombuffer(raw, dtype=np.float32).copy()
+
+
+def wgpu_mul_scalar(data: np.ndarray, scalar: float) -> np.ndarray:
+    """Multiply array by scalar on GPU."""
+    _ensure_device()
+    if not AVAILABLE:
+        raise RuntimeError("WebGPU backend is not available")
+    import struct
+    import wgpu
+
+    n = len(data)
+    output_size = n * 4
+    params = struct.pack("<IIfI", n, 0, scalar, 0)
+
+    buffers = [
+        (data.tobytes(), wgpu.BufferUsage.STORAGE | wgpu.BufferUsage.COPY_DST, False),
+        (b"\x00" * output_size, wgpu.BufferUsage.STORAGE | wgpu.BufferUsage.COPY_SRC | wgpu.BufferUsage.COPY_DST, True),
+        (params, wgpu.BufferUsage.STORAGE | wgpu.BufferUsage.COPY_DST, False),
+    ]
+
+    num_wg = max(1, (n + 255) // 256)
+    raw = _run_compute_shader(_DEVICE, _MUL_SCALAR_SRC, buffers, num_wg, output_size)
+    return np.frombuffer(raw, dtype=np.float32).copy()
 
 
 def _reinterpret_f32_as_u32(val: float) -> int:

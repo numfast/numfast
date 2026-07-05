@@ -1,0 +1,14 @@
+name = "Storage"
+version = "1.0.0"
+depends = []
+alias = [
+    "make_column", "make_table", "compute_plan", "optimize_table",
+    "column_layout", "packing_plan"
+]
+mods = [
+    "make_column", "make_table", "compute_plan", "optimize_table",
+    "column_layout", "packing_plan"
+]
+
+[metadata]
+description = "Storage layer: Column, PackingPlan, Table, Optimize"

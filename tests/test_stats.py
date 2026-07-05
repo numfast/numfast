@@ -13,7 +13,7 @@ Verifies:
 
 from Stats._lib.stats_lib import _compute, _get_moments, _clear_cache, MOMENTS, _compute_via_dispatcher, _merge_moments
 from Stats.Stats import total, minimum, maximum, mean, var, std, count, range_, all_stats
-from _core.series import make_series
+from Series._lib import make_series
 from _core.context import create_context
 from _core import kernel
 from _core.backend import set_active, get_active_name
