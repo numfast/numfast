@@ -1,6 +1,6 @@
 """Bitonic Sort CPU — one substage pass."""
 
-from numfast.Runtime._lib.mod_iface import ExecutionContext
+from Runtime._lib.mod_iface import ExecutionContext
 
 
 def cpu_sort(ctx: ExecutionContext):

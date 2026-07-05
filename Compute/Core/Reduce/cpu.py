@@ -4,7 +4,7 @@
 Reference implementation — чистый Python, без оптимизаций.
 """
 
-from numfast.Runtime._lib.mod_iface import ExecutionContext
+from Runtime._lib.mod_iface import ExecutionContext
 
 
 def cpu(ctx: ExecutionContext):

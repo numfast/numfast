@@ -1,6 +1,6 @@
 """Bitonic Sort descriptor — one substage pass."""
 
-from numfast.Runtime._lib.mod_iface import ExecutionPlan, InputSlot, OutputSlot
+from Runtime._lib.mod_iface import ExecutionPlan, InputSlot, OutputSlot
 
 
 def describe_sort(params: dict) -> ExecutionPlan:

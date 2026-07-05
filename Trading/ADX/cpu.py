@@ -15,7 +15,7 @@ Pipeline per Bar i (i >= 1):
   ADX = SMA of DX over `period` bars
 """
 
-from numfast.Runtime._lib.mod_iface import ExecutionContext
+from Runtime._lib.mod_iface import ExecutionContext
 
 
 def cpu(ctx: ExecutionContext):

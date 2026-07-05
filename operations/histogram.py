@@ -1,8 +1,8 @@
 """High-level histogram operation."""
 
 import numpy as np
-from numfast.Runtime import Runtime
-from numfast.Compute import register_all
+from Runtime import Runtime
+from Compute import register_all
 
 
 def histogram(data: np.ndarray, bins: int = 10,
@@ -20,7 +20,7 @@ def histogram(data: np.ndarray, bins: int = 10,
     Returns:
         histogram: 1D float64 array of bin counts
     """
-    from numfast.Runtime._lib.Drivers.WebGPU import WebGpuDriver
+    from Runtime._lib.Drivers.WebGPU import WebGpuDriver
 
     if min_val is None:
         min_val = float(data.min())

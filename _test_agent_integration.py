@@ -2,7 +2,7 @@ import sys, os
 import numpy as np
 
 from numfast import AgentSDK, Result
-from numfast.agent import Session, Workspace
+from agent import Session, Workspace
 
 NUMPATH = r'C:\App\numfast\numfast'
 

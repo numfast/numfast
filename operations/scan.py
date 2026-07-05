@@ -1,8 +1,8 @@
 """High-level scan (prefix sum) operation."""
 
 import numpy as np
-from numfast.Runtime import Runtime
-from numfast.Compute import register_all
+from Runtime import Runtime
+from Compute import register_all
 
 
 def scan(data: np.ndarray, use_gpu: bool = False) -> np.ndarray:
@@ -15,7 +15,7 @@ def scan(data: np.ndarray, use_gpu: bool = False) -> np.ndarray:
     Returns:
         prefix_sum: 1D float64 array, same length as data
     """
-    from numfast.Runtime._lib.Drivers.WebGPU import WebGpuDriver
+    from Runtime._lib.Drivers.WebGPU import WebGpuDriver
 
     driver = WebGpuDriver() if use_gpu else None
     rt = Runtime(driver=driver)

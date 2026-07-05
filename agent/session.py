@@ -10,9 +10,9 @@
 import time
 from typing import Optional
 
-from numfast.Runtime import Runtime
-from numfast.Compute import register_all as register_compute_kernels
-from numfast.operations import scan, matmul, fft, sort, histogram
+from Runtime import Runtime
+from Compute import register_all as register_compute_kernels
+from operations import scan, matmul, fft, sort, histogram
 
 
 class Session:
@@ -40,7 +40,7 @@ class Session:
 
     def _open(self):
         """Создать Runtime и зарегистрировать ядра."""
-        from numfast.Runtime._lib.Drivers.WebGPU import WebGpuDriver
+        from Runtime._lib.Drivers.WebGPU import WebGpuDriver
 
         self._driver = WebGpuDriver() if self._use_gpu else None
         self._runtime = Runtime(driver=self._driver)
@@ -80,7 +80,7 @@ class Session:
         Returns:
             Result
         """
-        from numfast.agent import Result
+        from agent import Result
         t0 = time.time()
         try:
             local_vars = dict(kwargs)
@@ -110,7 +110,7 @@ class Session:
         Returns:
             Result
         """
-        from numfast.agent import Result
+        from agent import Result
         t0 = time.time()
         try:
             import subprocess
@@ -154,7 +154,7 @@ class Session:
         Returns:
             Result
         """
-        from numfast.agent import Result
+        from agent import Result
         t0 = time.time()
         try:
             import time as _time
@@ -200,7 +200,7 @@ class Session:
         Returns:
             Result
         """
-        from numfast.agent import Result
+        from agent import Result
         t0 = time.time()
         try:
             lab_name = f"Labs._{number:03d}_{{}}"
@@ -253,7 +253,7 @@ class Session:
         Returns:
             Result
         """
-        from numfast.agent import Result
+        from agent import Result
         import numpy as np
         t0 = time.time()
         try:
@@ -297,7 +297,7 @@ class Session:
         Returns:
             Result
         """
-        from numfast.agent import Result
+        from agent import Result
         import numpy as np
         t0 = time.time()
         try:

@@ -1,8 +1,8 @@
 """High-level FFT operation."""
 import math
 import numpy as np
-from numfast.Runtime import Runtime
-from numfast.Compute import register_all
+from Runtime import Runtime
+from Compute import register_all
 
 
 def fft(data: np.ndarray, use_gpu: bool = False) -> np.ndarray:
@@ -19,7 +19,7 @@ def fft(data: np.ndarray, use_gpu: bool = False) -> np.ndarray:
     Returns:
         result: 1D float64 array, interleaved [real, imag, ...]
     """
-    from numfast.Runtime._lib.Drivers.WebGPU import WebGpuDriver
+    from Runtime._lib.Drivers.WebGPU import WebGpuDriver
 
     # Handle real-only input
     if data.ndim == 1 and data.dtype in (np.float32, np.float64):

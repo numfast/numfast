@@ -1,8 +1,8 @@
 """High-level sort operation."""
 import math
 import numpy as np
-from numfast.Runtime import Runtime
-from numfast.Compute import register_all
+from Runtime import Runtime
+from Compute import register_all
 
 
 def sort(data: np.ndarray, use_gpu: bool = False) -> np.ndarray:
@@ -19,7 +19,7 @@ def sort(data: np.ndarray, use_gpu: bool = False) -> np.ndarray:
     Returns:
         sorted array
     """
-    from numfast.Runtime._lib.Drivers.WebGPU import WebGpuDriver
+    from Runtime._lib.Drivers.WebGPU import WebGpuDriver
 
     n = len(data)
     log2n = int(math.log2(n))

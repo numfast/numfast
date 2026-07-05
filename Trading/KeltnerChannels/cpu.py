@@ -5,7 +5,7 @@ Upper = Middle + ATR(period_atr) * mult
 Lower = Middle - ATR(period_atr) * mult
 """
 
-from numfast.Runtime._lib.mod_iface import ExecutionContext
+from Runtime._lib.mod_iface import ExecutionContext
 
 
 def cpu(ctx: ExecutionContext):

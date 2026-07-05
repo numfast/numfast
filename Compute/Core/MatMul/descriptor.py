@@ -1,6 +1,6 @@
 """MatMul descriptor — tiled matrix multiply C = A × B."""
 
-from numfast.Runtime._lib.mod_iface import ExecutionPlan, InputSlot, OutputSlot
+from Runtime._lib.mod_iface import ExecutionPlan, InputSlot, OutputSlot
 
 TILE = 16
 

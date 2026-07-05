@@ -1,83 +1,113 @@
-# NumFast — Experimental GPU-oriented Columnar Data Engine
+# NumFast
 
-NumFast is an experimental columnar data engine where every table is physically stored as a tightly packed Row-Struct container in VRAM. Columns are laid out as contiguous bit sequences — 11, 14, 17 bits, whatever fits — without padding or per-column arrays. JIT WGSL compute shaders extract and reduce data directly from the packed representation, no host-side decompression required.
-
-The public API exposes `NumericSeries` and `Tables` interfaces backed by lightweight proxy dicts carrying only metadata.
-
-## Project structure
+**GPU-first numerical computing framework** — Runtime, Driver, Compute, High-Level API and Agent SDK.
 
 ```
-numfast/
-  _core/          — kernel, layout engine, visualizer, compression, series types
-  _main/          — внутренние служебные компоненты (не для прямого использования)
-  Vis/            — GPU-визуализация (WGPU Jupyter canvas, Chart)
-  Tables/         — table creation, column proxy, dynamic compression
-  Series/         — series extension (Builder)
-  Stats/          — statistical functions (total, mean, min, max, var)
-  tests/          — pytest suite
+pip install numfast
 ```
 
-## Series Type System
+## Architecture
 
-| Тип | Статус | Описание |
-|-----|--------|----------|
-| `NumericSeries` | ✅ Реализовано | Числовые данные, bit packing, GPU-статистика |
-| `ObjectSeries` | 🚧 Заглушка | Python-объекты, произвольные структуры |
-| `TextSeries` | 🚧 Заглушка | Строки, токены, NLP |
-| `ImageSeries` | 🚧 Заглушка | Изображения (JPEG, PNG, raw) |
-| `TensorSeries` | 🚧 Заглушка | Многомерные тензоры для AI/ML |
+```
+User (human or AI)              ─┐
+    │                            │ Agent SDK
+    ▼                            │ AI-agnostic
+Agent SDK                        ─┘
+    │
+    ▼
+Session — owns Runtime
+    │
+    ├──► Runtime — kernel table, compiler, executor
+    ├──► Driver — CPU (reference) · WebGPU · CUDA (stub)
+    ├──► Operations — scan(), matmul(), fft(), sort(), histogram()
+    └──► Compute — 6 GPU algorithms with CPU==GPU conformance
+```
 
 ## Quick start
 
 ```python
-from _core.context import create_context
-from _core.series import NumericSeries
-from Tables._lib.tables_lib import _container_table_create, _get_column
-from Stats.Stats import total, mean
+from numfast import scan, sort, matmul
+import numpy as np
 
-ctx = create_context("demo")
+# Prefix sum
+x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+y = scan(x)
+print(y)  # [1. 3. 6. 10. 15.]
 
-# Numeric series
-s = NumericSeries([1.0, 2.0, 3.0, 4.0, 5.0], ctx)
-s.info()                  # dual-mode dashboard
+# Bitonic sort
+x = np.random.random(8)
+s = sort(x)
 
-# Table with adaptive bit packing
-tbl = _container_table_create(
-    [{"name": "price", "dtype": "float32",
-      "compression": {"scaled": True, "bits": 12, "scale": 0.1, "offset": 50.0}},
-     {"name": "volume", "dtype": "float32"}],
-    {"price": [150.0, 200.0, 175.0],
-     "volume": [1000, 2000, 1500]},
-)
-tbl.info()
-
-col = _get_column(tbl, "price")
-print(total(col), mean(col))
+# Matrix multiplication
+A = np.ones((4, 4), dtype=np.float64)
+B = np.ones((4, 4), dtype=np.float64)
+C = matmul(A.flatten(), B.flatten(), M=4, N=4, K=4)
 ```
 
-## Visualization (Jupyter)
+## Agent SDK
 
 ```python
-from numfast.Vis import Chart
+from numfast import AgentSDK
 
-chart = Chart(width=1000, height=600)
-chart.show()          # WGPU canvas in Jupyter
-chart.draw_frame()    # manual render tick
+sdk = AgentSDK()
+
+with sdk.session() as session:
+    # Run a script
+    result = session.run("x = 2 + 2")
+
+    # Compare two arrays
+    result = session.diff(
+        np.array([1.0, 2.0, 3.0]),
+        np.array([1.0, 2.0, 3.0]),
+    )
+
+    # Compare CPU vs GPU
+    cpu_result = ...
+    gpu_result = ...
+    session.compare(cpu_result, gpu_result)
+
+    # Run benchmarks
+    session.benchmark("matmul_4x4", "matmul(A, B, M=4, N=4, K=4)")
 ```
+
+## Tools
+
+| Tool | Description |
+|------|-------------|
+| `scan()` | Inclusive prefix sum (CPU/GPU) |
+| `matmul()` | Tiled matrix multiplication |
+| `fft()` | Fast Fourier Transform |
+| `sort()` | Bitonic sort (power of 2) |
+| `histogram()` | Binned histogram with atomics |
+
+## Backends
+
+- **CPU** — reference implementation, float64, always available
+- **WebGPU** — GPU via `wgpu-py` (Windows, Linux, macOS)
+- CUDA, OpenCL, Metal — driver interface ready (stubs)
+
+Every GPU kernel has CPU == GPU conformance tests.
 
 ## Requirements
 
-- Python ≥ 3.11
-- Windows (WebGPU via `wgpu-py`) or CPU fallback
-- NumPy (CPU fallback)
+- Python >= 3.11
+- NumPy (CPU)
+- `wgpu-py` (optional, for GPU)
 
 ## Development
 
 ```bash
-pytest              # run all tests
-pytest -x           # stop on first failure
+# Run all tests
+pytest
+
+# Run conformance suite
+python -m tests.conformance.test_compute
 ```
 
 ## License
 
 AGPL-3.0-only
+
+## Status
+
+Pre-alpha. API is stable (frozen per ADR-005). Active development.

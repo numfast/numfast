@@ -5,7 +5,7 @@ CCI = (TP - SMA(TP, period)) / (0.015 * MeanDeviation)
 where MeanDeviation = sum(|TP - SMA(TP)|) / period
 """
 
-from numfast.Runtime._lib.mod_iface import ExecutionContext
+from Runtime._lib.mod_iface import ExecutionContext
 
 
 def cpu(ctx: ExecutionContext):

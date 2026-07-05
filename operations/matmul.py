@@ -1,8 +1,8 @@
 """High-level matrix multiplication operation."""
 
 import numpy as np
-from numfast.Runtime import Runtime
-from numfast.Compute import register_all
+from Runtime import Runtime
+from Compute import register_all
 
 
 def matmul(A: np.ndarray, B: np.ndarray, M: int = None, N: int = None, K: int = None,
@@ -18,7 +18,7 @@ def matmul(A: np.ndarray, B: np.ndarray, M: int = None, N: int = None, K: int = 
     Returns:
         C: 1D flatten array, M×N
     """
-    from numfast.Runtime._lib.Drivers.WebGPU import WebGpuDriver
+    from Runtime._lib.Drivers.WebGPU import WebGpuDriver
 
     # Handle 2D inputs
     if A.ndim == 2 and B.ndim == 2:

@@ -15,7 +15,7 @@ Agent SDK:
 """
 
 # Operations — high-level API
-from .operations import scan, matmul, fft, sort, histogram
+from operations import scan, matmul, fft, sort, histogram
 
 from _core.context import create_context
 from _core.series_types import SeriesKind
@@ -27,7 +27,7 @@ from _core.backend import get_xp, set_active, get_active_name
 from Stats.Stats import total, mean, var, std, minimum, maximum, count, range_
 
 # Storage API
-from ._kernel import (
+from _kernel import (
     Context,
     create_table,
     _kernel as _ctx,
@@ -40,23 +40,23 @@ PackingPlan = _ctx.PackingPlan
 ColumnLayout = _ctx.ColumnLayout
 
 # Pipeline
-from .Pipeline import Pipeline, Task
+from Pipeline import Pipeline, Task
 
 # Trading indicators — pure-function kernels, register via register_all(runtime)
-from .Trading import register_all as register_trading_kernels
+from Trading import register_all as register_trading_kernels
 
 # Compute — вычислительные ядра
-from .Compute import register_all as register_compute_kernels
+from Compute import register_all as register_compute_kernels
 
 # Runtime — исполнительный слой
-from .Runtime import (
+from Runtime import (
     Runtime, CpuDriver, Task as RuntimeTask, compile as compile_jobs,
     BlockView, BufferView, ExecutionPacket,
     validate_uniforms, KernelValidator,
 )
 
 # Agent SDK — программный слой для автоматизации
-from .agent import AgentSDK, Result
+from agent import AgentSDK, Result
 
 __all__ = [
     "Context", "create_table",

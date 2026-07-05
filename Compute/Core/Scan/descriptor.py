@@ -1,6 +1,6 @@
 """Scan descriptors — ExecutionPlans for three chained Scan kernels."""
 
-from numfast.Runtime._lib.mod_iface import ExecutionPlan, InputSlot, OutputSlot
+from Runtime._lib.mod_iface import ExecutionPlan, InputSlot, OutputSlot
 
 BLOCK = 64
 

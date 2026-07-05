@@ -4,7 +4,7 @@ Users should use the top-level API (nf.Table, nf.create_table).
 Context is only needed for advanced multi-context scenarios.
 """
 
-from .Storage import (
+from Storage import (
     Table as _Table,
     Column as _Column,
     ColumnType as _ColumnType,

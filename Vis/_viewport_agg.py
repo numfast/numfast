@@ -16,7 +16,7 @@ import struct
 import numpy as np
 import wgpu
 
-from numfast._core.backend import _wgpu
+from _core.backend import _wgpu
 
 _WGSL_COMMON_MAIN = """
     let bucket = id.x;

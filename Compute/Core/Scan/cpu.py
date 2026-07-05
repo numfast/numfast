@@ -1,6 +1,6 @@
 """Scan CPU references — one per kernel phase."""
 
-from numfast.Runtime._lib.mod_iface import ExecutionContext
+from Runtime._lib.mod_iface import ExecutionContext
 
 
 def cpu_local(ctx: ExecutionContext):

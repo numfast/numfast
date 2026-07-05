@@ -1,6 +1,6 @@
 """MatMul CPU — naive triple loop."""
 
-from numfast.Runtime._lib.mod_iface import ExecutionContext
+from Runtime._lib.mod_iface import ExecutionContext
 
 
 def cpu_matmul(ctx: ExecutionContext):

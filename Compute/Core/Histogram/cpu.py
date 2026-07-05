@@ -1,6 +1,6 @@
 """Histogram CPU reference."""
 
-from numfast.Runtime._lib.mod_iface import ExecutionContext
+from Runtime._lib.mod_iface import ExecutionContext
 
 
 def cpu_histogram(ctx: ExecutionContext):

@@ -1,6 +1,6 @@
 """Reduce descriptor — сумма всех элементов."""
 
-from numfast.Runtime._lib.mod_iface import InputSlot, OutputSlot, BufferSpec, ExecutionPlan
+from Runtime._lib.mod_iface import InputSlot, OutputSlot, BufferSpec, ExecutionPlan
 
 
 def describe(params: dict) -> ExecutionPlan:

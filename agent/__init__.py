@@ -3,7 +3,7 @@
 AI-agnostic. Не зависит от LLM, API ключей, промптов.
 
 Usage:
-    from numfast.agent import AgentSDK, Result
+    from agent import AgentSDK, Result
 
     sdk = AgentSDK()
 

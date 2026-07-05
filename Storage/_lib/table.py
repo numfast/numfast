@@ -87,7 +87,7 @@ class Table:
         Returns:
             SeriesProxy instance
         """
-        from numfast._core.series_proxy import SeriesProxy
+        from _core.series_proxy import SeriesProxy
         if column_name is None:
             column_name = self.column_list[0].name
         return SeriesProxy(self, column_name)
