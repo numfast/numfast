@@ -1,28 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200">
   <defs>
     <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0d47a1"/>
-      <stop offset="100%" stop-color="#00bcd4"/>
+      <stop offset="0%" stop-color="#1565C0"/>
+      <stop offset="100%" stop-color="#00E5FF"/>
     </linearGradient>
   </defs>
   <g transform="translate(20, 20)">
     <rect width="160" height="160" rx="32" fill="url(#g2)"/>
-    <g fill="none" stroke="#ffffff">
-      <line x1="48" y1="40" x2="48" y2="120" stroke-width="10" stroke-linecap="round"/>
-      <line x1="48" y1="40" x2="112" y2="120" stroke-width="10" stroke-linecap="round"/>
-      <line x1="112" y1="40" x2="112" y2="120" stroke-width="10" stroke-linecap="round"/>
-      <g stroke-width="3" opacity="0.4" stroke-linecap="round">
-        <line x1="56" y1="60" x2="88" y2="60"/>
-        <line x1="60" y1="80" x2="98" y2="80"/>
-        <line x1="64" y1="100" x2="108" y2="100"/>
-      </g>
+    <g fill="none" stroke="#ffffff" stroke-linecap="round">
+      <line x1="40" y1="56" x2="108" y2="56" stroke-width="12"/>
+      <line x1="52" y1="80" x2="108" y2="80" stroke-width="12"/>
+      <line x1="64" y1="104" x2="108" y2="104" stroke-width="12"/>
     </g>
+    <polygon points="108,44 120,80 108,116 96,80" fill="#ffffff" opacity="0.9"/>
   </g>
-  <g transform="translate(210, 125)" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-weight="700">
-    <text x="0" y="0" font-size="64" fill="#0d47a1" letter-spacing="2">Num</text>
-    <text x="195" y="0" font-size="64" fill="#00bcd4" letter-spacing="2">Fast</text>
+  <g transform="translate(210, 105)" font-family="'Segoe UI', system-ui, sans-serif" font-weight="700">
+    <text x="0" y="0" font-size="52" fill="#1565C0" letter-spacing="1">Num</text>
+    <text x="160" y="0" font-size="52" fill="#00BCD4" letter-spacing="1">Fast</text>
   </g>
-  <text x="210" y="175" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="16" fill="#78909c" letter-spacing="4">
-    GPU-FIRST NUMERICAL COMPUTING
+  <text x="210" y="165" font-family="'Segoe UI', system-ui, sans-serif" font-size="14" fill="#78909C" letter-spacing="4" font-weight="600">
+    GPU-FIRST AI-NATIVE COMPUTING
   </text>
 </svg>
