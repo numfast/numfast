@@ -15,19 +15,19 @@ Agent SDK:
 """
 
 # Operations — high-level API
-from operations import scan, matmul, fft, sort, histogram
+from numfast.operations import scan, matmul, fft, sort, histogram
 
-from _core.context import create_context
-from _core.series_types import SeriesKind
-from _core.series_proxy import SeriesProxy
-from Series._lib import NumericSeries, make_series
-from Series._lib.math_ops import sin, cos, tan, exp, log, sqrt, neg
-from Series._lib.expr import _LazyExpr
-from _core.backend import get_xp, set_active, get_active_name
-from Stats.Stats import total, mean, var, std, minimum, maximum, count, range_
+from numfast._core.context import create_context
+from numfast._core.series_types import SeriesKind
+from numfast._core.series_proxy import SeriesProxy
+from numfast.Series._lib import NumericSeries, make_series
+from numfast.Series._lib.math_ops import sin, cos, tan, exp, log, sqrt, neg
+from numfast.Series._lib.expr import _LazyExpr
+from numfast._core.backend import get_xp, set_active, get_active_name
+from numfast.Stats.Stats import total, mean, var, std, minimum, maximum, count, range_
 
 # Storage API
-from _kernel import (
+from numfast._kernel import (
     Context,
     create_table,
     _kernel as _ctx,
@@ -40,23 +40,23 @@ PackingPlan = _ctx.PackingPlan
 ColumnLayout = _ctx.ColumnLayout
 
 # Pipeline
-from Pipeline import Pipeline, Task
+from numfast.Pipeline import Pipeline, Task
 
 # Trading indicators — pure-function kernels, register via register_all(runtime)
-from Trading import register_all as register_trading_kernels
+from numfast.Trading import register_all as register_trading_kernels
 
 # Compute — вычислительные ядра
-from Compute import register_all as register_compute_kernels
+from numfast.Compute import register_all as register_compute_kernels
 
 # Runtime — исполнительный слой
-from Runtime import (
+from numfast.Runtime import (
     Runtime, CpuDriver, Task as RuntimeTask, compile as compile_jobs,
     BlockView, BufferView, ExecutionPacket,
     validate_uniforms, KernelValidator,
 )
 
 # Agent SDK — программный слой для автоматизации
-from agent import AgentSDK, Result
+from numfast.agent import AgentSDK, Result
 
 __all__ = [
     "Context", "create_table",

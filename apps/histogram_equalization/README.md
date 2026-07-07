@@ -1,11 +1,19 @@
 # Histogram Equalization
 
+**NumFast operations:** `histogram()` · `scan()`
+
+**Difficulty:** ★★☆☆☆
+
+**Speedup:** CPU O(n) · GPU O(n) with atomics
+
+---
+
 **Задача:** Улучшить контраст изображения через выравнивание гистограммы.
 
-**Метод:** histogram() + scan() → CDF → пиксельная карта.
+**Метод:** histogram() → CDF via scan() → пиксельная карта.
 
-**Почему NumFast:** histogram() использует GPU-атомики, scan() — параллельный
-prefix sum. Оба работают за O(n).
+**Почему NumFast:** histogram() использует GPU-атомики в shared memory,
+scan() — параллельный префиксный сумматор.
 
 **Запуск:**
 ```bash
