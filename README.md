@@ -26,30 +26,30 @@ Session — owns Runtime
 ## Quick start
 
 ```python
-from numfast import scan, sort, matmul
+import numfast as nf
 import numpy as np
 
 # Prefix sum
 x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
-y = scan(x)
+y = nf.scan(x)
 print(y)  # [1. 3. 6. 10. 15.]
 
 # Bitonic sort
 x = np.random.random(8)
-s = sort(x)
+s = nf.sort(x)
 
 # Matrix multiplication
 A = np.ones((4, 4), dtype=np.float64)
 B = np.ones((4, 4), dtype=np.float64)
-C = matmul(A.flatten(), B.flatten(), M=4, N=4, K=4)
+C = nf.matmul(A.flatten(), B.flatten(), M=4, N=4, K=4)
 ```
 
 ## Agent SDK
 
 ```python
-from numfast import AgentSDK
+import numfast as nf
 
-sdk = AgentSDK()
+sdk = nf.AgentSDK()
 
 with sdk.session() as session:
     # Run a script

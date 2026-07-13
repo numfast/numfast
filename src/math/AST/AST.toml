@@ -1,0 +1,8 @@
+name = "AST"
+version = "0.1.0"
+depends = []
+alias = ["parse", "compile_to_isa", "evaluate"]
+mods = ["parse", "compile_to_isa", "evaluate"]
+
+[metadata]
+description = "AST language frontend: parse expressions, compile to ISA, evaluate for debugging."

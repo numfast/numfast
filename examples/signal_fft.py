@@ -5,7 +5,7 @@ _examples_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(_examples_dir, '..'))
 sys.path.insert(0, os.path.join(_examples_dir, '..', '..'))
 
-from numfast import fft
+import numfast as nf
 
 
 def find_dominant_frequencies(signal: np.ndarray, sample_rate: float = 1.0, top_k: int = 3):
@@ -20,7 +20,7 @@ def find_dominant_frequencies(signal: np.ndarray, sample_rate: float = 1.0, top_
         frequencies: list of (freq, magnitude) tuples
     """
     n = len(signal)
-    spectrum = fft(signal)
+    spectrum = nf.fft(signal)
     
     # Convert interleaved to complex
     complex_spec = spectrum[0::2] + 1j * spectrum[1::2]

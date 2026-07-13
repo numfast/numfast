@@ -1,6 +1,6 @@
 """Linear regression using normal equations (matmul)."""
 import numpy as np
-from numfast import matmul
+import numfast as nf
 
 def linear_regression(X, y):
     """Fit y = Xβ using normal equations: β = (X^T X)^{-1} X^T y.
@@ -10,10 +10,10 @@ def linear_regression(X, y):
     XT = X.T
     n = X.shape[1]
     # X^T X (n×n)
-    XTX = matmul(XT.flatten(), X.flatten(), M=n, N=n, K=X.shape[0])
+    XTX = nf.matmul(XT.flatten(), X.flatten(), M=n, N=n, K=X.shape[0])
     XTX = XTX.reshape(n, n)
     # X^T y (n×1)
-    XTy = matmul(XT.flatten(), y.flatten(), M=n, N=1, K=X.shape[0])
+    XTy = nf.matmul(XT.flatten(), y.flatten(), M=n, N=1, K=X.shape[0])
     # Solve via numpy (inverse is a placeholder — future: operations.inv)
     beta = np.linalg.solve(XTX, XTy.flatten())
     return beta

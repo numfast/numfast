@@ -1,6 +1,6 @@
 """Image box blur using matmul (separable convolution)."""
 import numpy as np
-from numfast import matmul
+import numfast as nf
 
 def box_blur(image, kernel_size=5):
     """Apply box blur via separable convolution using matmul.
@@ -21,11 +21,11 @@ def box_blur(image, kernel_size=5):
         avg_mat[i, left:right] = 1.0 / n
     
     # Row blur: (h×w) @ (w×w) = h×w
-    row_blurred = matmul(image.flatten(), avg_mat.flatten(), M=h, N=w, K=w)
+    row_blurred = nf.matmul(image.flatten(), avg_mat.flatten(), M=h, N=w, K=w)
     row_blurred = row_blurred.reshape(h, w)
     
     # Col blur: (w×h) → same matrix applied to transpose
-    col_blurred = matmul(row_blurred.T.flatten(), avg_mat.flatten(), M=w, N=w, K=w)
+    col_blurred = nf.matmul(row_blurred.T.flatten(), avg_mat.flatten(), M=w, N=w, K=w)
     col_blurred = col_blurred.reshape(w, h).T
     
     return col_blurred

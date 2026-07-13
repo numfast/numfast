@@ -1,0 +1,7 @@
+name = "Agent"
+alias = ["AgentSDK", "Result"]
+mods = ["AgentSDK", "Result"]
+depends = ["Runtime", "Compute", "Operations"]
+
+[metadata]
+description = "Agent SDK for AI agent integration"

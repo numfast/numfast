@@ -180,24 +180,29 @@ def test_lazy_chain():
 
 def test_numfast_import():
     import numfast as nf
-    assert hasattr(nf, 'sin')
-    assert hasattr(nf, 'cos')
-    assert hasattr(nf, 'exp')
-    assert hasattr(nf, 'log')
-    assert hasattr(nf, 'sqrt')
-    assert hasattr(nf, 'neg')
-    assert hasattr(nf, 'NumericSeries')
-    assert hasattr(nf, 'create_context')
     assert hasattr(nf, 'total')
     assert hasattr(nf, 'mean')
+    assert hasattr(nf, 'compile')
+    assert hasattr(nf, 'execute')
+    assert hasattr(nf, 'series')
+    assert hasattr(nf, 'table')
+    assert hasattr(nf, 'sin')
+    assert hasattr(nf, 'cos')
+    assert hasattr(nf, 'scan')
+    assert hasattr(nf, 'matmul')
+    # Module itself has __version__
+    import numfast
+    assert hasattr(numfast, '__version__')
 
 
 def test_numfast_usage():
     import numfast as nf
-    ctx = nf.create_context("test_nf_usage")
-    x = nf.NumericSeries([0.0, 1.0, 2.0], ctx)
-    y = nf.sin(x) + nf.cos(x) * 3
+    x = nf.series([0.0, 1.0, 2.0])
+    # Series supports .data() and math ops via functions
+    from Series._lib.math_ops import sin, cos
+    y = sin(x) + cos(x) * 3
     result = y.data()
+    import math
     ref = [math.sin(v) + math.cos(v) * 3 for v in [0.0, 1.0, 2.0]]
     for r, ref_v in zip(result, ref):
         assert abs(r - ref_v) < 1e-12

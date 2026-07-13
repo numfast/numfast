@@ -1,6 +1,6 @@
 """Sobel edge detection using matmul for convolution."""
 import numpy as np
-from numfast import matmul
+import numfast as nf
 
 def sobel_edge(image):
     """Detect edges using Sobel operator via matmul.
@@ -35,10 +35,10 @@ def sobel_edge(image):
             Dy[i, i+1] = 1.0
     
     # Gx = image @ Dx  (horizontal gradient via matmul)
-    Gx = matmul(image.flatten(), Dx.flatten(), M=h, N=w, K=w).reshape(h, w)
+    Gx = nf.matmul(image.flatten(), Dx.flatten(), M=h, N=w, K=w).reshape(h, w)
     
     # Gy = Dy @ image  (vertical gradient via matmul)
-    Gy = matmul(Dy.flatten(), image.flatten(), M=h, N=w, K=h).reshape(h, w)
+    Gy = nf.matmul(Dy.flatten(), image.flatten(), M=h, N=w, K=h).reshape(h, w)
     
     magnitude = np.sqrt(Gx**2 + Gy**2)
     return magnitude

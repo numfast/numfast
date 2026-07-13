@@ -1,0 +1,6 @@
+name = "Mods"
+alias = ["register", "get_registered"]
+mods = ["register", "get_registered"]
+
+[metadata]
+description = "Decorators and function registry"

@@ -1,10 +1,10 @@
 """Audio frequency analysis using FFT."""
 import numpy as np
-from numfast import fft
+import numfast as nf
 
 def find_tones(data, sample_rate=44100, top_k=5):
     """Find dominant frequencies in an audio signal."""
-    spectrum = fft(data)
+    spectrum = nf.fft(data)
     n = len(spectrum) // 2
     magnitudes = np.abs(spectrum[0::2] + 1j * spectrum[1::2])[:n // 2]
     freqs = np.fft.fftfreq(n, d=1.0 / sample_rate)[:n // 2]

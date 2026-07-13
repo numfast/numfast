@@ -1,0 +1,7 @@
+name = "Compute"
+alias = ["register_compute_kernels"]
+mods = ["register_compute_kernels"]
+depends = ["Runtime"]
+
+[metadata]
+description = "Compute kernels: Map, Reduce, Scan, FFT, MatMul, Sort, Histogram"

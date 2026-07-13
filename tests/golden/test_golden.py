@@ -12,8 +12,8 @@ import numpy as np
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")))
 
-from numfast.Runtime import Runtime
-from numfast import register_trading_kernels
+from Runtime import Runtime
+from Trading import register_all as register_trading_kernels
 
 GOLDEN_DIR = os.path.join(os.path.dirname(__file__), "data")
 

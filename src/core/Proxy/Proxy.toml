@@ -1,0 +1,6 @@
+name = "Proxy"
+alias = ["load", "info"]
+mods = ["load", "info"]
+
+[metadata]
+description = "Lazy module loader"

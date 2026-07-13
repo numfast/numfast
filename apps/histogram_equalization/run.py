@@ -1,11 +1,11 @@
 """Histogram equalization for grayscale images."""
 import numpy as np
-from numfast import histogram, scan
+import numfast as nf
 
 def equalize(image, bins=256):
     flat = image.flatten()
-    hist = histogram(flat, bins=bins, min_val=0.0, max_val=1.0)
-    cdf = scan(hist)
+    hist = nf.histogram(flat, bins=bins, min_val=0.0, max_val=1.0)
+    cdf = nf.scan(hist)
     cdf = cdf / cdf[-1]
     indices = np.clip((flat * (bins - 1)).astype(np.int64), 0, bins - 1)
     result = cdf[indices]

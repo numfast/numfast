@@ -1,0 +1,6 @@
+name = "Tables"
+alias = ["container_table", "get_column", "compress_column", "column_view"]
+mods = ["container_table", "get_column", "compress_column", "column_view"]
+
+[metadata]
+description = "Row-Struct Container: create, query, compress columns"

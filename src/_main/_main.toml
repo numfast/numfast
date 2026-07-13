@@ -1,0 +1,6 @@
+name = "_main"
+alias = ["info", "status", "diagnostics"]
+mods = ["info", "status", "diagnostics"]
+
+[metadata]
+description = "NumFast core: info, status, diagnostics"

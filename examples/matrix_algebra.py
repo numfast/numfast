@@ -5,7 +5,7 @@ _examples_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(_examples_dir, '..'))
 sys.path.insert(0, os.path.join(_examples_dir, '..', '..'))
 
-from numfast import matmul
+import numfast as nf
 
 
 def power_method(A: np.ndarray, iterations: int = 20) -> tuple:
@@ -29,13 +29,13 @@ def power_method(A: np.ndarray, iterations: int = 20) -> tuple:
     
     for _ in range(iterations):
         # Av via matmul (n×1 vector as n×1 matrix)
-        Av = matmul(A_flat, v, M=n, N=1, K=n)
+        Av = nf.matmul(A_flat, v, M=n, N=1, K=n)
         v_new = Av.flatten()
         norm = np.linalg.norm(v_new)
         v = v_new / norm
     
     # Rayleigh quotient
-    Av = matmul(A_flat, v, M=n, N=1, K=n).flatten()
+    Av = nf.matmul(A_flat, v, M=n, N=1, K=n).flatten()
     eigenvalue = float(np.dot(v, Av))
     
     return eigenvalue, v

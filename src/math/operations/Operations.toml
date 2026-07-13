@@ -1,0 +1,7 @@
+name = "Operations"
+alias = ["scan", "matmul", "fft", "sort", "histogram"]
+mods = ["scan", "matmul", "fft", "sort", "histogram"]
+depends = ["Runtime"]
+
+[metadata]
+description = "High-level operations: prefix scan, matmul, FFT, sort, histogram"

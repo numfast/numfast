@@ -5,7 +5,7 @@ _examples_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(_examples_dir, '..'))
 sys.path.insert(0, os.path.join(_examples_dir, '..', '..'))
 
-from numfast import scan
+import numfast as nf
 
 
 def moving_average(data: np.ndarray, window: int = 3) -> np.ndarray:
@@ -18,7 +18,7 @@ def moving_average(data: np.ndarray, window: int = 3) -> np.ndarray:
     Returns:
         smoothed: 1D array, same length
     """
-    prefix = scan(data)
+    prefix = nf.scan(data)
     n = len(data)
     result = np.zeros(n, dtype=np.float64)
     for i in range(n):

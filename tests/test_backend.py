@@ -42,9 +42,9 @@ def test_device_info():
 def test_no_cupy_in_lib_files():
     import os
     lib_dirs = [
-        os.path.join(os.path.dirname(__file__), "..", "Series", "_lib"),
-        os.path.join(os.path.dirname(__file__), "..", "Stats", "_lib"),
-        os.path.join(os.path.dirname(__file__), "..", "Tables", "_lib"),
+        os.path.join(os.path.dirname(__file__), "..", "src", "core", "Series", "_lib"),
+        os.path.join(os.path.dirname(__file__), "..", "src", "math", "Stats", "_lib"),
+        os.path.join(os.path.dirname(__file__), "..", "src", "core", "Tables", "_lib"),
     ]
     import re
     for d in lib_dirs:

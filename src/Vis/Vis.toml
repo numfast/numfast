@@ -1,0 +1,6 @@
+name = "Vis"
+alias = []
+mods = []
+
+[metadata]
+description = "Visualization: GPU-accelerated chart rendering"

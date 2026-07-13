@@ -9,8 +9,8 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")))
 
 import numpy as np
-from numfast.Runtime import Runtime
-from numfast import register_trading_kernels
+from Runtime import Runtime
+from Trading import register_all as register_trading_kernels
 
 
 def make_runtime():

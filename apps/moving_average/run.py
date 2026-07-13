@@ -1,9 +1,9 @@
 """Moving Average — financial indicator using prefix sum."""
 import numpy as np
-from numfast import scan
+import numfast as nf
 
 def moving_average(data, window=5):
-    prefix = scan(data)
+    prefix = nf.scan(data)
     result = np.zeros_like(data)
     for i in range(len(data)):
         if i < window:
