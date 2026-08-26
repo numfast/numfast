@@ -244,7 +244,7 @@ console.log("CHECK 7: math + stats");
   check("std", Math.abs(nf.std(st) - Math.sqrt(2)) < 1e-6);
 
   const di = nf.deviceInfo();
-  check("deviceInfo()", di.backend === "cpu" && di.version === "1.0.0a1-js" &&
+  check("deviceInfo()", di.backend === "cpu" && di.version === "1.0.0-alpha.1" &&
     di.kernels === 33, JSON.stringify(di));
 }
 
