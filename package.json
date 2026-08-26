@@ -1,6 +1,6 @@
 {
   "name": "@numfast/numfast",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0-alpha.2",
   "description": "GPU-first numerical computing framework — Runtime, 32 Compute primitives (Map, Reduce, Scan, Sort, FFT, MatMul, etc)",
   "main": "index.js",
   "files": [

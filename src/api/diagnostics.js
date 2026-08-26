@@ -8,7 +8,7 @@
 
 "use strict";
 
-const VERSION = "1.0.0-alpha.1";
+const VERSION = "1.0.0-alpha.2";
 const KERNEL_COUNT = 33;
 const { status } = require("./webgpu_driver");
 
