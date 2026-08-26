@@ -65,11 +65,11 @@ Measured characterizations (RTX 2060, details in docs/PERFORMANCE.md):
 
 ## Documentation
 
-- [docs/QUICKSTART.md](docs/QUICKSTART.md) — copy-paste quickstart
-- [docs/EXAMPLES.md](docs/EXAMPLES.md) — E1-E8 with real outputs
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — how it works + extensions
-- [docs/LIMITATIONS.md](docs/LIMITATIONS.md) — honest limits
-- [docs/PERFORMANCE.md](docs/PERFORMANCE.md) — measured numbers only
+- [docs/QUICKSTART.md](https://github.com/numfast/numfast/blob/main/docs/QUICKSTART.md) — copy-paste quickstart
+- [docs/EXAMPLES.md](https://github.com/numfast/numfast/blob/main/docs/EXAMPLES.md) — E1-E8 with real outputs
+- [docs/ARCHITECTURE.md](https://github.com/numfast/numfast/blob/main/docs/ARCHITECTURE.md) — how it works + extensions
+- [docs/LIMITATIONS.md](https://github.com/numfast/numfast/blob/main/docs/LIMITATIONS.md) — honest limits
+- [docs/PERFORMANCE.md](https://github.com/numfast/numfast/blob/main/docs/PERFORMANCE.md) — measured numbers only
 
 ## Status
 
