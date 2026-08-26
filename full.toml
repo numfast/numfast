@@ -1,0 +1,111 @@
+# NumFast App Manifest
+# Builder: python -m builder build .
+
+[kernel]
+name = "numfast"
+singleton = true
+
+# === Core: inner kitchen ===
+[[extensions]]
+name = "_main"
+path = "src/_main"
+
+[[extensions]]
+name = "Storage"
+path = "src/core/Storage"
+
+# NOTE: Loader — dzst НЕ входит в public API (оставлен для внутреннего использования)
+[[extensions]]
+name = "Loader"
+path = "src/core/Loader"
+
+[[extensions]]
+name = "Creation"
+path = "src/core/Creation"
+
+[[extensions]]
+name = "TopK"
+path = "src/core/TopK"
+
+[[extensions]]
+name = "GroupBy"
+path = "src/core/GroupBy"
+
+[[extensions]]
+name = "Filter"
+path = "src/core/Filter"
+
+[[extensions]]
+name = "Runtime"
+path = "src/core/Runtime"
+
+[[extensions]]
+name = "Series"
+path = "src/core/Series"
+
+[[extensions]]
+name = "Pipeline"
+path = "src/core/Pipeline"
+
+[[extensions]]
+name = "Proxy"
+path = "src/core/Proxy"
+
+[[extensions]]
+name = "Mods"
+path = "src/core/Mods"
+
+[[extensions]]
+name = "Tables"
+path = "src/core/Tables"
+
+[[extensions]]
+name = "Agent"
+path = "src/core/Agent"
+
+# === Drivers ===
+[[extensions]]
+name = "CPU"
+path = "src/core/Runtime/_lib/Drivers/CPU"
+
+# === Math: primitives ===
+[[extensions]]
+name = "Stats"
+path = "src/math/Stats"
+
+[[extensions]]
+name = "Operations"
+path = "src/math/operations"
+
+[[extensions]]
+name = "Compute"
+path = "src/math/Compute"
+
+[[extensions]]
+name = "WalkForwardFullFused"
+path = "src/core/WalkForwardFullFused"
+
+[[extensions]]
+name = "AST"
+path = "src/math/AST"
+
+[[extensions]]
+name = "ISA"
+path = "src/math/ISA"
+
+
+# === Math: primitives ===
+[[extensions]]
+name = "Math"
+path = "src/math/Math"
+
+# === Trading ===
+[[extensions]]
+name = "Trading"
+path = "src/trading"
+
+# === Visualizer ===
+[[extensions]]
+name = "Vis"
+path = "src/Vis"
+

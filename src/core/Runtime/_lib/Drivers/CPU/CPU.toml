@@ -1,0 +1,7 @@
+name = "CPU"
+alias = ["cpu_driver"]
+mods = ["cpu_driver"]
+depends = ["Runtime"]
+
+[metadata]
+description = "CPU Driver — reference implementation of NumFast Driver"

@@ -1,0 +1,8 @@
+name = "GroupBy"
+version = "0.1.0"
+depends = ["Sort", "Scan", "Reduce"]
+alias = ["groupby"]
+mods = ["groupby"]
+
+[metadata]
+description = "GroupBy via Sort+Compare(shift)+Scan+Reduce segmented, mean via MapBinary"

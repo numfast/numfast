@@ -1,0 +1,8 @@
+name = "Creation"
+version = "0.1.0"
+depends = []
+alias = ["Creation"]
+mods = ["Creation"]
+
+[metadata]
+description = "Public array creation API: zeros, ones, full, arange, linspace, random_uniform/normal/integers (S200)"

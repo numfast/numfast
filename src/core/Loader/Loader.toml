@@ -1,0 +1,8 @@
+name = "Loader"
+version = "0.1.0"
+depends = ["Storage"]
+alias = ["load_dzst"]
+mods = ["load_dzst"]
+
+[metadata]
+description = "P0-L file->Storage"

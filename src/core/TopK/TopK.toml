@@ -1,0 +1,8 @@
+name = "TopK"
+version = "0.1.0"
+depends = []
+alias = ["TopK"]
+mods = ["TopK"]
+
+[metadata]
+description = "TopK slice via Sort+Gather composition stable"

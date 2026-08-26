@@ -1,0 +1,8 @@
+name = "WalkForwardFullFused"
+version = "0.1.0"
+depends = ["Sort", "Scan", "Reduce"]
+alias = ["WalkForwardFullFused"]
+mods = ["WalkForwardFullFused"]
+
+[metadata]
+description = "Walk-forward full fused kernel: SMA+RSI conditions -> per-fold masked return sums/counts, one dispatch per dataset"

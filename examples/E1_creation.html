@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>NumFast JS — E1 Creation (zeros / arange / full)</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 2rem; background: #fafafa; }
+  h1 { font-size: 1.2rem; }
+  pre { background: #111; color: #9f9; padding: 1rem; border-radius: 8px;
+        min-height: 8em; white-space: pre-wrap; }
+  .note { color: #555; font-size: .85rem; }
+</style>
+</head>
+<body>
+<h1>E1 — Creation: zeros / ones / arange / full</h1>
+<p class="note">Module scripts требуют HTTP-сервер: из корня репозитория
+<code>npx serve .</code> или <code>python -m http.server</code>, затем открыть
+<code>/examples/E1_creation.html</code>.</p>
+<pre id="out">loading…</pre>
+
+<script type="module">
+// ---- mini CJS loader: запускает настоящий ../index.js в браузере ----
+const ENTRY = new URL('../index.js', import.meta.url).href;
+const MODULES = new Map();
+const DEP_RE = /require\((['"])([^'"\n]+)\1\)/g;
+function resolveUrl(fromUrl, spec) {
+  return new URL(spec.endsWith('.js') ? spec : spec + '.js', fromUrl).href;
+}
+async function preload(url) {
+  if (MODULES.has(url)) return;
+  MODULES.set(url, { code: null, deps: [], exports: null });
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('loader: HTTP ' + res.status + ' for ' + url);
+  const code = await res.text();
+  const deps = [];
+  for (const m of code.matchAll(DEP_RE)) deps.push(resolveUrl(url, m[2]));
+  MODULES.set(url, { code, deps, exports: null });
+  for (const d of deps) await preload(d);
+}
+function executeModule(url) {
+  const mod = MODULES.get(url);
+  if (!mod.exports) {
+    mod.exports = {};
+    const localRequire = (spec) => executeModule(resolveUrl(url, spec)).exports;
+    new Function('require', 'module', 'exports', mod.code)(
+      localRequire, { exports: mod.exports }, mod.exports);
+  }
+  return mod;
+}
+const nfPromise = (async () => {
+  await preload(ENTRY);
+  return executeModule(ENTRY).exports;
+})();
+
+// ---- пример ----
+const out = document.getElementById('out');
+nfPromise.then((nf) => {
+  const z = nf.zeros(5);
+  const o = nf.ones(4);
+  const a = nf.arange(1, 6);
+  const f = nf.full(3, 2.5);
+  out.textContent = [
+    'backend       : ' + nf.deviceInfo().backend,
+    'zeros(5)      : [' + Array.from(z.data) + ']  dtype=' + z.dtype,
+    'ones(4)       : [' + Array.from(o.data) + ']',
+    'arange(1,6)   : [' + Array.from(a.data) + ']',
+    'full(3, 2.5)  : [' + Array.from(f.data) + ']',
+  ].join('\n');
+}).catch((e) => { out.textContent = 'ERROR: ' + (e && e.message || e); });
+</script>
+</body>
+</html>

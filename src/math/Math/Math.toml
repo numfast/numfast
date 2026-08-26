@@ -1,0 +1,7 @@
+name = "Math"
+alias = ["sin", "cos", "tan", "exp", "log", "sqrt", "neg", "abs", "square"]
+mods = ["sin", "cos", "tan", "exp", "log", "sqrt", "neg", "abs", "square"]
+depends = ["Series"]
+
+[metadata]
+description = "Element-wise math operations: sin, cos, tan, exp, log, sqrt, neg, abs, square"

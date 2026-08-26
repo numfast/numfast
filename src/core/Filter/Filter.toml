@@ -1,0 +1,9 @@
+name = "Filter"
+version = "0.1.0"
+depends = []
+alias = ["Filter"]
+mods = ["Filter"]
+variables = []
+
+[metadata]
+description = "Filter(src,cond)=Gather(src,Scan(Compare(cond,0))): stable order N=0/all-false chunkable 4_194_240; Select=Mask"

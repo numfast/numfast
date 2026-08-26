@@ -1,0 +1,20 @@
+"""CUDA Driver stub — NotImplementedError until CUDA backend is implemented."""
+from Runtime._lib.Drivers.base import Driver
+
+
+class CudaDriver(Driver):
+    """CUDA Driver — заглушка.
+    
+    Будет реализован после стабилизации Driver API.
+    Использует PyCUDA или CUDA Python.
+    """
+
+    def __init__(self):
+        super().__init__()
+        raise NotImplementedError(
+            "CUDA Driver is not yet implemented. "
+            "See docs/ARCHITECTURE.md for the interface contract."
+        )
+
+    def execute(self, packet):
+        raise NotImplementedError("CUDA Driver: execute")

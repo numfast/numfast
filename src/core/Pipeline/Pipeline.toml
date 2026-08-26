@@ -1,0 +1,6 @@
+name = "Pipeline"
+alias = ["Pipeline", "Task"]
+mods = ["Pipeline", "Task"]
+
+[metadata]
+description = "Pipeline: sequential task execution"

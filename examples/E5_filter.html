@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>NumFast JS — E5 волна &gt; 0.5 → filter → count</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 2rem; background: #fafafa; }
+  h1 { font-size: 1.2rem; }
+  pre { background: #111; color: #9f9; padding: 1rem; border-radius: 8px;
+        min-height: 8em; white-space: pre-wrap; }
+  .note { color: #555; font-size: .85rem; }
+</style>
+</head>
+<body>
+<h1>E5 — Compare GPU: волна sin(t) &gt; 0.5 → filter → count</h1>
+<p class="note">Module scripts требуют HTTP-сервер: из корня репозитория
+<code>npx serve .</code> или <code>python -m http.server</code>, затем открыть
+<code>/examples/E5_filter.html</code>. Нужен браузер с WebGPU (Chrome/Edge
+113+); без WebGPU — CPU fallback.</p>
+<pre id="out">loading…</pre>
+
+<script type="module">
+// ---- mini CJS loader: запускает настоящий ../index.js в браузере ----
+const ENTRY = new URL('../index.js', import.meta.url).href;
+const MODULES = new Map();
+const DEP_RE = /require\((['"])([^'"\n]+)\1\)/g;
+function resolveUrl(fromUrl, spec) {
+  return new URL(spec.endsWith('.js') ? spec : spec + '.js', fromUrl).href;
+}
+async function preload(url) {
+  if (MODULES.has(url)) return;
+  MODULES.set(url, { code: null, deps: [], exports: null });
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('loader: HTTP ' + res.status + ' for ' + url);
+  const code = await res.text();
+  const deps = [];
+  for (const m of code.matchAll(DEP_RE)) deps.push(resolveUrl(url, m[2]));
+  MODULES.set(url, { code, deps, exports: null });
+  for (const d of deps) await preload(d);
+}
+function executeModule(url) {
+  const mod = MODULES.get(url);
+  if (!mod.exports) {
+    mod.exports = {};
+    const localRequire = (spec) => executeModule(resolveUrl(url, spec)).exports;
+    new Function('require', 'module', 'exports', mod.code)(
+      localRequire, { exports: mod.exports }, mod.exports);
+  }
+  return mod;
+}
+
+// ---- пример ----
+const out = document.getElementById('out');
+const nfPromise = (async () => {
+  await preload(ENTRY);
+  return executeModule(ENTRY).exports;
+})();
+
+nfPromise.then(async (nf) => {
+  const gpuOn = await nf.initWebGPU();
+
+  // t = arange(0, 10, 0.001) -> n=10000 (IndexKernel), волна sin(t).
+  const t = await nf.arange(0, 10, 0.001, gpuOn ? { gpu: true } : undefined);
+  let waveData;
+  if (gpuOn) {
+    waveData = await nf.webgpu.runMap(0, t.data);   // Map(sin) на GPU
+  } else {
+    waveData = nf.sin(t.data).data;                 // CPU fallback
+  }
+
+  const wave = nf.Series.from(waveData);
+  // Compare gt(0.5): GPU при gpu:true, CPU fallback иначе.
+  const mask = await wave.gt(0.5, gpuOn ? { gpu: true } : undefined);
+  const kept = wave.filter(mask);                   // Gather -> значения
+
+  out.textContent = [
+    'backend        : ' + (gpuOn ? 'webgpu' : 'cpu (fallback)'),
+    'длина волны    : ' + wave.len(),
+    'маска gt(0.5)  : ' + mask.len() + ' элементов, единиц: ' +
+      Array.from(mask.data).reduce((a, b) => a + b, 0),
+    'filter → count : ' + kept.len(),
+    'первые 5       : [' +
+      Array.from(kept.data.slice(0, 5)).map((v) => v.toFixed(4)).join(', ') + ']',
+  ].join('\n');
+}).catch((e) => { out.textContent = 'ERROR: ' + (e && e.message || e); });
+</script>
+</body>
+</html>

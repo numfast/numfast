@@ -1,0 +1,7 @@
+name = "Runtime"
+alias = ["compile", "execute", "register_kernel", "Runtime", "CpuDriver", "GpuDriver", "ExecutionPacket", "BlockView"]
+mods = ["compile", "execute", "register_kernel", "Runtime", "CpuDriver", "GpuDriver", "ExecutionPacket", "BlockView"]
+depends = ["Storage"]
+
+[metadata]
+description = "NumFast execution layer: compiler, memory, scheduler, drivers"

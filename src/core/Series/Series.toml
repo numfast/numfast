@@ -1,0 +1,6 @@
+name = "Series"
+alias = ["series", "rolling_window", "normalize_series", "NumericSeries", "make_series"]
+mods = ["series", "rolling_window", "normalize_series", "NumericSeries", "make_series"]
+
+[metadata]
+description = "Series data operations: NumericSeries, rolling, normalization"

@@ -1,0 +1,21 @@
+{
+  "name": "@numfast/numfast",
+  "version": "1.0.0",
+  "description": "GPU-first numerical computing framework — Runtime, 32 Compute primitives (Map, Reduce, Scan, Sort, FFT, MatMul, etc)",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "src/"
+  ],
+  "scripts": {
+    "test": "node test/test_npm.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/numfast/numfast.git"
+  },
+  "keywords": ["gpu", "compute", "webgpu", "numerical", "hpc"],
+  "license": "AGPL-3.0-only",
+  "bugs": { "url": "https://github.com/numfast/numfast/issues" },
+  "homepage": "https://github.com/numfast/numfast"
+}

@@ -1,0 +1,6 @@
+name = "Stats"
+alias = ["total", "minimum", "maximum", "mean", "var", "std", "count", "range_", "all_stats", "clear_cache"]
+mods = ["total", "minimum", "maximum", "mean", "var", "std", "count", "range_", "all_stats", "clear_cache"]
+
+[metadata]
+description = "Statistical methods: one-pass moments with cache"

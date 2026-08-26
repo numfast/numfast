@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>NumFast JS — E7 GPU vs CPU benchmark: zeros(1M) × 100</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 2rem; background: #fafafa; }
+  h1 { font-size: 1.2rem; }
+  pre { background: #111; color: #9f9; padding: 1rem; border-radius: 8px;
+        min-height: 10em; white-space: pre-wrap; }
+  .note { color: #555; font-size: .85rem; }
+</style>
+</head>
+<body>
+<h1>E7 — Benchmark: zeros(1&nbsp;000&nbsp;000) × 100 прогонов, GPU vs CPU</h1>
+<p class="note">Module scripts требуют HTTP-сервер: из корня репозитория
+<code>npx serve .</code> или <code>python -m http.server</code>, затем открыть
+<code>/examples/E7_gpu_benchmark.html</code>. Нужен браузер с WebGPU
+(Chrome/Edge 113+); без WebGPU обе колонки будут CPU.</p>
+<pre id="out">loading…</pre>
+
+<script type="module">
+// ---- mini CJS loader: запускает настоящий ../index.js в браузере ----
+const ENTRY = new URL('../index.js', import.meta.url).href;
+const MODULES = new Map();
+const DEP_RE = /require\((['"])([^'"\n]+)\1\)/g;
+function resolveUrl(fromUrl, spec) {
+  return new URL(spec.endsWith('.js') ? spec : spec + '.js', fromUrl).href;
+}
+async function preload(url) {
+  if (MODULES.has(url)) return;
+  MODULES.set(url, { code: null, deps: [], exports: null });
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('loader: HTTP ' + res.status + ' for ' + url);
+  const code = await res.text();
+  const deps = [];
+  for (const m of code.matchAll(DEP_RE)) deps.push(resolveUrl(url, m[2]));
+  MODULES.set(url, { code, deps, exports: null });
+  for (const d of deps) await preload(d);
+}
+function executeModule(url) {
+  const mod = MODULES.get(url);
+  if (!mod.exports) {
+    mod.exports = {};
+    const localRequire = (spec) => executeModule(resolveUrl(url, spec)).exports;
+    new Function('require', 'module', 'exports', mod.code)(
+      localRequire, { exports: mod.exports }, mod.exports);
+  }
+  return mod;
+}
+
+// ---- пример ----
+const out = document.getElementById('out');
+const nfPromise = (async () => {
+  await preload(ENTRY);
+  return executeModule(ENTRY).exports;
+})();
+
+nfPromise.then(async (nf) => {
+  const gpuOn = await nf.initWebGPU();
+  const N = 1000000;
+  const RUNS = 100;
+
+  // CPU: синхронный IndexKernel.
+  nf.zeros(N); // warmup
+  let t0 = performance.now();
+  for (let i = 0; i < RUNS; i++) nf.zeros(N);
+  const cpuMs = performance.now() - t0;
+
+  // GPU: IndexKernel на WebGPU. Время честное: launch + readback staging
+  // (4 MB за прогон) входят в замер.
+  let gpuMs = null;
+  if (gpuOn) {
+    await nf.zeros(N, undefined, { gpu: true }); // warmup (pipeline cache)
+    t0 = performance.now();
+    for (let i = 0; i < RUNS; i++) await nf.zeros(N, undefined, { gpu: true });
+    gpuMs = performance.now() - t0;
+  }
+
+  const mbPerRun = N * 4 / (1024 * 1024);
+  const row = (name, totalMs) => [
+    name,
+    totalMs.toFixed(1).padStart(10) + ' ms',
+    (totalMs / RUNS).toFixed(3).padStart(10) + ' ms/iter',
+    ((RUNS * N / 1e6) / (totalMs / 1000)).toFixed(1).padStart(8) + ' M/s',
+    (mbPerRun * RUNS).toFixed(0).padStart(6) + ' MB readback',
+  ].join('  |  ');
+
+  out.textContent = [
+    'backend: ' + (gpuOn ? 'webgpu' : 'cpu (WebGPU unavailable)') +
+      '   adapter: "' + nf.deviceInfo().adapter + '"',
+    'N=' + N.toLocaleString('en-US') + ', runs=' + RUNS +
+      ', dtype=float32 (' + mbPerRun.toFixed(1) + ' MB/progon)',
+    '',
+    'backend |              total             avg     throughput        I/O',
+    row('CPU', cpuMs),
+    gpuMs !== null ? row('GPU', gpuMs) : 'GPU      |  unavailable',
+    '',
+    gpuMs !== null
+      ? 'speedup GPU vs CPU: x' + (cpuMs / gpuMs).toFixed(2)
+      : 'Открой в браузере с WebGPU для сравнения.',
+  ].join('\n');
+}).catch((e) => { out.textContent = 'ERROR: ' + (e && e.message || e); });
+</script>
+</body>
+</html>

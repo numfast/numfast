@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "numfast"
+version = "1.0.0a1"
+description = "GPU-first numerical computing framework — Runtime, Driver, Compute, Agent SDK"
+readme = "README.md"
+license = {text = "AGPL-3.0-only"}
+authors = [
+    {name = "NumFast", email = "dev@numfast.org"},
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+]
+keywords = ["gpu", "compute", "numerical", "wgpu", "webgpu", "hpc"]
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=2.0",
+    "wgpu>=0.31",
+]
+
+[project.urls]
+Homepage = "https://github.com/numfast/numfast"
+Source = "https://github.com/numfast/numfast"
+Documentation = "https://github.com/numfast/numfast"
+
+# Non-standard layout: the `numfast` package IS the repo root
+# (__init__.py lives at repo root). Extension sources under src/
+# are NOT importable subpackages -- they are mounted at runtime by
+# numfast/__init__.py (AppBuilder extensions), so only "numfast"
+# itself is declared for packaging. full.toml and the whole src/
+# tree ship as package data: extensions are loaded dynamically,
+# import names are not needed.
+[tool.setuptools]
+packages = ["numfast"]
+
+[tool.setuptools.package-dir]
+numfast = "."
+
+[tool.setuptools.package-data]
+numfast = [
+  "full.toml",
+  "src/**/*.py",
+  "src/**/*.toml",
+  "src/**/*.js",
+  "src/**/*.json",
+]

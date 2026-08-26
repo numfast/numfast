@@ -1,0 +1,7 @@
+name = "Trading"
+alias = ["register_trading_kernels"]
+mods = ["register_trading_kernels"]
+depends = ["Runtime"]
+
+[metadata]
+description = "Trading indicators: SMA, EMA, RSI, MACD, BollingerBands, ..."

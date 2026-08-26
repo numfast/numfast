@@ -1,0 +1,9 @@
+name = "ZindiGaps"
+version = "0.1.0"
+depends = []
+alias = ["anchors", "searchsorted"]
+mods = ["anchors", "searchsorted"]
+variables = []
+
+[metadata]
+description = "GPU searchsorted + backward-anchor features for TWS forecasting"

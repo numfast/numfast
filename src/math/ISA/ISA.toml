@@ -1,0 +1,8 @@
+name = "ISA"
+version = "0.1.0"
+depends = ["Compute"]
+alias = ["lower", "format_jobs"]
+mods = ["lower", "format_jobs"]
+
+[metadata]
+description = "ISA lowering: maps abstract operations (SMA, EMA, ATR) to Compute primitives graph."

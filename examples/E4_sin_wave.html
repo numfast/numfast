@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>NumFast JS — E4 sin(i*0.01) через Map GPU → ASCII-график</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 2rem; background: #fafafa; }
+  h1 { font-size: 1.2rem; }
+  pre { background: #111; color: #9f9; padding: 1rem; border-radius: 8px;
+        min-height: 16em; white-space: pre; overflow-x: auto;
+        font-size: 12px; line-height: 1.15; }
+  .note { color: #555; font-size: .85rem; }
+</style>
+</head>
+<body>
+<h1>E4 — sin(i·0.01): WebGPU Map (func=0) + ASCII-график</h1>
+<p class="note">Module scripts требуют HTTP-сервер: из корня репозитория
+<code>npx serve .</code> или <code>python -m http.server</code>, затем открыть
+<code>/examples/E4_sin_wave.html</code>. Нужен браузер с WebGPU
+(Chrome/Edge 113+); без WebGPU — CPU fallback.</p>
+<pre id="out">loading…</pre>
+
+<script type="module">
+// ---- mini CJS loader: запускает настоящий ../index.js в браузере ----
+const ENTRY = new URL('../index.js', import.meta.url).href;
+const MODULES = new Map();
+const DEP_RE = /require\((['"])([^'"\n]+)\1\)/g;
+function resolveUrl(fromUrl, spec) {
+  return new URL(spec.endsWith('.js') ? spec : spec + '.js', fromUrl).href;
+}
+async function preload(url) {
+  if (MODULES.has(url)) return;
+  MODULES.set(url, { code: null, deps: [], exports: null });
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('loader: HTTP ' + res.status + ' for ' + url);
+  const code = await res.text();
+  const deps = [];
+  for (const m of code.matchAll(DEP_RE)) deps.push(resolveUrl(url, m[2]));
+  MODULES.set(url, { code, deps, exports: null });
+  for (const d of deps) await preload(d);
+}
+function executeModule(url) {
+  const mod = MODULES.get(url);
+  if (!mod.exports) {
+    mod.exports = {};
+    const localRequire = (spec) => executeModule(resolveUrl(url, spec)).exports;
+    new Function('require', 'module', 'exports', mod.code)(
+      localRequire, { exports: mod.exports }, mod.exports);
+  }
+  return mod;
+}
+
+// ---- пример ----
+const out = document.getElementById('out');
+const nf = (async () => {
+  await preload(ENTRY);
+  return executeModule(ENTRY).exports;
+})();
+
+nf.then(async (nf) => {
+  const gpuOn = await nf.initWebGPU();          // navigator.gpu -> device
+
+  // t_i = i * 0.01 через GPU IndexKernel (arange), затем Map(sin) на GPU.
+  const N = 900;
+  const t = await nf.arange(0, N * 0.01, 0.01, gpuOn ? { gpu: true } : undefined);
+  let wave;
+  if (gpuOn) {
+    wave = await nf.webgpu.runMap(0, t.data);   // Map func=0 (sin) на GPU
+  } else {
+    wave = nf.sin(t.data).data;                 // CPU fallback
+  }
+
+  // ASCII-график: 60 колонок (каждая 15-я точка), 21 строка.
+  const COLS = 60; const STRIDE = 15; const ROWS = 21;
+  const grid = Array.from({ length: ROWS }, () => new Array(COLS).fill(' '));
+  for (let c = 0; c < COLS; c++) {
+    const i = Math.min(c * STRIDE, wave.length - 1);
+    const row = Math.round((wave[i] + 1) / 2 * (ROWS - 1));
+    grid[ROWS - 1 - row][c] = '*';
+  }
+  const header = 'backend: ' + (gpuOn ? 'webgpu' : 'cpu (fallback)') +
+    '   adapter: "' + nf.deviceInfo().adapter + '"';
+  out.textContent = header + '\n\n' +
+    grid.map((r) => r.join('')).join('\n') + '\n' +
+    '\nsin(i*0.01), i=0..' + (N - 1) + ', показана каждая ' +
+    STRIDE + '-я точка';
+}).catch((e) => { out.textContent = 'ERROR: ' + (e && e.message || e); });
+</script>
+</body>
+</html>
