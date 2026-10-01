@@ -21,6 +21,4 @@ numfast-native/target/
 .idea/
 .DS_Store
 # Un-anchor: rules above must match at repo root only, so tools/scratch/*.py stays tracked.
-
-# Test oracles that live in scratch/ ARE source: keep them tracked.
-!/scratch/hash_join_oracle.py
+# NOTE: test golden oracles now live in tests/oracles/ (tracked), not scratch/.

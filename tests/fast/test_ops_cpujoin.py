@@ -1,6 +1,6 @@
 # Copyright (c) 2026 NumFast
 # SPDX-License-Identifier: AGPL-3.0-only
-"""Golden: CpuJoin production vs scratch/hash_join_oracle.py (P1) + pandas.
+"""Golden: CpuJoin production vs tests/oracles/hash_join_oracle.py (P1) + pandas.
 
 int exact (chk sum(v1)+sum(v2)); J3 NULL contract: miss -> valid 0
 (payload 0 + invalid, never NaN/sentinel).
@@ -39,7 +39,7 @@ def J(kernel):
 
 def _oracle():
     spec = _ilu.spec_from_file_location(
-        "nfcpujoin_oracle", str(_FORK / "scratch" / "hash_join_oracle.py"))
+        "nfcpujoin_oracle", str(_FORK / "tests" / "oracles" / "hash_join_oracle.py"))
     m = _ilu.module_from_spec(spec)
     spec.loader.exec_module(m)
     return m
