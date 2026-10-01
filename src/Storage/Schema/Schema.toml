@@ -1,0 +1,10 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+name = "Schema"
+version = "0.1.0"
+depends = ["Core", "Dictionary"]
+alias = ["column_schema", "schema_transform", "schema_untransform", "pattern_decode", "resident_prepare", "date_encode", "date_decode"]
+mods = ["column_schema", "schema_transform", "schema_untransform", "pattern_decode", "resident_prepare", "date_encode", "date_decode"]
+
+[metadata]
+level = "storage"

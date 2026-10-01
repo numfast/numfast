@@ -1,0 +1,20 @@
+{
+ "tag": "go_dict",
+ "seed": 42,
+ "dict_weights": {
+  "K": 10000,
+  "m": 10000,
+  "sidecar_bytes": 160000,
+  "sidecar_bpg": 16.0,
+  "quant_bytes": 90000,
+  "quant_bpg": 9.0,
+  "formula_bytes": 16,
+  "plain_1T_ms": 3.73,
+  "owned_P1_ms": 5.08,
+  "formula_ranges_cover_m": true,
+  "formula_roundrobin_disjoint": true,
+  "single_thread_note": "ownership P=1 == plain math; no loss, formula needs zero shipping"
+ },
+ "dict_ms": 2418.2,
+ "total_s": 2.4
+}

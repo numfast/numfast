@@ -1,0 +1,145 @@
+{
+ "tag": "ad_Q2",
+ "Q": "Q2",
+ "N": 10000000,
+ "G": 10000,
+ "m": 10201,
+ "sig": "i",
+ "seed": 42,
+ "pack_ms": 153.4,
+ "dict_ms": 4.042,
+ "meta": {
+  "v3_physical": "float64",
+  "v3_kind": "series",
+  "id1_kind": "pattern",
+  "id1_physical": "int32",
+  "K1_K": 101,
+  "K2_K": 101
+ },
+ "cells": {
+  "8": {
+   "N": 10000000,
+   "G": 10000,
+   "T": 8,
+   "A": {
+    "agg_ms": 5.94,
+    "merge_ms": 0.233,
+    "total_ms": 163.62
+   },
+   "D": {
+    "route_ms": 130.12,
+    "agg_ms": 13.0,
+    "merge_ms": 0.341,
+    "total_ms": 300.91,
+    "perm_mb": 40.0,
+    "imb_pct": 0.12
+   },
+   "ratio_agg_D_over_A": 2.187,
+   "ratio_total_D_over_A": 1.839,
+   "correct": {
+    "A": {
+     "counts_exact": true,
+     "cols_exact": [
+      true
+     ],
+     "float_max_diff": 0.0,
+     "pass": true
+    },
+    "D": {
+     "counts_exact": true,
+     "cols_exact": [
+      true
+     ],
+     "float_max_diff": 0.0,
+     "pass": true
+    },
+    "chk_v1": 29998789,
+    "chk_pass": true,
+    "ngroups": 10000
+   }
+  },
+  "12": {
+   "N": 10000000,
+   "G": 10000,
+   "T": 12,
+   "A": {
+    "agg_ms": 4.48,
+    "merge_ms": 0.401,
+    "total_ms": 162.32
+   },
+   "D": {
+    "route_ms": 126.79,
+    "agg_ms": 12.71,
+    "merge_ms": 0.297,
+    "total_ms": 297.25,
+    "perm_mb": 40.0,
+    "imb_pct": 0.5
+   },
+   "ratio_agg_D_over_A": 2.841,
+   "ratio_total_D_over_A": 1.831,
+   "correct": {
+    "A": {
+     "counts_exact": true,
+     "cols_exact": [
+      true
+     ],
+     "float_max_diff": 0.0,
+     "pass": true
+    },
+    "D": {
+     "counts_exact": true,
+     "cols_exact": [
+      true
+     ],
+     "float_max_diff": 0.0,
+     "pass": true
+    },
+    "chk_v1": 29998789,
+    "chk_pass": true,
+    "ngroups": 10000
+   }
+  },
+  "16": {
+   "N": 10000000,
+   "G": 10000,
+   "T": 16,
+   "A": {
+    "agg_ms": 3.94,
+    "merge_ms": 0.455,
+    "total_ms": 161.84
+   },
+   "D": {
+    "route_ms": 129.14,
+    "agg_ms": 12.93,
+    "merge_ms": 0.327,
+    "total_ms": 299.84,
+    "perm_mb": 40.0,
+    "imb_pct": 0.17
+   },
+   "ratio_agg_D_over_A": 3.282,
+   "ratio_total_D_over_A": 1.853,
+   "correct": {
+    "A": {
+     "counts_exact": true,
+     "cols_exact": [
+      true
+     ],
+     "float_max_diff": 0.0,
+     "pass": true
+    },
+    "D": {
+     "counts_exact": true,
+     "cols_exact": [
+      true
+     ],
+     "float_max_diff": 0.0,
+     "pass": true
+    },
+    "chk_v1": 29998789,
+    "chk_pass": true,
+    "ngroups": 10000
+   }
+  }
+ },
+ "total_s": 29.9
+}

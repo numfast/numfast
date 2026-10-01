@@ -1,0 +1,448 @@
+{
+ "ingest_ms": {
+  "parquet_read": 461.2847000025795,
+  "to_numpy": 918.0992999972659,
+  "dict4": 5051.137200003723,
+  "date2": 114.62700000265613,
+  "rows": 999978
+ },
+ "matrix": [
+  {
+   "q": "Q1",
+   "status": "supported",
+   "detail": "count=999978",
+   "stages_ms": {
+    "compile": 0.1432999997632578,
+    "execute": 2.5378999998793006,
+    "duckdb": 8.67619999917224
+   },
+   "match": "EXACT"
+  },
+  {
+   "q": "Q2",
+   "status": "supported",
+   "detail": "count=14174",
+   "stages_ms": {
+    "compile": 0.11520000407472253,
+    "execute": 7.6333000033628196,
+    "duckdb": 9.118000001762994
+   },
+   "match": "EXACT"
+  },
+  {
+   "q": "Q3",
+   "status": "supported",
+   "detail": "sum=1604053554 count=999978 avg=1604.088843954567",
+   "stages_ms": {
+    "compile": 0.09380000119563192,
+    "execute": 4.738200004794635,
+    "duckdb": 9.943299999576993
+   },
+   "match": "EXACT+TOL"
+  },
+  {
+   "q": "Q4",
+   "status": "unsupported",
+   "detail": "AVG(UserID): BIGINT narrowing series 'u': int64->int32 narrowing overflow: observed range [435090932899640449,",
+   "stages_ms": {},
+   "match": "N/A"
+  },
+  {
+   "q": "Q5",
+   "status": "supported",
+   "detail": "count=79842",
+   "stages_ms": {
+    "compile": 0.05579999560723081,
+    "execute": 78.6937000011676,
+    "duckdb": 19.20649999374291
+   },
+   "match": "EXACT"
+  },
+  {
+   "q": "Q6",
+   "status": "supported",
+   "detail": "count=18315",
+   "stages_ms": {
+    "compile": 0.09560000034980476,
+    "execute": 7.91429999662796,
+    "duckdb": 25.410000002011657
+   },
+   "match": "EXACT"
+  },
+  {
+   "q": "Q7",
+   "status": "supported",
+   "detail": "min=2013-07-15 max=2013-07-15",
+   "stages_ms": {
+    "compile": 0.09790000331122428,
+    "execute": 0.5659000016748905,
+    "duckdb": 7.619500000146218
+   },
+   "match": "EXACT"
+  },
+  {
+   "q": "Q8",
+   "status": "supported",
+   "detail": "groups=5 top=[(2, 9543), (13, 4592), (52, 34)]",
+   "stages_ms": {
+    "compile": 0.07980000373208895,
+    "execute": 0.2708000029087998,
+    "duckdb": 9.996100001444574
+   },
+   "match": "EXACT"
+  },
+  {
+   "q": "Q12",
+   "status": "supported",
+   "detail": "pack=radix top=(1, 'iPad', 1967) tie=True exec_ms=12.0",
+   "stages_ms": {
+    "compile": 0.1081000009435229,
+    "execute": 3.6146999991615303,
+    "duckdb": 29.25229999527801
+   },
+   "match": "TIE-MULTISET"
+  },
+  {
+   "q": "Q9",
+   "status": "supported",
+   "detail": "top=(229, 27961) tie=False",
+   "stages_ms": {
+    "compile": 0.10710000060498714,
+    "execute": 165.61409999849275,
+    "duckdb": 37.140000000363216
+   },
+   "match": "EXACT"
+  },
+  {
+   "q": "Q14",
+   "status": "supported",
+   "detail": "top=('\u0432\u0435\u0434\u043e\u043c\u043e\u0441\u043a\u0432\u044b \u0432\u043c\u0435\u0441\u0442\u0443', 1381) tie=False",
+   "stages_ms": {
+    "compile": 0.13079999916953966,
+    "execute": 20.494000003964175,
+    "duckdb": 48.35589999856893
+   },
+   "match": "EXACT"
+  },
+  {
+   "q": "Q11",
+   "status": "supported",
+   "detail": "top=('iPad', 2303) tie=False",
+   "stages_ms": {
+    "compile": 0.134599999000784,
+    "execute": 8.813399996142834,
+    "duckdb": 24.510600000212435
+   },
+   "match": "EXACT"
+  },
+  {
+   "q": "Q10",
+   "status": "supported",
+   "detail": "top=(229, 38044, 426413, 1612.7858859837763, 27961) null_excluded=930624",
+   "stages_ms": {
+    "compile": 0.21630000264849514,
+    "execute": 178.37120000331197,
+    "duckdb": 48.53740000544349
+   },
+   "match": "EXACT"
+  },
+  {
+   "q": "Q13",
+   "status": "supported",
+   "detail": "groups=18315 top=[('\u0432\u0435\u0434\u043e\u043c\u043e\u0441\u043a\u0432\u044b \u0432\u043c\u0435\u0441\u0442\u0443', 4943), ('\u0432\u0435\u0434\u043e\u043c\u043e\u0441\u043a\u0432\u044b \u0432\u044b \u0438\u0437', 2471)]",
+   "stages_ms": {
+    "compile": 0.10390000534243882,
+    "execute": 1.3551000010920689,
+    "duckdb": 26.235899997118395
+   },
+   "match": "EXACT"
+  },
+  {
+   "q": "Q15",
+   "status": "supported",
+   "detail": "groups=19300 top-counts=[3478, 1857, 1682]",
+   "stages_ms": {
+    "compile": 0.11240000458201393,
+    "execute": 1.2495999981183559,
+    "duckdb": 27.643900000839494
+   },
+   "match": "EXACT"
+  },
+  {
+   "q": "Q16",
+   "status": "unsupported",
+   "detail": "GROUP BY UserID: BIGINT keys narrowing",
+   "stages_ms": {},
+   "match": "N/A"
+  },
+  {
+   "q": "Q17",
+   "status": "supported",
+   "detail": "groups=98484 top=[(1508127196834704092, None, 1303)] tie=False",
+   "stages_ms": {
+    "compile": 0.13020000187680125,
+    "execute": 121.87550000089686,
+    "duckdb": 40.71450000628829
+   },
+   "match": "EXACT"
+  },
+  {
+   "q": "Q18",
+   "status": "supported",
+   "detail": "groups=98484 subset=True",
+   "stages_ms": {
+    "compile": 0.13020000187680125,
+    "execute": 121.87550000089686,
+    "duckdb": 32.248099996650126
+   },
+   "match": "MULTISET"
+  },
+  {
+   "q": "Q19",
+   "status": "unsupported",
+   "detail": "GROUP BY UserID+m+SearchPhrase: BIGINT keys",
+   "stages_ms": {},
+   "match": "N/A"
+  },
+  {
+   "q": "Q20",
+   "status": "unsupported",
+   "detail": "WHERE UserID=435090932899640449: BIGINT literal narrowing",
+   "stages_ms": {},
+   "match": "N/A"
+  },
+  {
+   "q": "Q21",
+   "status": "supported",
+   "detail": "count=95",
+   "stages_ms": {
+    "compile": 0.13359999866224825,
+    "execute": 2.437900002405513,
+    "duckdb": 45.81549999420531
+   },
+   "match": "EXACT"
+  },
+  {
+   "q": "Q22",
+   "status": "supported",
+   "detail": "groups=1 top=[('\u043e\u0434\u0438\u043d \u0438\u043d\u0441\u0442\u0440\u0443\u043a\u0442\u0443\u0440\u0430 \u043f\u0442\u0430\u0445\u0430\u043d\u0438 \u043d\u044e\u0448\u0438 \u0441\u043c\u043e\u0442\u0440\u0435\u0442\u044c \u043a\u0440\u0430\u0441\u0438', 'http://bdsm_position/2624217,2013-07-01:2013/frl-4/transport.ru/google%2F', 2)]",
+   "stages_ms": {
+    "compile": 0.1266999970539473,
+    "execute": 96.9316999980947,
+    "duckdb": 37.45510000590002
+   },
+   "match": "EXACT"
+  },
+  {
+   "q": "Q23",
+   "status": "supported",
+   "detail": "groups=53 tie=True top_c=[45, 16, 15]",
+   "stages_ms": {
+    "compile": 0.2674999996088445,
+    "execute": 10.315699997590855,
+    "duckdb": 61.13580000237562
+   },
+   "match": "TIE-MULTISET"
+  },
+  {
+   "q": "Q24",
+   "status": "supported",
+   "detail": "PARTIAL url-only projection (FULL 105-col deferred, wide projection ARCH) filtered=95 tie=False",
+   "stages_ms": {
+    "compile": 0.1964999974006787,
+    "execute": 4.999899996619206,
+    "duckdb": 80.69670000259066
+   },
+   "match": "EXACT"
+  },
+  {
+   "q": "Q25",
+   "status": "supported",
+   "detail": "top_match=False multiset=True tie=True",
+   "stages_ms": {
+    "compile": 0.16689999756636098,
+    "execute": 11.51650000247173,
+    "duckdb": 25.275200001487974
+   },
+   "match": "MULTISET"
+  },
+  {
+   "q": "Q26",
+   "status": "supported",
+   "detail": "top_match=True multiset=True tie=True",
+   "stages_ms": {
+    "compile": 0.14419999934034422,
+    "execute": 10.322199996153358,
+    "duckdb": 14.846599995507859
+   },
+   "match": "EXACT"
+  },
+  {
+   "q": "Q27",
+   "status": "supported",
+   "detail": "top_match=True",
+   "stages_ms": {
+    "compile": 0.15970000094966963,
+    "execute": 13.895999996748287,
+    "duckdb": 16.811999994388316
+   },
+   "match": "EXACT"
+  },
+  {
+   "q": "Q28",
+   "status": "supported",
+   "detail": "groups=2 top=[(62, 92.81298001401677, 413790), (38, 73.96797959706166, 507770)]",
+   "stages_ms": {
+    "compile": 0.1283999954466708,
+    "execute": 0.23899999359855428,
+    "duckdb": 49.107200000435114
+   },
+   "match": "EXACT+TOL"
+  },
+  {
+   "q": "Q29",
+   "status": "supported",
+   "detail": "groups=2 parity6=True top=[('state=19945206', 14.0, 287813, 'state=19945206')] exec_ms=4874.4",
+   "stages_ms": {
+    "compile": 0.1706000039121136,
+    "execute": 26.09120000124676,
+    "duckdb": 306.0043000004953
+   },
+   "match": "EXACT"
+  },
+  {
+   "q": "Q30",
+   "status": "supported",
+   "detail": "sums0=1604053554 sums89=1693051596",
+   "stages_ms": {
+    "compile": 23.81510000122944,
+    "execute": 207.4304999987362,
+    "duckdb": 31.28370000194991
+   },
+   "match": "EXACT"
+  },
+  {
+   "q": "Q31",
+   "status": "supported",
+   "detail": "groups=22830 top=[(2, 1124827693, 180), (2, 1090700661, 72)] tie_hi=True",
+   "stages_ms": {
+    "compile": 0.12650000280700624,
+    "execute": 1.6178000005311333,
+    "duckdb": 21.501199997146614
+   },
+   "match": "TIE-MULTISET"
+  },
+  {
+   "q": "Q32",
+   "status": "unsupported",
+   "detail": "GROUP BY WatchID+ClientIP: WatchID BIGINT narrowing",
+   "stages_ms": {},
+   "match": "N/A"
+  },
+  {
+   "q": "Q33",
+   "status": "unsupported",
+   "detail": "GROUP BY WatchID+ClientIP: WatchID BIGINT narrowing",
+   "stages_ms": {},
+   "match": "N/A"
+  },
+  {
+   "q": "Q34",
+   "status": "supported",
+   "detail": "groups=275488 top=('http://irr.ru/index.php?showalbum/login-leniya7777294,938303130', 58970)",
+   "stages_ms": {
+    "compile": 0.08820000221021473,
+    "execute": 18.432400000165217,
+    "duckdb": 82.34530000481755
+   },
+   "match": "EXACT"
+  },
+  {
+   "q": "Q35",
+   "status": "supported",
+   "detail": "GROUP BY 1, URL: constant key is a no-op; same as Q34",
+   "stages_ms": {
+    "compile": 0.08820000221021473,
+    "execute": 18.432400000165217,
+    "duckdb": 82.34530000481755
+   },
+   "match": "EXACT"
+  },
+  {
+   "q": "Q36",
+   "status": "supported",
+   "detail": "groups=68330 top=[(-267589304, -267589305, -267589306, -267589307, 1733)] tie=False exec_ms=185.3",
+   "stages_ms": {
+    "compile": 0.1669000048423186,
+    "execute": 167.3016999993706,
+    "duckdb": 23.69340000586817
+   },
+   "match": "EXACT"
+  },
+  {
+   "q": "Q37",
+   "status": "supported",
+   "detail": "top=('http://irr.ru/index.php?showalbum/login-leniya7777294,938303130', 56533) tie_lo=False tie_hi=False",
+   "stages_ms": {
+    "compile": 0.10820000170497224,
+    "execute": 11.88469999760855,
+    "duckdb": 72.06220000080066
+   },
+   "match": "EXACT"
+  },
+  {
+   "q": "Q38",
+   "status": "supported",
+   "detail": "top=('\u0422\u0435\u0441\u0442 (\u0420\u043e\u0441\u0441\u0438\u044f) - \u042f\u043d\u0434\u0435\u043a\u0441', 67544) tie_lo=False tie_hi=False",
+   "stages_ms": {
+    "compile": 0.1360000023851171,
+    "execute": 2.1529000005102716,
+    "duckdb": 31.412200005433988
+   },
+   "match": "EXACT"
+  },
+  {
+   "q": "Q39",
+   "status": "supported",
+   "detail": "top=('http://stalker-pub-20087898675494,960948/#page_type%3D260117152337&spn=1395,94552/photo-3.xhtml?html_params%3D0%26rleurl%3D%26bn%3Dorder_by=0&hide', 2) tie_lo=True tie_hi=True",
+   "stages_ms": {
+    "compile": 0.1081000009435229,
+    "execute": 0.7305999970412813,
+    "duckdb": 46.801099997537676
+   },
+   "match": "TIE-MULTISET"
+  },
+  {
+   "q": "Q40",
+   "status": "unsupported",
+   "detail": "CASE WHEN TraficSourceID...: no conditional/case primitive",
+   "stages_ms": {},
+   "match": "N/A"
+  },
+  {
+   "q": "Q41",
+   "status": "unsupported",
+   "detail": "RefererHash=3594120000172545465: BIGINT literal narrowing",
+   "stages_ms": {},
+   "match": "N/A"
+  },
+  {
+   "q": "Q42",
+   "status": "unsupported",
+   "detail": "URLHash=2868770270353813622: BIGINT literal narrowing",
+   "stages_ms": {},
+   "match": "N/A"
+  },
+  {
+   "q": "Q43",
+   "status": "supported",
+   "detail": "top=('2013-07-15 12:40:00', 314)",
+   "stages_ms": {
+    "compile": 0.12989999959245324,
+    "execute": 0.21290000586304814,
+    "duckdb": 29.492800000298303
+   },
+   "match": "EXACT"
+  }
+ ]
+}

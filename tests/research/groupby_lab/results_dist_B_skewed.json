@@ -1,0 +1,72 @@
+[
+ {
+  "algo": "B",
+  "regime": "M100/skewed",
+  "M": 100,
+  "pattern": "skewed",
+  "ms": 3.2910999871091917,
+  "local_ms": 3.2008999987738207,
+  "bytes": 2400,
+  "ngroups": 100,
+  "extra": {
+   "seg": 4,
+   "partial_rows": 400
+  }
+ },
+ {
+  "algo": "B",
+  "regime": "M10000/skewed",
+  "M": 10000,
+  "pattern": "skewed",
+  "ms": 7.69909999507945,
+  "local_ms": 5.397899993113242,
+  "bytes": 236952,
+  "ngroups": 9873,
+  "extra": {
+   "seg": 4,
+   "partial_rows": 28802
+  }
+ },
+ {
+  "algo": "B",
+  "regime": "M100000/skewed",
+  "M": 100000,
+  "pattern": "skewed",
+  "ms": 12.308800010941923,
+  "local_ms": 5.62789999821689,
+  "bytes": 1020168,
+  "ngroups": 42507,
+  "extra": {
+   "seg": 4,
+   "partial_rows": 56255
+  }
+ },
+ {
+  "algo": "B",
+  "regime": "M1000000/skewed",
+  "M": 1000000,
+  "pattern": "skewed",
+  "ms": 13.968200000817887,
+  "local_ms": 6.00720000511501,
+  "bytes": 1461624,
+  "ngroups": 60901,
+  "extra": {
+   "seg": 4,
+   "partial_rows": 64034
+  }
+ },
+ {
+  "algo": "B",
+  "regime": "M10000000/skewed",
+  "M": 10000000,
+  "pattern": "skewed",
+  "ms": 13.81740000215359,
+  "local_ms": 5.754900004831143,
+  "bytes": 1555896,
+  "ngroups": 64829,
+  "extra": {
+   "seg": 4,
+   "partial_rows": 65331
+  }
+ }
+]

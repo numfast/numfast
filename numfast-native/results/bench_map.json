@@ -1,0 +1,665 @@
+{
+ "seed": 42,
+ "cases": [
+  {
+   "n": 100000,
+   "kind": "i32",
+   "fn": "add",
+   "form": "arr",
+   "mem_mb": 1.14,
+   "xfer_mb": 1.14,
+   "numpy_ms": 0.071,
+   "native_ms": 0.08,
+   "wasm_ms": 0.208,
+   "gb_s": {
+    "numpy": 15.83,
+    "native": 13.92,
+    "wasm": 5.37,
+    "gpu_warm": 0.27
+   },
+   "gpu_warm_ms": 4.16,
+   "gpu_cold_ms": 2481.0
+  },
+  {
+   "n": 100000,
+   "kind": "i32",
+   "fn": "add",
+   "form": "scal",
+   "mem_mb": 0.76,
+   "xfer_mb": 0.76,
+   "numpy_ms": 0.08,
+   "native_ms": 0.061,
+   "wasm_ms": 0.151,
+   "gb_s": {
+    "numpy": 9.29,
+    "native": 12.27,
+    "wasm": 4.92,
+    "gpu_warm": 0.25
+   },
+   "gpu_warm_ms": 3.039,
+   "gpu_cold_ms": 2481.0
+  },
+  {
+   "n": 100000,
+   "kind": "i32",
+   "fn": "div",
+   "form": "arr",
+   "mem_mb": 1.14,
+   "xfer_mb": 1.14,
+   "numpy_ms": 1.042,
+   "native_ms": 0.778,
+   "wasm_ms": 0.647,
+   "gb_s": {
+    "numpy": 1.07,
+    "native": 1.44,
+    "wasm": 1.73
+   },
+   "gpu_warm_ms": "explicit-gap(cpu-owns)",
+   "gpu_cold_ms": "explicit-gap(cpu-owns)"
+  },
+  {
+   "n": 100000,
+   "kind": "i32",
+   "fn": "div",
+   "form": "scal",
+   "mem_mb": 0.76,
+   "xfer_mb": 0.76,
+   "numpy_ms": 0.951,
+   "native_ms": 0.878,
+   "wasm_ms": 0.564,
+   "gb_s": {
+    "numpy": 0.78,
+    "native": 0.85,
+    "wasm": 1.32
+   },
+   "gpu_warm_ms": "explicit-gap(cpu-owns)",
+   "gpu_cold_ms": "explicit-gap(cpu-owns)"
+  },
+  {
+   "n": 100000,
+   "kind": "i32",
+   "fn": "floor_div",
+   "form": "arr",
+   "mem_mb": 1.14,
+   "xfer_mb": 1.14,
+   "numpy_ms": 1.081,
+   "native_ms": 0.601,
+   "wasm_ms": 0.771,
+   "gb_s": {
+    "numpy": 1.03,
+    "native": 1.86,
+    "wasm": 1.45,
+    "gpu_warm": 0.26
+   },
+   "gpu_warm_ms": 4.295,
+   "gpu_cold_ms": 2481.0
+  },
+  {
+   "n": 100000,
+   "kind": "i32",
+   "fn": "floor_div",
+   "form": "scal",
+   "mem_mb": 0.76,
+   "xfer_mb": 0.76,
+   "numpy_ms": 0.052,
+   "native_ms": 0.407,
+   "wasm_ms": 0.738,
+   "gb_s": {
+    "numpy": 14.33,
+    "native": 1.83,
+    "wasm": 1.01,
+    "gpu_warm": 0.24
+   },
+   "gpu_warm_ms": 3.111,
+   "gpu_cold_ms": 2481.0
+  },
+  {
+   "n": 100000,
+   "kind": "f32",
+   "fn": "add",
+   "form": "arr",
+   "mem_mb": 1.14,
+   "xfer_mb": 1.14,
+   "numpy_ms": 0.053,
+   "native_ms": 0.074,
+   "wasm_ms": 0.267,
+   "gb_s": {
+    "numpy": 21.13,
+    "native": 15.06,
+    "wasm": 4.18,
+    "gpu_warm": 0.26
+   },
+   "gpu_warm_ms": 4.362,
+   "gpu_cold_ms": 4.4
+  },
+  {
+   "n": 100000,
+   "kind": "f32",
+   "fn": "add",
+   "form": "scal",
+   "mem_mb": 0.76,
+   "xfer_mb": 0.76,
+   "numpy_ms": 0.039,
+   "native_ms": 0.053,
+   "wasm_ms": 0.157,
+   "gb_s": {
+    "numpy": 19.2,
+    "native": 13.93,
+    "wasm": 4.75,
+    "gpu_warm": 0.2
+   },
+   "gpu_warm_ms": 3.729,
+   "gpu_cold_ms": 4.4
+  },
+  {
+   "n": 100000,
+   "kind": "f32",
+   "fn": "div",
+   "form": "arr",
+   "mem_mb": 1.14,
+   "xfer_mb": 1.14,
+   "numpy_ms": 0.858,
+   "native_ms": 0.164,
+   "wasm_ms": 0.27,
+   "gb_s": {
+    "numpy": 1.3,
+    "native": 6.82,
+    "wasm": 4.15
+   },
+   "gpu_warm_ms": "explicit-gap(cpu-owns)",
+   "gpu_cold_ms": "explicit-gap(cpu-owns)"
+  },
+  {
+   "n": 100000,
+   "kind": "f32",
+   "fn": "div",
+   "form": "scal",
+   "mem_mb": 0.76,
+   "xfer_mb": 0.76,
+   "numpy_ms": 0.504,
+   "native_ms": 0.164,
+   "wasm_ms": 0.237,
+   "gb_s": {
+    "numpy": 1.48,
+    "native": 4.55,
+    "wasm": 3.14
+   },
+   "gpu_warm_ms": "explicit-gap(cpu-owns)",
+   "gpu_cold_ms": "explicit-gap(cpu-owns)"
+  },
+  {
+   "n": 100000,
+   "kind": "f32",
+   "fn": "floor_div",
+   "form": "arr",
+   "mem_mb": 1.14,
+   "xfer_mb": 1.14,
+   "numpy_ms": 4.284,
+   "native_ms": 1.629,
+   "wasm_ms": 0.375,
+   "gb_s": {
+    "numpy": 0.26,
+    "native": 0.69,
+    "wasm": 2.98
+   },
+   "gpu_warm_ms": "explicit-gap(cpu-owns)",
+   "gpu_cold_ms": "explicit-gap(cpu-owns)"
+  },
+  {
+   "n": 100000,
+   "kind": "f32",
+   "fn": "floor_div",
+   "form": "scal",
+   "mem_mb": 0.76,
+   "xfer_mb": 0.76,
+   "numpy_ms": 3.746,
+   "native_ms": 1.58,
+   "wasm_ms": 0.497,
+   "gb_s": {
+    "numpy": 0.2,
+    "native": 0.47,
+    "wasm": 1.5
+   },
+   "gpu_warm_ms": "explicit-gap(cpu-owns)",
+   "gpu_cold_ms": "explicit-gap(cpu-owns)"
+  },
+  {
+   "n": 100000,
+   "kind": "f64",
+   "fn": "add",
+   "form": "arr",
+   "mem_mb": 2.29,
+   "xfer_mb": 2.29,
+   "numpy_ms": 0.095,
+   "native_ms": 0.117,
+   "wasm_ms": 0.329,
+   "gb_s": {
+    "numpy": 23.63,
+    "native": 19.07,
+    "wasm": 6.79
+   },
+   "gpu_warm_ms": "explicit-gap(cpu-owns)",
+   "gpu_cold_ms": "explicit-gap(cpu-owns)"
+  },
+  {
+   "n": 100000,
+   "kind": "f64",
+   "fn": "add",
+   "form": "scal",
+   "mem_mb": 1.53,
+   "xfer_mb": 1.53,
+   "numpy_ms": 0.076,
+   "native_ms": 0.092,
+   "wasm_ms": 0.199,
+   "gb_s": {
+    "numpy": 19.74,
+    "native": 16.16,
+    "wasm": 7.5
+   },
+   "gpu_warm_ms": "explicit-gap(cpu-owns)",
+   "gpu_cold_ms": "explicit-gap(cpu-owns)"
+  },
+  {
+   "n": 100000,
+   "kind": "f64",
+   "fn": "div",
+   "form": "arr",
+   "mem_mb": 2.29,
+   "xfer_mb": 2.29,
+   "numpy_ms": 0.235,
+   "native_ms": 0.175,
+   "wasm_ms": 0.357,
+   "gb_s": {
+    "numpy": 9.53,
+    "native": 12.75,
+    "wasm": 6.26
+   },
+   "gpu_warm_ms": "explicit-gap(cpu-owns)",
+   "gpu_cold_ms": "explicit-gap(cpu-owns)"
+  },
+  {
+   "n": 100000,
+   "kind": "f64",
+   "fn": "div",
+   "form": "scal",
+   "mem_mb": 1.53,
+   "xfer_mb": 1.53,
+   "numpy_ms": 0.21,
+   "native_ms": 0.199,
+   "wasm_ms": 0.235,
+   "gb_s": {
+    "numpy": 7.1,
+    "native": 7.49,
+    "wasm": 6.35
+   },
+   "gpu_warm_ms": "explicit-gap(cpu-owns)",
+   "gpu_cold_ms": "explicit-gap(cpu-owns)"
+  },
+  {
+   "n": 100000,
+   "kind": "f64",
+   "fn": "floor_div",
+   "form": "arr",
+   "mem_mb": 2.29,
+   "xfer_mb": 2.29,
+   "numpy_ms": 3.412,
+   "native_ms": 1.58,
+   "wasm_ms": 0.511,
+   "gb_s": {
+    "numpy": 0.66,
+    "native": 1.41,
+    "wasm": 4.37
+   },
+   "gpu_warm_ms": "explicit-gap(cpu-owns)",
+   "gpu_cold_ms": "explicit-gap(cpu-owns)"
+  },
+  {
+   "n": 100000,
+   "kind": "f64",
+   "fn": "floor_div",
+   "form": "scal",
+   "mem_mb": 1.53,
+   "xfer_mb": 1.53,
+   "numpy_ms": 3.103,
+   "native_ms": 1.307,
+   "wasm_ms": 0.401,
+   "gb_s": {
+    "numpy": 0.48,
+    "native": 1.14,
+    "wasm": 3.72
+   },
+   "gpu_warm_ms": "explicit-gap(cpu-owns)",
+   "gpu_cold_ms": "explicit-gap(cpu-owns)"
+  },
+  {
+   "n": 1000000,
+   "kind": "i32",
+   "fn": "add",
+   "form": "arr",
+   "mem_mb": 11.44,
+   "xfer_mb": 11.44,
+   "numpy_ms": 1.773,
+   "native_ms": 1.731,
+   "wasm_ms": 2.189,
+   "gb_s": {
+    "numpy": 6.3,
+    "native": 6.46,
+    "wasm": 5.1,
+    "gpu_warm": 0.65
+   },
+   "gpu_warm_ms": 17.133,
+   "gpu_cold_ms": 2481.0
+  },
+  {
+   "n": 1000000,
+   "kind": "i32",
+   "fn": "add",
+   "form": "scal",
+   "mem_mb": 7.63,
+   "xfer_mb": 7.63,
+   "numpy_ms": 1.71,
+   "native_ms": 1.484,
+   "wasm_ms": 0.719,
+   "gb_s": {
+    "numpy": 4.36,
+    "native": 5.02,
+    "wasm": 10.36,
+    "gpu_warm": 0.51
+   },
+   "gpu_warm_ms": 14.522,
+   "gpu_cold_ms": 2481.0
+  },
+  {
+   "n": 1000000,
+   "kind": "i32",
+   "fn": "div",
+   "form": "arr",
+   "mem_mb": 11.44,
+   "xfer_mb": 11.44,
+   "numpy_ms": 12.825,
+   "native_ms": 9.011,
+   "wasm_ms": 6.748,
+   "gb_s": {
+    "numpy": 0.87,
+    "native": 1.24,
+    "wasm": 1.66
+   },
+   "gpu_warm_ms": "explicit-gap(cpu-owns)",
+   "gpu_cold_ms": "explicit-gap(cpu-owns)"
+  },
+  {
+   "n": 1000000,
+   "kind": "i32",
+   "fn": "div",
+   "form": "scal",
+   "mem_mb": 7.63,
+   "xfer_mb": 7.63,
+   "numpy_ms": 11.299,
+   "native_ms": 8.915,
+   "wasm_ms": 5.786,
+   "gb_s": {
+    "numpy": 0.66,
+    "native": 0.84,
+    "wasm": 1.29
+   },
+   "gpu_warm_ms": "explicit-gap(cpu-owns)",
+   "gpu_cold_ms": "explicit-gap(cpu-owns)"
+  },
+  {
+   "n": 1000000,
+   "kind": "i32",
+   "fn": "floor_div",
+   "form": "arr",
+   "mem_mb": 11.44,
+   "xfer_mb": 11.44,
+   "numpy_ms": 11.148,
+   "native_ms": 6.219,
+   "wasm_ms": 7.609,
+   "gb_s": {
+    "numpy": 1.0,
+    "native": 1.8,
+    "wasm": 1.47,
+    "gpu_warm": 0.64
+   },
+   "gpu_warm_ms": 17.484,
+   "gpu_cold_ms": 2481.0
+  },
+  {
+   "n": 1000000,
+   "kind": "i32",
+   "fn": "floor_div",
+   "form": "scal",
+   "mem_mb": 7.63,
+   "xfer_mb": 7.63,
+   "numpy_ms": 1.741,
+   "native_ms": 5.28,
+   "wasm_ms": 7.049,
+   "gb_s": {
+    "numpy": 4.28,
+    "native": 1.41,
+    "wasm": 1.06,
+    "gpu_warm": 0.51
+   },
+   "gpu_warm_ms": 14.622,
+   "gpu_cold_ms": 2481.0
+  },
+  {
+   "n": 1000000,
+   "kind": "f32",
+   "fn": "add",
+   "form": "arr",
+   "mem_mb": 11.44,
+   "xfer_mb": 11.44,
+   "numpy_ms": 1.76,
+   "native_ms": 1.727,
+   "wasm_ms": 0.751,
+   "gb_s": {
+    "numpy": 6.35,
+    "native": 6.47,
+    "wasm": 14.88,
+    "gpu_warm": 0.66
+   },
+   "gpu_warm_ms": 17.004,
+   "gpu_cold_ms": 4.4
+  },
+  {
+   "n": 1000000,
+   "kind": "f32",
+   "fn": "add",
+   "form": "scal",
+   "mem_mb": 7.63,
+   "xfer_mb": 7.63,
+   "numpy_ms": 1.589,
+   "native_ms": 1.63,
+   "wasm_ms": 1.124,
+   "gb_s": {
+    "numpy": 4.69,
+    "native": 4.57,
+    "wasm": 6.63,
+    "gpu_warm": 0.52
+   },
+   "gpu_warm_ms": 14.44,
+   "gpu_cold_ms": 4.4
+  },
+  {
+   "n": 1000000,
+   "kind": "f32",
+   "fn": "div",
+   "form": "arr",
+   "mem_mb": 11.44,
+   "xfer_mb": 11.44,
+   "numpy_ms": 7.639,
+   "native_ms": 3.191,
+   "wasm_ms": 1.735,
+   "gb_s": {
+    "numpy": 1.46,
+    "native": 3.5,
+    "wasm": 6.44
+   },
+   "gpu_warm_ms": "explicit-gap(cpu-owns)",
+   "gpu_cold_ms": "explicit-gap(cpu-owns)"
+  },
+  {
+   "n": 1000000,
+   "kind": "f32",
+   "fn": "div",
+   "form": "scal",
+   "mem_mb": 7.63,
+   "xfer_mb": 7.63,
+   "numpy_ms": 6.104,
+   "native_ms": 3.053,
+   "wasm_ms": 1.767,
+   "gb_s": {
+    "numpy": 1.22,
+    "native": 2.44,
+    "wasm": 4.22
+   },
+   "gpu_warm_ms": "explicit-gap(cpu-owns)",
+   "gpu_cold_ms": "explicit-gap(cpu-owns)"
+  },
+  {
+   "n": 1000000,
+   "kind": "f32",
+   "fn": "floor_div",
+   "form": "arr",
+   "mem_mb": 11.44,
+   "xfer_mb": 11.44,
+   "numpy_ms": 41.623,
+   "native_ms": 16.127,
+   "wasm_ms": 3.351,
+   "gb_s": {
+    "numpy": 0.27,
+    "native": 0.69,
+    "wasm": 3.33
+   },
+   "gpu_warm_ms": "explicit-gap(cpu-owns)",
+   "gpu_cold_ms": "explicit-gap(cpu-owns)"
+  },
+  {
+   "n": 1000000,
+   "kind": "f32",
+   "fn": "floor_div",
+   "form": "scal",
+   "mem_mb": 7.63,
+   "xfer_mb": 7.63,
+   "numpy_ms": 36.35,
+   "native_ms": 15.232,
+   "wasm_ms": 2.346,
+   "gb_s": {
+    "numpy": 0.2,
+    "native": 0.49,
+    "wasm": 3.18
+   },
+   "gpu_warm_ms": "explicit-gap(cpu-owns)",
+   "gpu_cold_ms": "explicit-gap(cpu-owns)"
+  },
+  {
+   "n": 1000000,
+   "kind": "f64",
+   "fn": "add",
+   "form": "arr",
+   "mem_mb": 22.89,
+   "xfer_mb": 22.89,
+   "numpy_ms": 3.24,
+   "native_ms": 4.044,
+   "wasm_ms": 3.277,
+   "gb_s": {
+    "numpy": 6.9,
+    "native": 5.53,
+    "wasm": 6.82
+   },
+   "gpu_warm_ms": "explicit-gap(cpu-owns)",
+   "gpu_cold_ms": "explicit-gap(cpu-owns)"
+  },
+  {
+   "n": 1000000,
+   "kind": "f64",
+   "fn": "add",
+   "form": "scal",
+   "mem_mb": 15.26,
+   "xfer_mb": 15.26,
+   "numpy_ms": 3.04,
+   "native_ms": 2.974,
+   "wasm_ms": 1.111,
+   "gb_s": {
+    "numpy": 4.9,
+    "native": 5.01,
+    "wasm": 13.42
+   },
+   "gpu_warm_ms": "explicit-gap(cpu-owns)",
+   "gpu_cold_ms": "explicit-gap(cpu-owns)"
+  },
+  {
+   "n": 1000000,
+   "kind": "f64",
+   "fn": "div",
+   "form": "arr",
+   "mem_mb": 22.89,
+   "xfer_mb": 22.89,
+   "numpy_ms": 6.915,
+   "native_ms": 3.581,
+   "wasm_ms": 3.612,
+   "gb_s": {
+    "numpy": 3.23,
+    "native": 6.24,
+    "wasm": 6.19
+   },
+   "gpu_warm_ms": "explicit-gap(cpu-owns)",
+   "gpu_cold_ms": "explicit-gap(cpu-owns)"
+  },
+  {
+   "n": 1000000,
+   "kind": "f64",
+   "fn": "div",
+   "form": "scal",
+   "mem_mb": 15.26,
+   "xfer_mb": 15.26,
+   "numpy_ms": 6.245,
+   "native_ms": 3.236,
+   "wasm_ms": 1.722,
+   "gb_s": {
+    "numpy": 2.39,
+    "native": 4.6,
+    "wasm": 8.65
+   },
+   "gpu_warm_ms": "explicit-gap(cpu-owns)",
+   "gpu_cold_ms": "explicit-gap(cpu-owns)"
+  },
+  {
+   "n": 1000000,
+   "kind": "f64",
+   "fn": "floor_div",
+   "form": "arr",
+   "mem_mb": 22.89,
+   "xfer_mb": 22.89,
+   "numpy_ms": 35.461,
+   "native_ms": 17.223,
+   "wasm_ms": 4.654,
+   "gb_s": {
+    "numpy": 0.63,
+    "native": 1.3,
+    "wasm": 4.8
+   },
+   "gpu_warm_ms": "explicit-gap(cpu-owns)",
+   "gpu_cold_ms": "explicit-gap(cpu-owns)"
+  },
+  {
+   "n": 1000000,
+   "kind": "f64",
+   "fn": "floor_div",
+   "form": "scal",
+   "mem_mb": 15.26,
+   "xfer_mb": 15.26,
+   "numpy_ms": 30.126,
+   "native_ms": 14.209,
+   "wasm_ms": 1.569,
+   "gb_s": {
+    "numpy": 0.49,
+    "native": 1.05,
+    "wasm": 9.5
+   },
+   "gpu_warm_ms": "explicit-gap(cpu-owns)",
+   "gpu_cold_ms": "explicit-gap(cpu-owns)"
+  }
+ ]
+}

@@ -1,0 +1,14 @@
+{
+ "tag": "go_precomp",
+ "seed": 42,
+ "precomp": {
+  "A_no_meta_ms": 8.8,
+  "B_meta_avail_unfair_ms": 19.3,
+  "C_build_plus_query_ms": 54.4,
+  "exact_build_ms": 0.02,
+  "D_amortized_per_query_Q20_ms": 19.0,
+  "note": "B is unfair without metadata source; C/D show true cost"
+ },
+ "precomp_ms": 2884.8,
+ "total_s": 2.9
+}

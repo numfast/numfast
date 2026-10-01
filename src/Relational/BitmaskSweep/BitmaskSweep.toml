@@ -1,0 +1,11 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+name = "BitmaskSweep"
+version = "0.1.0"
+depends = []
+alias = ["bitmask_sweep", "bitmask_sweep_available"]
+mods = ["bitmask_sweep", "bitmask_sweep_available"]
+
+[metadata]
+level = "relational"
+description = "Generic batch sweep over u64 bitmask lanes with predicate-swizzle probes"

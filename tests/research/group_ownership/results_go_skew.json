@@ -1,0 +1,168 @@
+{
+ "tag": "go_skew",
+ "seed": 42,
+ "skew": {
+  "uniform": {
+   "equal-contig": {
+    "max": 125334,
+    "imb": 0.27
+   },
+   "equal-roundrobin": {
+    "max": 125695,
+    "imb": 0.56
+   },
+   "B-contigW": {
+    "max": 125083,
+    "imb": 0.07
+   },
+   "C-greedy": {
+    "max": 125041,
+    "imb": 0.03
+   },
+   "D-sortedLPT": {
+    "max": 125002,
+    "imb": 0.0
+   },
+   "E-firstlast": {
+    "max": 125004,
+    "imb": 0.0
+   },
+   "hash": {
+    "max": 125695,
+    "imb": 0.56
+   },
+   "weighted_gain_pct": 0.26,
+   "K": 10000
+  },
+  "mild": {
+   "equal-contig": {
+    "max": 249943,
+    "imb": 99.95
+   },
+   "equal-roundrobin": {
+    "max": 125466,
+    "imb": 0.37
+   },
+   "B-contigW": {
+    "max": 125131,
+    "imb": 0.1
+   },
+   "C-greedy": {
+    "max": 125042,
+    "imb": 0.03
+   },
+   "D-sortedLPT": {
+    "max": 125000,
+    "imb": 0.0
+   },
+   "E-firstlast": {
+    "max": 125001,
+    "imb": 0.0
+   },
+   "hash": {
+    "max": 125466,
+    "imb": 0.37
+   },
+   "weighted_gain_pct": 0.37,
+   "K": 10000
+  },
+  "medium": {
+   "equal-contig": {
+    "max": 353449,
+    "imb": 182.76
+   },
+   "equal-roundrobin": {
+    "max": 133129,
+    "imb": 6.5
+   },
+   "B-contigW": {
+    "max": 125210,
+    "imb": 0.17
+   },
+   "C-greedy": {
+    "max": 125020,
+    "imb": 0.02
+   },
+   "D-sortedLPT": {
+    "max": 125025,
+    "imb": 0.02
+   },
+   "E-firstlast": {
+    "max": 125111,
+    "imb": 0.09
+   },
+   "hash": {
+    "max": 133129,
+    "imb": 6.5
+   },
+   "weighted_gain_pct": 6.09,
+   "K": 10000
+  },
+  "heavy": {
+   "equal-contig": {
+    "max": 500207,
+    "imb": 300.17
+   },
+   "equal-roundrobin": {
+    "max": 160875,
+    "imb": 28.7
+   },
+   "B-contigW": {
+    "max": 125882,
+    "imb": 0.71
+   },
+   "C-greedy": {
+    "max": 125020,
+    "imb": 0.02
+   },
+   "D-sortedLPT": {
+    "max": 125014,
+    "imb": 0.01
+   },
+   "E-firstlast": {
+    "max": 125063,
+    "imb": 0.05
+   },
+   "hash": {
+    "max": 160875,
+    "imb": 28.7
+   },
+   "weighted_gain_pct": 22.29,
+   "K": 10000
+  },
+  "extreme": {
+   "equal-contig": {
+    "max": 562596,
+    "imb": 350.08
+   },
+   "equal-roundrobin": {
+    "max": 127756,
+    "imb": 2.2
+   },
+   "B-contigW": {
+    "max": 126743,
+    "imb": 1.39
+   },
+   "C-greedy": {
+    "max": 125032,
+    "imb": 0.03
+   },
+   "D-sortedLPT": {
+    "max": 125008,
+    "imb": 0.01
+   },
+   "E-firstlast": {
+    "max": 125026,
+    "imb": 0.02
+   },
+   "hash": {
+    "max": 127756,
+    "imb": 2.2
+   },
+   "weighted_gain_pct": 2.15,
+   "K": 10000
+  }
+ },
+ "skew_ms": 2979.0,
+ "total_s": 3.0
+}

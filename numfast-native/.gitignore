@@ -1,0 +1,7 @@
+# build artifacts (reproducible via cargo build)
+target/
+# generated vectors (reproducible via tools/gen.py, seed 42)
+vectors/
+# raw node outputs (reproducible via tools/parity.py); keep *.json evidence
+results/sums.f64
+results/counts.i64

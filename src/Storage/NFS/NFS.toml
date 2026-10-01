@@ -1,0 +1,10 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+name = "NFS"
+version = "0.1.0"
+depends = ["Core"]
+alias = ["persist_table", "load_table"]
+mods = ["persist_table", "load_table"]
+
+[metadata]
+level = "storage"

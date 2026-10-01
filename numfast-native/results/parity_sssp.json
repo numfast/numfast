@@ -1,0 +1,7 @@
+{
+ "pairs": 50,
+ "reachable": 48,
+ "native": true,
+ "batch_mt_eq_st": true,
+ "pred_ok": true
+}

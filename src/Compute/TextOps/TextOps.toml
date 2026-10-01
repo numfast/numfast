@@ -1,0 +1,10 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+name = "TextOps"
+version = "0.1.0"
+depends = []
+alias = ["text_length", "regex_replace_dict"]
+mods = ["text_length", "regex_replace_dict"]
+
+[metadata]
+level = "compute"

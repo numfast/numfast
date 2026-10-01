@@ -1,0 +1,11 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+name = "GroupedHash"
+version = "0.1.0"
+depends = []
+alias = ["grouped_distinct_hash", "GroupedHashMiss"]
+mods = ["grouped_distinct_hash", "GroupedHashMiss"]
+
+[metadata]
+description = "Generic grouped COUNT DISTINCT via pair open-addressing hash"
+level = "driver"

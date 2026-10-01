@@ -1,0 +1,11 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+name = "Segmented"
+version = "0.1.0"
+depends = []
+alias = ["segmented_reduce", "adjacency_slice", "adjacency_flat"]
+mods = ["segmented_reduce", "adjacency_slice", "adjacency_flat"]
+
+[metadata]
+level = "relational"
+description = "P1 segmented_reduce (bounds) + P2 adjacency_slice (CSR slice)"

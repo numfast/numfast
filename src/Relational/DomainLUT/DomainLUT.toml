@@ -1,0 +1,11 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+name = "DomainLUT"
+version = "0.1.0"
+depends = []
+alias = ["dict_contains_lut", "dict_equal_lut", "dict_not_equal_lut", "dict_not_contains_lut", "codes_lut_mask"]
+mods = ["dict_contains_lut", "dict_equal_lut", "dict_not_equal_lut", "dict_not_contains_lut", "codes_lut_mask"]
+
+[metadata]
+level = "relational"
+member = "D-scale dictionary predicate LUT + row-side gather mask"

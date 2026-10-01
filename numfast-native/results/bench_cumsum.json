@@ -1,0 +1,125 @@
+{
+ "seed": 42,
+ "cases": [
+  {
+   "n": 100000,
+   "kind": "i32",
+   "mem_mb": 0.76,
+   "numpy_cold_ms": 2.732,
+   "numpy_ms": 3.31,
+   "native_cold_ms": 2.944,
+   "native_ms": 0.071,
+   "wasm_cold_process_ms": 234.24,
+   "wasm_cold_kernel_ms": 0.407,
+   "wasm_ms": 0.147,
+   "gb_s": {
+    "numpy": 0.11,
+    "native": 5.27,
+    "wasm": 2.54,
+    "gpu_total": 0.05,
+    "gpu_kernel": 0.06
+   },
+   "gpu_cold_ms": 398.645,
+   "gpu_total_ms": 8.213,
+   "gpu_transfer_ms": 2.462,
+   "gpu_transfer_cold_ms": 2110.435,
+   "gpu_kernel_ms": 5.751
+  },
+  {
+   "n": 100000,
+   "kind": "f32",
+   "mem_mb": 0.76,
+   "numpy_cold_ms": 0.358,
+   "numpy_ms": 0.321,
+   "native_cold_ms": 0.209,
+   "native_ms": 0.138,
+   "wasm_cold_process_ms": 230.445,
+   "wasm_cold_kernel_ms": 0.631,
+   "wasm_ms": 0.163,
+   "gb_s": {
+    "numpy": 1.16,
+    "native": 2.7,
+    "wasm": 2.29
+   },
+   "gpu_total_ms": "explicit-gap(no-float-scan-lanes)"
+  },
+  {
+   "n": 100000,
+   "kind": "f64",
+   "mem_mb": 1.53,
+   "numpy_cold_ms": 0.461,
+   "numpy_ms": 0.396,
+   "native_cold_ms": 0.161,
+   "native_ms": 0.147,
+   "wasm_cold_process_ms": 229.041,
+   "wasm_cold_kernel_ms": 0.647,
+   "wasm_ms": 0.188,
+   "gb_s": {
+    "numpy": 1.88,
+    "native": 5.07,
+    "wasm": 3.96
+   },
+   "gpu_total_ms": "explicit-gap(no-float-scan-lanes)"
+  },
+  {
+   "n": 1000000,
+   "kind": "i32",
+   "mem_mb": 7.63,
+   "numpy_cold_ms": 30.376,
+   "numpy_ms": 31.1,
+   "native_cold_ms": 2.0,
+   "native_ms": 1.771,
+   "wasm_cold_process_ms": 237.123,
+   "wasm_cold_kernel_ms": 2.688,
+   "wasm_ms": 0.654,
+   "gb_s": {
+    "numpy": 0.12,
+    "native": 2.1,
+    "wasm": 5.7,
+    "gpu_total": 0.13,
+    "gpu_kernel": 0.21
+   },
+   "gpu_cold_ms": 30.198,
+   "gpu_total_ms": 29.754,
+   "gpu_transfer_ms": 11.799,
+   "gpu_transfer_cold_ms": 11.714,
+   "gpu_kernel_ms": 17.955
+  },
+  {
+   "n": 1000000,
+   "kind": "f32",
+   "mem_mb": 7.63,
+   "numpy_cold_ms": 4.507,
+   "numpy_ms": 4.412,
+   "native_cold_ms": 1.993,
+   "native_ms": 2.034,
+   "wasm_cold_process_ms": 242.849,
+   "wasm_cold_kernel_ms": 2.704,
+   "wasm_ms": 1.061,
+   "gb_s": {
+    "numpy": 0.84,
+    "native": 1.83,
+    "wasm": 3.51
+   },
+   "gpu_total_ms": "explicit-gap(no-float-scan-lanes)"
+  },
+  {
+   "n": 1000000,
+   "kind": "f64",
+   "mem_mb": 15.26,
+   "numpy_cold_ms": 4.427,
+   "numpy_ms": 5.203,
+   "native_cold_ms": 2.335,
+   "native_ms": 3.1,
+   "wasm_cold_process_ms": 256.632,
+   "wasm_cold_kernel_ms": 4.069,
+   "wasm_ms": 1.157,
+   "gb_s": {
+    "numpy": 1.43,
+    "native": 2.4,
+    "wasm": 6.44
+   },
+   "gpu_total_ms": "explicit-gap(no-float-scan-lanes)"
+  }
+ ]
+}

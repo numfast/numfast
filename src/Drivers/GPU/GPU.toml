@@ -1,0 +1,10 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+name = "GPU"
+version = "0.2.0"
+depends = ["Core"]
+alias = ["gpu_execute", "gpu_capability", "gpu_vram_budget", "gpu_chunked_execute"]
+mods = ["gpu_execute", "gpu_capability", "gpu_vram_budget", "gpu_chunked_execute"]
+
+[level]
+level = "driver"

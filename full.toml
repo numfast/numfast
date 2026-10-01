@@ -1,0 +1,116 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+[kernel]
+name = "NumFast"
+
+[[extensions]]
+name = "Core"
+path = "src/Core"
+
+[[extensions]]
+name = "Schema"
+path = "src/Storage/Schema"
+
+[[extensions]]
+name = "Dictionary"
+path = "src/Storage/Dictionary"
+
+[[extensions]]
+name = "IR"
+path = "src/Semantic/IR"
+
+[[extensions]]
+name = "Planner"
+path = "src/Runtime/Planner"
+
+[[extensions]]
+name = "GroupedHash"
+path = "src/Drivers/GroupedHash"
+
+[[extensions]]
+name = "GroupedHashMT"
+path = "src/Drivers/GroupedHashMT"
+
+[[extensions]]
+name = "CPU"
+path = "src/Drivers/CPU"
+
+[[extensions]]
+name = "GPU"
+path = "src/Drivers/GPU"
+
+[[extensions]]
+name = "Fused"
+path = "src/Compute/Fused"
+
+[[extensions]]
+name = "TextOps"
+path = "src/Compute/TextOps"
+
+[[extensions]]
+name = "Join"
+path = "src/Relational/Join"
+
+[[extensions]]
+name = "GroupBy"
+path = "src/Relational/GroupBy"
+
+[[extensions]]
+name = "CompositeGroup"
+path = "src/Relational/CompositeGroup"
+
+[[extensions]]
+name = "Filter"
+path = "src/Relational/Filter"
+
+[[extensions]]
+name = "Sort"
+path = "src/Relational/Sort"
+
+[[extensions]]
+name = "Aggregate"
+path = "src/Relational/Aggregate"
+
+[[extensions]]
+name = "Segmented"
+path = "src/Relational/Segmented"
+
+[[extensions]]
+name = "Runtime"
+path = "src/Runtime/Runtime"
+
+[[extensions]]
+name = "NFS"
+path = "src/Storage/NFS"
+
+[[extensions]]
+name = "NfsBlocks"
+path = "src/Storage/NfsBlocks"
+
+[[extensions]]
+name = "NfsStream"
+path = "src/Storage/NfsStream"
+
+[[extensions]]
+name = "NfsZview"
+path = "src/Storage/NfsZview"
+
+[[extensions]]
+name = "SortedLookup"
+path = "src/Relational/SortedLookup"
+
+[[extensions]]
+name = "Sssp"
+path = "src/Relational/Sssp"
+
+[[extensions]]
+name = "PairInsert"
+path = "src/Relational/PairInsert"
+
+[[extensions]]
+name = "BitmaskSweep"
+path = "src/Relational/BitmaskSweep"
+
+[[extensions]]
+name = "DomainLUT"
+path = "src/Relational/DomainLUT"

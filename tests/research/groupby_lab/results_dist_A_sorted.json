@@ -1,0 +1,57 @@
+[
+ {
+  "algo": "A",
+  "regime": "M100/sorted",
+  "M": 100,
+  "pattern": "sorted",
+  "ms": 2.505700002075173,
+  "local_ms": 2.3043999972287565,
+  "bytes": 2400,
+  "ngroups": 100,
+  "extra": {}
+ },
+ {
+  "algo": "A",
+  "regime": "M10000/sorted",
+  "M": 10000,
+  "pattern": "sorted",
+  "ms": 3.028699997230433,
+  "local_ms": 2.4330000014742836,
+  "bytes": 239664,
+  "ngroups": 9986,
+  "extra": {}
+ },
+ {
+  "algo": "A",
+  "regime": "M100000/sorted",
+  "M": 100000,
+  "pattern": "sorted",
+  "ms": 5.8535999996820465,
+  "local_ms": 2.45730001188349,
+  "bytes": 1153512,
+  "ngroups": 48063,
+  "extra": {}
+ },
+ {
+  "algo": "A",
+  "regime": "M1000000/sorted",
+  "M": 1000000,
+  "pattern": "sorted",
+  "ms": 7.029699991107918,
+  "local_ms": 2.0758000027853996,
+  "bytes": 1524024,
+  "ngroups": 63501,
+  "extra": {}
+ },
+ {
+  "algo": "A",
+  "regime": "M10000000/sorted",
+  "M": 10000000,
+  "pattern": "sorted",
+  "ms": 7.823599997209385,
+  "local_ms": 2.6190000062342733,
+  "bytes": 1567584,
+  "ngroups": 65316,
+  "extra": {}
+ }
+]

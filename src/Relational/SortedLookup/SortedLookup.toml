@@ -1,0 +1,10 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+name = "SortedLookup"
+version = "0.1.0"
+depends = ["Core", "CPU"]
+alias = ["lookup_positions_i64", "isin_i64", "lookup_i64"]
+mods = ["lookup_positions_i64", "isin_i64", "lookup_i64"]
+
+[metadata]
+level = "relational"

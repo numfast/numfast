@@ -1,0 +1,9 @@
+{
+ "seed": 42,
+ "cases": 16,
+ "oracle_ms": 0.5009999877074733,
+ "native_ms": 2.5070999836316332,
+ "gpu_live": true,
+ "pass": true,
+ "fails": []
+}

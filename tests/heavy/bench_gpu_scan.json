@@ -1,0 +1,83 @@
+{
+ "seed": 42,
+ "reps": 5,
+ "warm": 3,
+ "sizes": {
+  "256K": {
+   "n": 262144,
+   "full_incl_H_ms": 14.411200012546033,
+   "full_excl_H_ms": 14.863999967928976,
+   "full_excl_G_ms": 9.96070000110194,
+   "transfer_ms": 3.988899989053607,
+   "kernel_incl_H_ms": 10.422300023492426,
+   "kernel_excl_H_ms": 10.875099978875369,
+   "kernel_excl_G_ms": 5.971800012048334,
+   "reduce_sum_ms": 3.781900042667985,
+   "reduce_min_ms": 3.728299983777106,
+   "reduce_max_ms": 3.8742999895475805,
+   "reduce_count_ms": 0.000600004568696022,
+   "numpy_cumsum_ms": 1.886499987449497,
+   "numpy_red_ms": 1.1309999972581863,
+   "gbytes_full": 0.0021
+  },
+  "1M": {
+   "n": 1048576,
+   "full_incl_H_ms": 32.92109997710213,
+   "full_excl_H_ms": 33.404999994672835,
+   "full_excl_G_ms": 17.189199978020042,
+   "transfer_ms": 9.984700009226799,
+   "kernel_incl_H_ms": 22.93639996787533,
+   "kernel_excl_H_ms": 23.420299985446036,
+   "kernel_excl_G_ms": 7.204499968793243,
+   "reduce_sum_ms": 5.428300006315112,
+   "reduce_min_ms": 5.435600003693253,
+   "reduce_max_ms": 5.320700001902878,
+   "reduce_count_ms": 0.000500003807246685,
+   "numpy_cumsum_ms": 6.962299987208098,
+   "numpy_red_ms": 4.574400023557246,
+   "gbytes_full": 0.0084
+  },
+  "4M": {
+   "n": 4194304,
+   "full_incl_H_ms": 104.0995999937877,
+   "full_excl_H_ms": 104.44020002614707,
+   "full_excl_G_ms": 41.47300001932308,
+   "transfer_ms": 31.46660001948476,
+   "kernel_incl_H_ms": 72.63299997430295,
+   "kernel_excl_H_ms": 72.97360000666231,
+   "kernel_excl_G_ms": 10.006399999838322,
+   "reduce_sum_ms": 17.581200052518398,
+   "reduce_min_ms": 17.751700012013316,
+   "reduce_max_ms": 17.16879999730736,
+   "reduce_count_ms": 0.000500003807246685,
+   "numpy_cumsum_ms": 27.954400051385164,
+   "numpy_red_ms": 19.68780002789572,
+   "gbytes_full": 0.0336
+  },
+  "10M": {
+   "n": 10485760,
+   "full_incl_H_ms": 233.38590003550053,
+   "full_excl_H_ms": 230.67459999583662,
+   "full_excl_G_ms": 86.83669997844845,
+   "transfer_ms": 71.36920001357794,
+   "kernel_incl_H_ms": 162.0167000219226,
+   "kernel_excl_H_ms": 159.30539998225868,
+   "kernel_excl_G_ms": 15.467499964870512,
+   "reduce_sum_ms": 31.717000005301088,
+   "reduce_min_ms": 33.285100013017654,
+   "reduce_max_ms": 33.421800006181,
+   "reduce_count_ms": 0.000500003807246685,
+   "numpy_cumsum_ms": 72.5273999851197,
+   "numpy_red_ms": 52.32310004066676,
+   "gbytes_full": 0.0839
+  }
+ },
+ "prefix_replace": {
+  "W": 40960,
+  "host_prefix_stage_ms": 2.4293000460602343,
+  "gpu_prefix_stage_ms": 3.797499986831099,
+  "full_scan_excl_H_ms": 8.613499987404794,
+  "full_scan_excl_G_ms": 7.517799967899919
+ },
+ "notes": "warm RTX2060 Vulkan wgpu-py; full=H2D+dispatch+D2H; transfer=raw H2D+D2H same bytes; kernel=full-transfer; pipelines recompile per call (same for H and G, disclosed); numpy single-thread verbatim; overflow policy wraparound mod 2**32"
+}

@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Toolchains / scratch (1.7 GB: rustup, zig.exe) — not project sources
+scratch/
+
+# Build artifacts
+build/
+dist/
+dist_rc/
+numfast-native/target/
+
+# Native artifacts
+*.nfs
+*.pdb
+
+# Editors / OS
+.idea/
+.DS_Store

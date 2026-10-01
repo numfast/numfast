@@ -1,0 +1,147 @@
+[
+ {
+  "algo": "C",
+  "regime": "M100/clustered",
+  "M": 100,
+  "pattern": "clustered",
+  "ms": 6.586900010006502,
+  "local_ms": 6.478700001025572,
+  "bytes": 2400,
+  "ngroups": 100,
+  "extra": {
+   "parts": [
+    9302,
+    8713,
+    7671,
+    7441,
+    9189,
+    7545,
+    8017,
+    7658
+   ],
+   "p": 8,
+   "max_part": 9302,
+   "cap": 16384,
+   "overflow": false,
+   "spill_rows": 0,
+   "spill_model_ms": 0.0,
+   "imbalance": 1.2501007929041796
+  }
+ },
+ {
+  "algo": "C",
+  "regime": "M10000/clustered",
+  "M": 10000,
+  "pattern": "clustered",
+  "ms": 9.57409999682568,
+  "local_ms": 9.357000002637506,
+  "bytes": 54672,
+  "ngroups": 2278,
+  "extra": {
+   "parts": [
+    8097,
+    7974,
+    7887,
+    7835,
+    8611,
+    8605,
+    7948,
+    8579
+   ],
+   "p": 8,
+   "max_part": 8611,
+   "cap": 16384,
+   "overflow": false,
+   "spill_rows": 0,
+   "spill_model_ms": 0.0,
+   "imbalance": 1.0990427568602426
+  }
+ },
+ {
+  "algo": "C",
+  "regime": "M100000/clustered",
+  "M": 100000,
+  "pattern": "clustered",
+  "ms": 9.376900008646771,
+  "local_ms": 9.23119999060873,
+  "bytes": 62784,
+  "ngroups": 2616,
+  "extra": {
+   "parts": [
+    7893,
+    8152,
+    8321,
+    7806,
+    8500,
+    8566,
+    8149,
+    8149
+   ],
+   "p": 8,
+   "max_part": 8566,
+   "cap": 16384,
+   "overflow": false,
+   "spill_rows": 0,
+   "spill_model_ms": 0.0,
+   "imbalance": 1.097361004355624
+  }
+ },
+ {
+  "algo": "C",
+  "regime": "M1000000/clustered",
+  "M": 1000000,
+  "pattern": "clustered",
+  "ms": 9.406099998159334,
+  "local_ms": 9.169400000246242,
+  "bytes": 62064,
+  "ngroups": 2586,
+  "extra": {
+   "parts": [
+    8128,
+    8295,
+    8461,
+    8277,
+    7596,
+    8242,
+    8773,
+    7764
+   ],
+   "p": 8,
+   "max_part": 8773,
+   "cap": 16384,
+   "overflow": false,
+   "spill_rows": 0,
+   "spill_model_ms": 0.0,
+   "imbalance": 1.1549499736703528
+  }
+ },
+ {
+  "algo": "C",
+  "regime": "M10000000/clustered",
+  "M": 10000000,
+  "pattern": "clustered",
+  "ms": 8.787800004938617,
+  "local_ms": 8.631199991214089,
+  "bytes": 62856,
+  "ngroups": 2619,
+  "extra": {
+   "parts": [
+    8735,
+    7944,
+    7919,
+    8392,
+    8057,
+    8797,
+    7538,
+    8154
+   ],
+   "p": 8,
+   "max_part": 8797,
+   "cap": 16384,
+   "overflow": false,
+   "spill_rows": 0,
+   "spill_model_ms": 0.0,
+   "imbalance": 1.167020429822234
+  }
+ }
+]

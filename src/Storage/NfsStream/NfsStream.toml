@@ -1,0 +1,11 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+name = "NfsStream"
+version = "0.1.0"
+depends = ["Core", "Schema"]
+alias = ["nfs_stream_build", "nfs_stream_open", "nfs_stream_read_block", "nfs_stream_plan"]
+mods = ["nfs_stream_build", "nfs_stream_open", "nfs_stream_read_block", "nfs_stream_plan"]
+
+[metadata]
+description = "SPEC-DELTA NFS single-file stream: stub header + blocks + service, patch at end, lazy reader"
+level = "storage"

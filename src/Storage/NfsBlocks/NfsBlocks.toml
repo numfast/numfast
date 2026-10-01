@@ -1,0 +1,11 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+name = "NfsBlocks"
+version = "0.1.0"
+depends = ["Core", "Schema"]
+alias = ["nfs_build", "nfs_open", "nfs_read_block"]
+mods = ["nfs_build", "nfs_open", "nfs_read_block"]
+
+[metadata]
+description = "NFS block-container: header+dictionary+index resident, data blocks lazy LRU"
+level = "storage"

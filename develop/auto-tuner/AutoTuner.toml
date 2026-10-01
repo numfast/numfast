@@ -1,0 +1,11 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+name = "AutoTuner"
+version = "0.1.0"
+depends = []
+alias = ["search", "fingerprint", "list_candidates", "run_demo"]
+mods = ["search", "fingerprint", "list_candidates", "run_demo"]
+
+[metadata]
+description = "SEARCH V1 research: 17 plan candidates over existing Planner alternatives, controlled execution, calibrated_v1 output. No prod changes."
+level = "research"

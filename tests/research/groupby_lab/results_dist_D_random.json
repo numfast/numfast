@@ -1,0 +1,67 @@
+[
+ {
+  "algo": "D",
+  "regime": "M100/random",
+  "M": 100,
+  "pattern": "random",
+  "ms": 5.5183000076795,
+  "local_ms": 5.056599999079481,
+  "bytes": 2400,
+  "ngroups": 100,
+  "extra": {
+   "was_sorted": false
+  }
+ },
+ {
+  "algo": "D",
+  "regime": "M10000/random",
+  "M": 10000,
+  "pattern": "random",
+  "ms": 8.431999987806194,
+  "local_ms": 7.7305000013438985,
+  "bytes": 239688,
+  "ngroups": 9987,
+  "extra": {
+   "was_sorted": false
+  }
+ },
+ {
+  "algo": "D",
+  "regime": "M100000/random",
+  "M": 100000,
+  "pattern": "random",
+  "ms": 9.292200003983453,
+  "local_ms": 8.680500002810732,
+  "bytes": 1156320,
+  "ngroups": 48180,
+  "extra": {
+   "was_sorted": false
+  }
+ },
+ {
+  "algo": "D",
+  "regime": "M1000000/random",
+  "M": 1000000,
+  "pattern": "random",
+  "ms": 8.895799997844733,
+  "local_ms": 8.220200004871003,
+  "bytes": 1522752,
+  "ngroups": 63448,
+  "extra": {
+   "was_sorted": false
+  }
+ },
+ {
+  "algo": "D",
+  "regime": "M10000000/random",
+  "M": 10000000,
+  "pattern": "random",
+  "ms": 7.905200007371604,
+  "local_ms": 7.223300010082312,
+  "bytes": 1567968,
+  "ngroups": 65332,
+  "extra": {
+   "was_sorted": false
+  }
+ }
+]

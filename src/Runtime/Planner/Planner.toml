@@ -1,0 +1,10 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+name = "Planner"
+version = "0.2.0"
+depends = ["CPU", "GPU", "Core"]
+alias = ["compile", "optimize", "select_backend", "chunk_plan", "explain", "plan_groupby", "plan_pack", "plan_filter", "calibrate", "calibrate_info"]
+mods = ["compile", "optimize", "select_backend", "chunk_plan", "explain", "plan_groupby", "plan_pack", "plan_filter", "calibrate", "calibrate_info"]
+
+[metadata]
+level = "runtime"

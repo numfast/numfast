@@ -1,0 +1,10 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+name = "IR"
+version = "0.1.0"
+depends = []
+alias = ["ir_series", "ir_map", "ir_compare", "ir_filter", "ir_mask", "ir_where", "ir_gather", "ir_sort", "ir_slice", "ir_reduce", "ir_rolling_sum", "ir_shift", "ir_cumsum", "ir_groupby", "ir_groupby_multi", "ir_pack_keys", "ir_encode_pattern", "ir_rng_fill_i32", "ir_rng_fill_f64", "ir_rng_sample_no_replace", "ir_rng_permutation", "ir_rng_compat", "ir_map_round", "ir_unique_inverse", "ir_unique", "ir_count_distinct", "ir_lookup", "ir_text_length", "ir_text_contains", "ir_text_startswith", "ir_text_endswith", "ir_text_equals", "ir_text_regex_replace"]
+mods = ["ir_series", "ir_map", "ir_compare", "ir_filter", "ir_mask", "ir_where", "ir_gather", "ir_sort", "ir_slice", "ir_reduce", "ir_rolling_sum", "ir_shift", "ir_cumsum", "ir_groupby", "ir_groupby_multi", "ir_pack_keys", "ir_encode_pattern", "ir_rng_fill_i32", "ir_rng_fill_f64", "ir_rng_sample_no_replace", "ir_rng_permutation", "ir_rng_compat", "ir_map_round", "ir_unique_inverse", "ir_unique", "ir_count_distinct", "ir_lookup", "ir_text_length", "ir_text_contains", "ir_text_startswith", "ir_text_endswith", "ir_text_equals", "ir_text_regex_replace"]
+
+[metadata]
+level = "semantic"

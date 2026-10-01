@@ -1,0 +1,133 @@
+{
+ "n": 9999505,
+ "kdt": "int64",
+ "vdt": "int64",
+ "groups": 3586,
+ "cpus": 40,
+ "numba_warm_ms": {
+  "median": 69.94519999716431,
+  "all": [
+   68,
+   70,
+   70,
+   73,
+   73
+  ],
+  "exact": true
+ },
+ "native_warm_ms": {
+  "median": 62.42780000320636,
+  "all": [
+   62,
+   69,
+   62,
+   64,
+   62
+  ],
+  "exact": true
+ },
+ "native_cold": [
+  {
+   "kernel_ms": 115.75220001395792,
+   "hash_ms": 90.76269998331554,
+   "scan_ms": 22.48599997255951,
+   "groups": 3586,
+   "sum_nunique": 1538794,
+   "numba_absent": true,
+   "wall_ms": 683.704700000817
+  },
+  {
+   "kernel_ms": 121.97149998974055,
+   "hash_ms": 94.98160000657663,
+   "scan_ms": 24.39439998124726,
+   "groups": 3586,
+   "sum_nunique": 1538794,
+   "numba_absent": true,
+   "wall_ms": 754.1971000027843
+  },
+  {
+   "kernel_ms": 123.86230000993237,
+   "hash_ms": 94.24860001308843,
+   "scan_ms": 27.219400013564155,
+   "groups": 3586,
+   "sum_nunique": 1538794,
+   "numba_absent": true,
+   "wall_ms": 717.8544999915175
+  }
+ ],
+ "ladder": {
+  "1": {
+   "median_ms": 340.7588999834843,
+   "all_ms": [
+    357,
+    341,
+    334
+   ],
+   "hash_ms": 269,
+   "scan_ms": 65,
+   "exact": true
+  },
+  "2": {
+   "median_ms": 190.84659998770803,
+   "all_ms": [
+    203,
+    191,
+    181
+   ],
+   "hash_ms": 139,
+   "scan_ms": 42,
+   "exact": true
+  },
+  "4": {
+   "median_ms": 110.44720001518726,
+   "all_ms": [
+    101,
+    110,
+    117
+   ],
+   "hash_ms": 88,
+   "scan_ms": 29,
+   "exact": true
+  },
+  "8": {
+   "median_ms": 75.33670001430437,
+   "all_ms": [
+    75,
+    79,
+    75
+   ],
+   "hash_ms": 50,
+   "scan_ms": 25,
+   "exact": true
+  },
+  "12": {
+   "median_ms": 65.81179998465814,
+   "all_ms": [
+    67,
+    66,
+    63
+   ],
+   "hash_ms": 39,
+   "scan_ms": 24,
+   "exact": true
+  },
+  "16": {
+   "median_ms": 62.167399999452755,
+   "all_ms": [
+    62,
+    62,
+    63
+   ],
+   "hash_ms": 38,
+   "scan_ms": 25,
+   "exact": true
+  }
+ },
+ "fuzz": {
+  "exact": 300,
+  "of": 300,
+  "miss_gates": 2,
+  "fails": 0
+ },
+ "native_vs_numba_warm": 1.120417506200312
+}

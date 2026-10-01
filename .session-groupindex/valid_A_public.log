@@ -1,0 +1,29 @@
+=== resident-10M A/B/C ===
+RSS start 0.09GB
+csv_load 14813ms RSS 1.27GB
+extract 4297ms str_input=340.0MB num=240.0MB RSS 1.88GB
+A.Q1 cold=2392ms warm=1526ms (exec 1526ms) chk=29998789 RSS 1.16GB
+A.Q2 cold=3662ms warm=3234ms (exec 3234ms) chk=29998789 RSS 1.17GB
+A.Q3 cold=2557ms warm=2443ms (exec 2443ms) mean3=4999719.622344427 RSS 1.46GB
+A.Q4 cold=222ms warm=47ms (exec 47ms) maxdiff=9.09e-13 RSS 1.40GB
+A.Q5 cold=477ms warm=457ms (exec 457ms) s3_scaled=499976651408061 RSS 1.50GB
+B.prep id1: 1391ms codes=10000000 RSS 1.32GB
+B.prep id2: 1301ms codes=10000000 RSS 1.37GB
+B.prep id3: 1937ms codes=10000000 RSS 1.70GB
+B.prep total 4629ms resident=390.0MB (vs str 340.0MB) RSS 1.70GB
+B.Q1 cold=27ms warm=23ms chk=29998789
+B.Q2 cold=406ms warm=402ms chk=29998789
+B.Q3 cold=290ms warm=462ms mean3=4999719.622344427
+B.Q4 cold=43ms warm=41ms maxdiff=9.09e-13
+B.Q5 cold=385ms warm=580ms s3_scaled=499976651408061
+
+--- A/B (cold ms, 10M) ---
+Q1: OLD=2392 NEW=27 RATIO=90.23x thr 4k/s -> 377k/s
+Q2: OLD=3662 NEW=406 RATIO=9.02x thr 3k/s -> 25k/s
+Q3: OLD=2557 NEW=290 RATIO=8.83x thr 4k/s -> 35k/s
+Q4: OLD=222 NEW=43 RATIO=5.22x thr 45k/s -> 235k/s
+Q5: OLD=477 NEW=385 RATIO=1.24x thr 21k/s -> 26k/s
+queries: OLD=9309 NEW=1149 RATIO=8.10x
+end-to-end: A=9309 B=5779 (prep 4629) RATIO=1.61x
+encode: paid-once=4629ms vs per-query sum~7888ms
+JSON written

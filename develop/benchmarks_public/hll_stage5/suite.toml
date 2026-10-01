@@ -1,0 +1,12 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+name = "hll_stage5"
+version = "0.1.0"
+suite = "benchmarks_public/hll_stage5"
+seed = 42
+summary = "develop/benchmarks_public/hll_stage5/summary.json"
+sources = ["C:/App/numfast/develop/HLL/bench_stage5_full.json", "C:/App/numfast/develop/HLL/bench_stage5_fix_w6.json", "C:/App/numfast/develop/bench_hll_stage4.json", "C:/App/numfast/develop/bench_hll_mvp.json"]
+# ORIGINAL proof (reference only, NOT run by run_all):
+# export PYTHONPATH="/c/App/numfast/develop/HLL/_lib:/c/App/numfast/develop/OptimizerAffine/_lib:/c/App/numfast/app-builder:/c/App/numfast/numfast/src" && python develop/HLL/bench_stage5_full.py develop/HLL/bench_stage5_full.toml
+# LIGHT verification:
+# export PYTHONPATH="/c/App/numfast/numfast/src" && python develop/benchmarks_public/hll_stage5/present_hll_stage5.py

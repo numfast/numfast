@@ -1,0 +1,82 @@
+[
+ {
+  "algo": "F",
+  "regime": "M100/clustered",
+  "M": 100,
+  "pattern": "clustered",
+  "ms": 0.6997000018600374,
+  "local_ms": 0.6304999988060445,
+  "bytes": 2400,
+  "ngroups": 100,
+  "extra": {
+   "path": "dense",
+   "est_uniq": 0.0244140625,
+   "span": 100,
+   "was_sorted": false
+  }
+ },
+ {
+  "algo": "F",
+  "regime": "M10000/clustered",
+  "M": 10000,
+  "pattern": "clustered",
+  "ms": 1.7325999942841008,
+  "local_ms": 1.1303999926894903,
+  "bytes": 54672,
+  "ngroups": 2278,
+  "extra": {
+   "path": "dense",
+   "est_uniq": 0.4248046875,
+   "span": 9495,
+   "was_sorted": false
+  }
+ },
+ {
+  "algo": "F",
+  "regime": "M100000/clustered",
+  "M": 100000,
+  "pattern": "clustered",
+  "ms": 2.4547999928472564,
+  "local_ms": 1.972600002773106,
+  "bytes": 62784,
+  "ngroups": 2616,
+  "extra": {
+   "path": "dense",
+   "est_uniq": 0.47802734375,
+   "span": 99238,
+   "was_sorted": false
+  }
+ },
+ {
+  "algo": "F",
+  "regime": "M1000000/clustered",
+  "M": 1000000,
+  "pattern": "clustered",
+  "ms": 10.230100000626408,
+  "local_ms": 10.027200012700632,
+  "bytes": 62064,
+  "ngroups": 2586,
+  "extra": {
+   "path": "part",
+   "est_uniq": 0.470458984375,
+   "span": 982591,
+   "was_sorted": false
+  }
+ },
+ {
+  "algo": "F",
+  "regime": "M10000000/clustered",
+  "M": 10000000,
+  "pattern": "clustered",
+  "ms": 9.850099988398142,
+  "local_ms": 9.713899999042042,
+  "bytes": 62856,
+  "ngroups": 2619,
+  "extra": {
+   "path": "part",
+   "est_uniq": 0.474853515625,
+   "span": 9704501,
+   "was_sorted": false
+  }
+ }
+]

@@ -1,0 +1,14 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+name = "benchmarks_public"
+version = "0.1.0"
+suites = ["h2o", "clickbench", "hll_stage5", "gpu_proof", "q30_affine"]
+# Taxi suite relocated to C:/App/competitions/NYCTaxi/numfast_taxi/ (see README_RELOCATED.md there).
+# ONE light verification command (Git Bash, from C:/App/numfast/numfast):
+# export PYTHONPATH="/c/App/numfast/numfast/src" && python develop/benchmarks_public/run_all.py
+# Per-suite pretty printers (same PYTHONPATH):
+# python develop/benchmarks_public/h2o/present_h2o.py
+# python develop/benchmarks_public/clickbench/present_clickbench.py
+# python develop/benchmarks_public/hll_stage5/present_hll_stage5.py
+# python develop/benchmarks_public/gpu_proof/present_gpu_proof.py
+# python develop/benchmarks_public/q30_affine/present_q30_affine.py

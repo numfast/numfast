@@ -1,0 +1,2962 @@
+{
+ "seed": 42,
+ "Ns": [
+  1000000,
+  10000000,
+  16000000
+ ],
+ "calibrate": {
+  "path": "C:\\App\\numfast\\numfast\\calibration.toml",
+  "profile": {
+   "version": "calibrated_v1",
+   "source": "measured:seed42",
+   "age": "29s",
+   "matched": true,
+   "warning": "",
+   "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+  },
+  "hooks": [
+   {
+    "hook": "rng-i32",
+    "ops": [
+     "rng_fill_i32"
+    ],
+    "kind": "measured-matrix",
+    "detail": "counter-domain RNG fill; needs cold-vs-warm host+resident",
+    "measured": true,
+    "status": "measured"
+   },
+   {
+    "hook": "map",
+    "ops": [
+     "map"
+    ],
+    "kind": "not-applicable",
+    "detail": "no GPU capability (CPU-oracle): nothing to measure",
+    "measured": null,
+    "status": "not-applicable"
+   },
+   {
+    "hook": "filter",
+    "ops": [
+     "filter"
+    ],
+    "kind": "measured-matrix",
+    "detail": "selectivity sweep sizes downstream n_op + D2H tail only",
+    "measured": true,
+    "status": "measured"
+   },
+   {
+    "hook": "groupby-card",
+    "ops": [
+     "groupby",
+     "groupby_multi"
+    ],
+    "kind": "measured-matrix-per-cardinality",
+    "detail": "per-M fits; held-out (N=500K, M=50K) validation red flag",
+    "measured": true,
+    "status": "measured",
+    "cardinalities": [
+     100,
+     10000,
+     100000
+    ]
+   },
+   {
+    "hook": "sort-nonpow2",
+    "ops": [
+     "sort"
+    ],
+    "kind": "not-applicable",
+    "detail": "non-pow2/multi-key/NaN sorts are CPU-only explicit",
+    "measured": null,
+    "status": "not-applicable"
+   },
+   {
+    "hook": "transfer",
+    "ops": [],
+    "kind": "unmeasured-slot",
+    "detail": "H2D/D2H per-byte \u043b\u0438\u043d\u0435\u0439\u043a\u0438: structure exists, no data",
+    "measured": false,
+    "status": "unmeasured"
+   },
+   {
+    "hook": "device-init",
+    "ops": [],
+    "kind": "unmeasured-slot",
+    "detail": "first-GPU-call setup discarded at calibration: unknown",
+    "measured": false,
+    "status": "unmeasured"
+   }
+  ]
+ },
+ "points": [
+  {
+   "n": 1000000,
+   "scenario": "S1-cpu-resident",
+   "hints": {
+    "residence_from": "host",
+    "device_state": "warm"
+   },
+   "predicted_cpu_ms": 61.44178319550919,
+   "predicted_gpu_ms": 13.750728924529147,
+   "chosen_select": "gpu",
+   "chosen_actual": "gpu",
+   "reason": "measured calibrated_v1 (warm): cpu=61.442ms vs gpu_host=13.751ms (selectivity=0.5); resident only removes round trips",
+   "gpu_eligible": true,
+   "gpu_blockers": [],
+   "coverage": {
+    "ok": true,
+    "blockers": []
+   },
+   "profile": {
+    "version": "calibrated_v1",
+    "source": "measured:seed42",
+    "age": "38s",
+    "matched": true,
+    "warning": "",
+    "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+   },
+   "estimate": {
+    "cpu_ms": 61.44178319550919,
+    "gpu_host_ms": 13.750728924529147,
+    "slots": {
+     "cold": {
+      "device_init_one_time": {
+       "status": "none",
+       "ms": 0.0,
+       "note": "warm: setup already paid"
+      },
+      "compile_miss": {
+       "status": "none",
+       "ms": 0.0,
+       "ops": [],
+       "note": "warm: pipelines already compiled"
+      }
+     },
+     "transfer": {
+      "h2d": {
+       "status": "absorbed-in-fit",
+       "ms": 0.0,
+       "note": "host->resident: warm fits absorb steady-state transfer (DELTA-10)"
+      },
+      "d2h": {
+       "status": "zero-by-residence",
+       "ms": 0.0,
+       "note": "host->resident: no bytes cross"
+      },
+      "residence": {
+       "from": "host",
+       "to": "resident",
+       "n": 1000000
+      }
+     }
+    },
+    "unknown_slots": [],
+    "breakdown": [
+     {
+      "node": "r",
+      "op": "rng_fill_i32",
+      "n_op": 1000000,
+      "cpu_ms": 61.44178319550919,
+      "gpu_ms": 13.750728924529147,
+      "note": ""
+     }
+    ],
+    "unmeasured": [],
+    "state": "warm",
+    "selectivity": 0.5,
+    "context": {
+     "op_multiset": [
+      [
+       "rng_fill_i32",
+       1
+      ]
+     ],
+     "n": 1000000,
+     "n_ops": 1,
+     "dtypes": [],
+     "cardinalities": {},
+     "nearest": {},
+     "selectivity": 0.5,
+     "residence_from": "host",
+     "device_state": "warm",
+     "profile": {
+      "version": "calibrated_v1",
+      "source": "measured:seed42",
+      "age": "38s",
+      "matched": true,
+      "warning": "",
+      "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+     }
+    },
+    "note": "resident multi-node GPU can only remove round trips already inside host fits: gpu_host_ms is a conservative upper bound; measured chains in dataset quantify it; v1: cold+transfer structural, unknown slots force safe CPU"
+   },
+   "actual_cpu_warm_best_ms": 63.88200000219513,
+   "actual_cpu_warm_med_ms": 64.14610000501852,
+   "actual_cpu_warm_runs_ms": [
+    65.95360000210349,
+    64.14610000501852,
+    63.88200000219513
+   ],
+   "actual_gpu_warm_best_ms": 11.773999998695217,
+   "actual_gpu_warm_med_ms": 12.23059999756515,
+   "actual_gpu_warm_runs_ms": [
+    12.23059999756515,
+    11.773999998695217,
+    12.488499996834435
+   ],
+   "actual_cpu_cold_ms": 65.81349999760278,
+   "actual_gpu_cold_ms": 2484.2628999977023,
+   "regret_warm_ms": 0.0,
+   "regret_cold_ms": 2418.4494000000996,
+   "speedup_warm_cpu_over_gpu": 5.4256837106569105,
+   "execution_info": {
+    "requested": "auto",
+    "actual": "gpu",
+    "reason": "measured calibrated_v1 (warm): cpu=61.442ms vs gpu_host=13.751ms (selectivity=0.5); resident only removes round trips",
+    "dispatches": 1,
+    "h2d": 1,
+    "d2h": 1,
+    "num_chunks": 1,
+    "placement": "resident",
+    "residence": {
+     "from": "host",
+     "to": "resident",
+     "crossings": [
+      "h2d"
+     ],
+     "ping_pong": false,
+     "note": "single backend per graph: at most one crossing"
+    },
+    "cost_estimate": {
+     "cpu": 61.44178319550919,
+     "gpu": 13.750728924529147
+    },
+    "profile": {
+     "version": "calibrated_v1",
+     "source": "measured:seed42",
+     "age": "38s",
+     "matched": true,
+     "warning": "",
+     "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+    },
+    "gpu_eligible": true,
+    "gpu_blockers": [],
+    "coverage": {
+     "ok": true,
+     "blockers": []
+    },
+    "estimate": {
+     "cpu_ms": 61.44178319550919,
+     "gpu_host_ms": 13.750728924529147,
+     "slots": {
+      "cold": {
+       "device_init_one_time": {
+        "status": "none",
+        "ms": 0.0,
+        "note": "warm: setup already paid"
+       },
+       "compile_miss": {
+        "status": "none",
+        "ms": 0.0,
+        "ops": [],
+        "note": "warm: pipelines already compiled"
+       }
+      },
+      "transfer": {
+       "h2d": {
+        "status": "absorbed-in-fit",
+        "ms": 0.0,
+        "note": "host->resident: warm fits absorb steady-state transfer (DELTA-10)"
+       },
+       "d2h": {
+        "status": "zero-by-residence",
+        "ms": 0.0,
+        "note": "host->resident: no bytes cross"
+       },
+       "residence": {
+        "from": "host",
+        "to": "resident",
+        "n": 1000000
+       }
+      }
+     },
+     "unknown_slots": [],
+     "breakdown": [
+      {
+       "node": "r",
+       "op": "rng_fill_i32",
+       "n_op": 1000000,
+       "cpu_ms": 61.44178319550919,
+       "gpu_ms": 13.750728924529147,
+       "note": ""
+      }
+     ],
+     "unmeasured": [],
+     "state": "warm",
+     "selectivity": 0.5,
+     "context": {
+      "op_multiset": [
+       [
+        "rng_fill_i32",
+        1
+       ]
+      ],
+      "n": 1000000,
+      "n_ops": 1,
+      "dtypes": [],
+      "cardinalities": {},
+      "nearest": {},
+      "selectivity": 0.5,
+      "residence_from": "host",
+      "device_state": "warm",
+      "profile": {
+       "version": "calibrated_v1",
+       "source": "measured:seed42",
+       "age": "38s",
+       "matched": true,
+       "warning": "",
+       "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+      }
+     },
+     "note": "resident multi-node GPU can only remove round trips already inside host fits: gpu_host_ms is a conservative upper bound; measured chains in dataset quantify it; v1: cold+transfer structural, unknown slots force safe CPU"
+    }
+   }
+  },
+  {
+   "n": 1000000,
+   "scenario": "S1-cpu-resident",
+   "hints": {
+    "residence_from": "host",
+    "device_state": "cold"
+   },
+   "predicted_cpu_ms": 61.44178319550919,
+   "predicted_gpu_ms": null,
+   "chosen_select": "cpu",
+   "chosen_actual": "cpu",
+   "reason": "measured calibrated_v1 (cold): gpu cost unknown (device_init_one_time unmeasured); safe CPU choice (cpu=61.442ms; selectivity=0.5)",
+   "gpu_eligible": true,
+   "gpu_blockers": [],
+   "coverage": {
+    "ok": true,
+    "blockers": []
+   },
+   "profile": {
+    "version": "calibrated_v1",
+    "source": "measured:seed42",
+    "age": "38s",
+    "matched": true,
+    "warning": "",
+    "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+   },
+   "estimate": {
+    "cpu_ms": 61.44178319550919,
+    "gpu_host_ms": null,
+    "slots": {
+     "cold": {
+      "device_init_one_time": {
+       "status": "unmeasured",
+       "ms": null,
+       "note": "first-GPU-call setup is discarded at calibration; no dedicated measurement: unknown"
+      },
+      "compile_miss": {
+       "status": "measured",
+       "ms": 0.45230000250739977,
+       "ops": [
+        "rng_fill_i32"
+       ],
+       "unmeasured_ops": [],
+       "note": "median cold-warm gap per op pipeline"
+      }
+     },
+     "transfer": {
+      "h2d": {
+       "status": "absorbed-in-fit",
+       "ms": 0.0,
+       "note": "host->resident: warm fits absorb steady-state transfer (DELTA-10)"
+      },
+      "d2h": {
+       "status": "zero-by-residence",
+       "ms": 0.0,
+       "note": "host->resident: no bytes cross"
+      },
+      "residence": {
+       "from": "host",
+       "to": "resident",
+       "n": 1000000
+      }
+     }
+    },
+    "unknown_slots": [
+     "device_init_one_time"
+    ],
+    "breakdown": [
+     {
+      "node": "r",
+      "op": "rng_fill_i32",
+      "n_op": 1000000,
+      "cpu_ms": 61.44178319550919,
+      "gpu_ms": 13.750728924529147,
+      "note": ""
+     }
+    ],
+    "unmeasured": [],
+    "state": "cold",
+    "selectivity": 0.5,
+    "context": {
+     "op_multiset": [
+      [
+       "rng_fill_i32",
+       1
+      ]
+     ],
+     "n": 1000000,
+     "n_ops": 1,
+     "dtypes": [],
+     "cardinalities": {},
+     "nearest": {},
+     "selectivity": 0.5,
+     "residence_from": "host",
+     "device_state": "cold",
+     "profile": {
+      "version": "calibrated_v1",
+      "source": "measured:seed42",
+      "age": "38s",
+      "matched": true,
+      "warning": "",
+      "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+     }
+    },
+    "note": "resident multi-node GPU can only remove round trips already inside host fits: gpu_host_ms is a conservative upper bound; measured chains in dataset quantify it; v1: cold+transfer structural, unknown slots force safe CPU"
+   },
+   "actual_cpu_warm_best_ms": 63.88200000219513,
+   "actual_cpu_warm_med_ms": 64.14610000501852,
+   "actual_cpu_warm_runs_ms": [
+    65.95360000210349,
+    64.14610000501852,
+    63.88200000219513
+   ],
+   "actual_gpu_warm_best_ms": 11.773999998695217,
+   "actual_gpu_warm_med_ms": 12.23059999756515,
+   "actual_gpu_warm_runs_ms": [
+    12.23059999756515,
+    11.773999998695217,
+    12.488499996834435
+   ],
+   "actual_cpu_cold_ms": 65.81349999760278,
+   "actual_gpu_cold_ms": 2484.2628999977023,
+   "regret_warm_ms": 52.10800000349991,
+   "regret_cold_ms": 0.0,
+   "speedup_warm_cpu_over_gpu": 5.4256837106569105,
+   "execution_info": {
+    "requested": "auto",
+    "actual": "cpu",
+    "reason": "measured calibrated_v1 (cold): gpu cost unknown (device_init_one_time unmeasured); safe CPU choice (cpu=61.442ms; selectivity=0.5)",
+    "dispatches": 1,
+    "h2d": 1,
+    "d2h": 1,
+    "num_chunks": 1,
+    "placement": "host",
+    "residence": {
+     "from": "host",
+     "to": "host",
+     "crossings": [],
+     "ping_pong": false,
+     "note": "single backend per graph: at most one crossing"
+    },
+    "cost_estimate": {
+     "cpu": 61.44178319550919,
+     "gpu": null
+    },
+    "profile": {
+     "version": "calibrated_v1",
+     "source": "measured:seed42",
+     "age": "38s",
+     "matched": true,
+     "warning": "",
+     "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+    },
+    "gpu_eligible": true,
+    "gpu_blockers": [],
+    "coverage": {
+     "ok": true,
+     "blockers": []
+    },
+    "estimate": {
+     "cpu_ms": 61.44178319550919,
+     "gpu_host_ms": null,
+     "slots": {
+      "cold": {
+       "device_init_one_time": {
+        "status": "unmeasured",
+        "ms": null,
+        "note": "first-GPU-call setup is discarded at calibration; no dedicated measurement: unknown"
+       },
+       "compile_miss": {
+        "status": "measured",
+        "ms": 0.45230000250739977,
+        "ops": [
+         "rng_fill_i32"
+        ],
+        "unmeasured_ops": [],
+        "note": "median cold-warm gap per op pipeline"
+       }
+      },
+      "transfer": {
+       "h2d": {
+        "status": "absorbed-in-fit",
+        "ms": 0.0,
+        "note": "host->resident: warm fits absorb steady-state transfer (DELTA-10)"
+       },
+       "d2h": {
+        "status": "zero-by-residence",
+        "ms": 0.0,
+        "note": "host->resident: no bytes cross"
+       },
+       "residence": {
+        "from": "host",
+        "to": "resident",
+        "n": 1000000
+       }
+      }
+     },
+     "unknown_slots": [
+      "device_init_one_time"
+     ],
+     "breakdown": [
+      {
+       "node": "r",
+       "op": "rng_fill_i32",
+       "n_op": 1000000,
+       "cpu_ms": 61.44178319550919,
+       "gpu_ms": 13.750728924529147,
+       "note": ""
+      }
+     ],
+     "unmeasured": [],
+     "state": "cold",
+     "selectivity": 0.5,
+     "context": {
+      "op_multiset": [
+       [
+        "rng_fill_i32",
+        1
+       ]
+      ],
+      "n": 1000000,
+      "n_ops": 1,
+      "dtypes": [],
+      "cardinalities": {},
+      "nearest": {},
+      "selectivity": 0.5,
+      "residence_from": "host",
+      "device_state": "cold",
+      "profile": {
+       "version": "calibrated_v1",
+       "source": "measured:seed42",
+       "age": "38s",
+       "matched": true,
+       "warning": "",
+       "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+      }
+     },
+     "note": "resident multi-node GPU can only remove round trips already inside host fits: gpu_host_ms is a conservative upper bound; measured chains in dataset quantify it; v1: cold+transfer structural, unknown slots force safe CPU"
+    }
+   }
+  },
+  {
+   "n": 1000000,
+   "scenario": "S2-gpu-resident",
+   "hints": {
+    "residence_from": "resident",
+    "device_state": "warm"
+   },
+   "predicted_cpu_ms": 61.44178319550919,
+   "predicted_gpu_ms": 13.750728924529147,
+   "chosen_select": "gpu",
+   "chosen_actual": "gpu",
+   "reason": "measured calibrated_v1 (warm): cpu=61.442ms vs gpu_host=13.751ms (selectivity=0.5); resident only removes round trips",
+   "gpu_eligible": true,
+   "gpu_blockers": [],
+   "coverage": {
+    "ok": true,
+    "blockers": []
+   },
+   "profile": {
+    "version": "calibrated_v1",
+    "source": "measured:seed42",
+    "age": "38s",
+    "matched": true,
+    "warning": "",
+    "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+   },
+   "estimate": {
+    "cpu_ms": 61.44178319550919,
+    "gpu_host_ms": 13.750728924529147,
+    "slots": {
+     "cold": {
+      "device_init_one_time": {
+       "status": "none",
+       "ms": 0.0,
+       "note": "warm: setup already paid"
+      },
+      "compile_miss": {
+       "status": "none",
+       "ms": 0.0,
+       "ops": [],
+       "note": "warm: pipelines already compiled"
+      }
+     },
+     "transfer": {
+      "h2d": {
+       "status": "zero-by-residence",
+       "ms": 0.0,
+       "note": "resident->resident: no bytes cross"
+      },
+      "d2h": {
+       "status": "zero-by-residence",
+       "ms": 0.0,
+       "note": "resident->resident: no bytes cross"
+      },
+      "residence": {
+       "from": "resident",
+       "to": "resident",
+       "n": 1000000
+      }
+     }
+    },
+    "unknown_slots": [],
+    "breakdown": [
+     {
+      "node": "r",
+      "op": "rng_fill_i32",
+      "n_op": 1000000,
+      "cpu_ms": 61.44178319550919,
+      "gpu_ms": 13.750728924529147,
+      "note": ""
+     }
+    ],
+    "unmeasured": [],
+    "state": "warm",
+    "selectivity": 0.5,
+    "context": {
+     "op_multiset": [
+      [
+       "rng_fill_i32",
+       1
+      ]
+     ],
+     "n": 1000000,
+     "n_ops": 1,
+     "dtypes": [],
+     "cardinalities": {},
+     "nearest": {},
+     "selectivity": 0.5,
+     "residence_from": "resident",
+     "device_state": "warm",
+     "profile": {
+      "version": "calibrated_v1",
+      "source": "measured:seed42",
+      "age": "38s",
+      "matched": true,
+      "warning": "",
+      "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+     }
+    },
+    "note": "resident multi-node GPU can only remove round trips already inside host fits: gpu_host_ms is a conservative upper bound; measured chains in dataset quantify it; v1: cold+transfer structural, unknown slots force safe CPU"
+   },
+   "actual_cpu_warm_best_ms": 63.88200000219513,
+   "actual_cpu_warm_med_ms": 64.14610000501852,
+   "actual_cpu_warm_runs_ms": [
+    65.95360000210349,
+    64.14610000501852,
+    63.88200000219513
+   ],
+   "actual_gpu_warm_best_ms": 11.773999998695217,
+   "actual_gpu_warm_med_ms": 12.23059999756515,
+   "actual_gpu_warm_runs_ms": [
+    12.23059999756515,
+    11.773999998695217,
+    12.488499996834435
+   ],
+   "actual_cpu_cold_ms": 65.81349999760278,
+   "actual_gpu_cold_ms": 2484.2628999977023,
+   "regret_warm_ms": 0.0,
+   "regret_cold_ms": 2418.4494000000996,
+   "speedup_warm_cpu_over_gpu": 5.4256837106569105,
+   "execution_info": {
+    "requested": "auto",
+    "actual": "gpu",
+    "reason": "measured calibrated_v1 (warm): cpu=61.442ms vs gpu_host=13.751ms (selectivity=0.5); resident only removes round trips",
+    "dispatches": 1,
+    "h2d": 1,
+    "d2h": 1,
+    "num_chunks": 1,
+    "placement": "resident",
+    "residence": {
+     "from": "resident",
+     "to": "resident",
+     "crossings": [],
+     "ping_pong": false,
+     "note": "single backend per graph: at most one crossing"
+    },
+    "cost_estimate": {
+     "cpu": 61.44178319550919,
+     "gpu": 13.750728924529147
+    },
+    "profile": {
+     "version": "calibrated_v1",
+     "source": "measured:seed42",
+     "age": "38s",
+     "matched": true,
+     "warning": "",
+     "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+    },
+    "gpu_eligible": true,
+    "gpu_blockers": [],
+    "coverage": {
+     "ok": true,
+     "blockers": []
+    },
+    "estimate": {
+     "cpu_ms": 61.44178319550919,
+     "gpu_host_ms": 13.750728924529147,
+     "slots": {
+      "cold": {
+       "device_init_one_time": {
+        "status": "none",
+        "ms": 0.0,
+        "note": "warm: setup already paid"
+       },
+       "compile_miss": {
+        "status": "none",
+        "ms": 0.0,
+        "ops": [],
+        "note": "warm: pipelines already compiled"
+       }
+      },
+      "transfer": {
+       "h2d": {
+        "status": "zero-by-residence",
+        "ms": 0.0,
+        "note": "resident->resident: no bytes cross"
+       },
+       "d2h": {
+        "status": "zero-by-residence",
+        "ms": 0.0,
+        "note": "resident->resident: no bytes cross"
+       },
+       "residence": {
+        "from": "resident",
+        "to": "resident",
+        "n": 1000000
+       }
+      }
+     },
+     "unknown_slots": [],
+     "breakdown": [
+      {
+       "node": "r",
+       "op": "rng_fill_i32",
+       "n_op": 1000000,
+       "cpu_ms": 61.44178319550919,
+       "gpu_ms": 13.750728924529147,
+       "note": ""
+      }
+     ],
+     "unmeasured": [],
+     "state": "warm",
+     "selectivity": 0.5,
+     "context": {
+      "op_multiset": [
+       [
+        "rng_fill_i32",
+        1
+       ]
+      ],
+      "n": 1000000,
+      "n_ops": 1,
+      "dtypes": [],
+      "cardinalities": {},
+      "nearest": {},
+      "selectivity": 0.5,
+      "residence_from": "resident",
+      "device_state": "warm",
+      "profile": {
+       "version": "calibrated_v1",
+       "source": "measured:seed42",
+       "age": "38s",
+       "matched": true,
+       "warning": "",
+       "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+      }
+     },
+     "note": "resident multi-node GPU can only remove round trips already inside host fits: gpu_host_ms is a conservative upper bound; measured chains in dataset quantify it; v1: cold+transfer structural, unknown slots force safe CPU"
+    }
+   }
+  },
+  {
+   "n": 1000000,
+   "scenario": "S2-gpu-resident",
+   "hints": {
+    "residence_from": "resident",
+    "device_state": "cold"
+   },
+   "predicted_cpu_ms": 61.44178319550919,
+   "predicted_gpu_ms": null,
+   "chosen_select": "cpu",
+   "chosen_actual": "cpu",
+   "reason": "measured calibrated_v1 (cold): gpu cost unknown (device_init_one_time unmeasured); safe CPU choice (cpu=61.442ms; selectivity=0.5)",
+   "gpu_eligible": true,
+   "gpu_blockers": [],
+   "coverage": {
+    "ok": true,
+    "blockers": []
+   },
+   "profile": {
+    "version": "calibrated_v1",
+    "source": "measured:seed42",
+    "age": "38s",
+    "matched": true,
+    "warning": "",
+    "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+   },
+   "estimate": {
+    "cpu_ms": 61.44178319550919,
+    "gpu_host_ms": null,
+    "slots": {
+     "cold": {
+      "device_init_one_time": {
+       "status": "unmeasured",
+       "ms": null,
+       "note": "first-GPU-call setup is discarded at calibration; no dedicated measurement: unknown"
+      },
+      "compile_miss": {
+       "status": "measured",
+       "ms": 0.45230000250739977,
+       "ops": [
+        "rng_fill_i32"
+       ],
+       "unmeasured_ops": [],
+       "note": "median cold-warm gap per op pipeline"
+      }
+     },
+     "transfer": {
+      "h2d": {
+       "status": "zero-by-residence",
+       "ms": 0.0,
+       "note": "resident->resident: no bytes cross"
+      },
+      "d2h": {
+       "status": "zero-by-residence",
+       "ms": 0.0,
+       "note": "resident->resident: no bytes cross"
+      },
+      "residence": {
+       "from": "resident",
+       "to": "resident",
+       "n": 1000000
+      }
+     }
+    },
+    "unknown_slots": [
+     "device_init_one_time"
+    ],
+    "breakdown": [
+     {
+      "node": "r",
+      "op": "rng_fill_i32",
+      "n_op": 1000000,
+      "cpu_ms": 61.44178319550919,
+      "gpu_ms": 13.750728924529147,
+      "note": ""
+     }
+    ],
+    "unmeasured": [],
+    "state": "cold",
+    "selectivity": 0.5,
+    "context": {
+     "op_multiset": [
+      [
+       "rng_fill_i32",
+       1
+      ]
+     ],
+     "n": 1000000,
+     "n_ops": 1,
+     "dtypes": [],
+     "cardinalities": {},
+     "nearest": {},
+     "selectivity": 0.5,
+     "residence_from": "resident",
+     "device_state": "cold",
+     "profile": {
+      "version": "calibrated_v1",
+      "source": "measured:seed42",
+      "age": "38s",
+      "matched": true,
+      "warning": "",
+      "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+     }
+    },
+    "note": "resident multi-node GPU can only remove round trips already inside host fits: gpu_host_ms is a conservative upper bound; measured chains in dataset quantify it; v1: cold+transfer structural, unknown slots force safe CPU"
+   },
+   "actual_cpu_warm_best_ms": 63.88200000219513,
+   "actual_cpu_warm_med_ms": 64.14610000501852,
+   "actual_cpu_warm_runs_ms": [
+    65.95360000210349,
+    64.14610000501852,
+    63.88200000219513
+   ],
+   "actual_gpu_warm_best_ms": 11.773999998695217,
+   "actual_gpu_warm_med_ms": 12.23059999756515,
+   "actual_gpu_warm_runs_ms": [
+    12.23059999756515,
+    11.773999998695217,
+    12.488499996834435
+   ],
+   "actual_cpu_cold_ms": 65.81349999760278,
+   "actual_gpu_cold_ms": 2484.2628999977023,
+   "regret_warm_ms": 52.10800000349991,
+   "regret_cold_ms": 0.0,
+   "speedup_warm_cpu_over_gpu": 5.4256837106569105,
+   "execution_info": {
+    "requested": "auto",
+    "actual": "cpu",
+    "reason": "measured calibrated_v1 (cold): gpu cost unknown (device_init_one_time unmeasured); safe CPU choice (cpu=61.442ms; selectivity=0.5)",
+    "dispatches": 1,
+    "h2d": 1,
+    "d2h": 1,
+    "num_chunks": 1,
+    "placement": "host",
+    "residence": {
+     "from": "resident",
+     "to": "host",
+     "crossings": [
+      "d2h"
+     ],
+     "ping_pong": false,
+     "note": "single backend per graph: at most one crossing"
+    },
+    "cost_estimate": {
+     "cpu": 61.44178319550919,
+     "gpu": null
+    },
+    "profile": {
+     "version": "calibrated_v1",
+     "source": "measured:seed42",
+     "age": "38s",
+     "matched": true,
+     "warning": "",
+     "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+    },
+    "gpu_eligible": true,
+    "gpu_blockers": [],
+    "coverage": {
+     "ok": true,
+     "blockers": []
+    },
+    "estimate": {
+     "cpu_ms": 61.44178319550919,
+     "gpu_host_ms": null,
+     "slots": {
+      "cold": {
+       "device_init_one_time": {
+        "status": "unmeasured",
+        "ms": null,
+        "note": "first-GPU-call setup is discarded at calibration; no dedicated measurement: unknown"
+       },
+       "compile_miss": {
+        "status": "measured",
+        "ms": 0.45230000250739977,
+        "ops": [
+         "rng_fill_i32"
+        ],
+        "unmeasured_ops": [],
+        "note": "median cold-warm gap per op pipeline"
+       }
+      },
+      "transfer": {
+       "h2d": {
+        "status": "zero-by-residence",
+        "ms": 0.0,
+        "note": "resident->resident: no bytes cross"
+       },
+       "d2h": {
+        "status": "zero-by-residence",
+        "ms": 0.0,
+        "note": "resident->resident: no bytes cross"
+       },
+       "residence": {
+        "from": "resident",
+        "to": "resident",
+        "n": 1000000
+       }
+      }
+     },
+     "unknown_slots": [
+      "device_init_one_time"
+     ],
+     "breakdown": [
+      {
+       "node": "r",
+       "op": "rng_fill_i32",
+       "n_op": 1000000,
+       "cpu_ms": 61.44178319550919,
+       "gpu_ms": 13.750728924529147,
+       "note": ""
+      }
+     ],
+     "unmeasured": [],
+     "state": "cold",
+     "selectivity": 0.5,
+     "context": {
+      "op_multiset": [
+       [
+        "rng_fill_i32",
+        1
+       ]
+      ],
+      "n": 1000000,
+      "n_ops": 1,
+      "dtypes": [],
+      "cardinalities": {},
+      "nearest": {},
+      "selectivity": 0.5,
+      "residence_from": "resident",
+      "device_state": "cold",
+      "profile": {
+       "version": "calibrated_v1",
+       "source": "measured:seed42",
+       "age": "38s",
+       "matched": true,
+       "warning": "",
+       "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+      }
+     },
+     "note": "resident multi-node GPU can only remove round trips already inside host fits: gpu_host_ms is a conservative upper bound; measured chains in dataset quantify it; v1: cold+transfer structural, unknown slots force safe CPU"
+    }
+   }
+  },
+  {
+   "n": 10000000,
+   "scenario": "S1-cpu-resident",
+   "hints": {
+    "residence_from": "host",
+    "device_state": "warm"
+   },
+   "predicted_cpu_ms": 613.7714803575797,
+   "predicted_gpu_ms": 116.43457845268087,
+   "chosen_select": "gpu",
+   "chosen_actual": "gpu",
+   "reason": "measured calibrated_v1 (warm): cpu=613.771ms vs gpu_host=116.435ms (selectivity=0.5); resident only removes round trips",
+   "gpu_eligible": true,
+   "gpu_blockers": [],
+   "coverage": {
+    "ok": true,
+    "blockers": []
+   },
+   "profile": {
+    "version": "calibrated_v1",
+    "source": "measured:seed42",
+    "age": "48s",
+    "matched": true,
+    "warning": "",
+    "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+   },
+   "estimate": {
+    "cpu_ms": 613.7714803575797,
+    "gpu_host_ms": 116.43457845268087,
+    "slots": {
+     "cold": {
+      "device_init_one_time": {
+       "status": "none",
+       "ms": 0.0,
+       "note": "warm: setup already paid"
+      },
+      "compile_miss": {
+       "status": "none",
+       "ms": 0.0,
+       "ops": [],
+       "note": "warm: pipelines already compiled"
+      }
+     },
+     "transfer": {
+      "h2d": {
+       "status": "absorbed-in-fit",
+       "ms": 0.0,
+       "note": "host->resident: warm fits absorb steady-state transfer (DELTA-10)"
+      },
+      "d2h": {
+       "status": "zero-by-residence",
+       "ms": 0.0,
+       "note": "host->resident: no bytes cross"
+      },
+      "residence": {
+       "from": "host",
+       "to": "resident",
+       "n": 10000000
+      }
+     }
+    },
+    "unknown_slots": [],
+    "breakdown": [
+     {
+      "node": "r",
+      "op": "rng_fill_i32",
+      "n_op": 10000000,
+      "cpu_ms": 613.7714803575797,
+      "gpu_ms": 116.43457845268087,
+      "note": ""
+     }
+    ],
+    "unmeasured": [],
+    "state": "warm",
+    "selectivity": 0.5,
+    "context": {
+     "op_multiset": [
+      [
+       "rng_fill_i32",
+       1
+      ]
+     ],
+     "n": 10000000,
+     "n_ops": 1,
+     "dtypes": [],
+     "cardinalities": {},
+     "nearest": {},
+     "selectivity": 0.5,
+     "residence_from": "host",
+     "device_state": "warm",
+     "profile": {
+      "version": "calibrated_v1",
+      "source": "measured:seed42",
+      "age": "48s",
+      "matched": true,
+      "warning": "",
+      "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+     }
+    },
+    "note": "resident multi-node GPU can only remove round trips already inside host fits: gpu_host_ms is a conservative upper bound; measured chains in dataset quantify it; v1: cold+transfer structural, unknown slots force safe CPU"
+   },
+   "actual_cpu_warm_best_ms": 607.5160000036703,
+   "actual_cpu_warm_med_ms": 609.0990999946371,
+   "actual_cpu_warm_runs_ms": [
+    609.0990999946371,
+    607.5160000036703,
+    615.357499998936
+   ],
+   "actual_gpu_warm_best_ms": 95.56979999615578,
+   "actual_gpu_warm_med_ms": 98.92930000205524,
+   "actual_gpu_warm_runs_ms": [
+    98.92930000205524,
+    99.52489999704994,
+    95.56979999615578
+   ],
+   "actual_cpu_cold_ms": 614.5235000003595,
+   "actual_gpu_cold_ms": 2726.9732000058866,
+   "regret_warm_ms": 0.0,
+   "regret_cold_ms": 2112.449700005527,
+   "speedup_warm_cpu_over_gpu": 6.356777978274593,
+   "execution_info": {
+    "requested": "auto",
+    "actual": "gpu",
+    "reason": "measured calibrated_v1 (warm): cpu=613.771ms vs gpu_host=116.435ms (selectivity=0.5); resident only removes round trips",
+    "dispatches": 1,
+    "h2d": 1,
+    "d2h": 1,
+    "num_chunks": 1,
+    "placement": "resident",
+    "residence": {
+     "from": "host",
+     "to": "resident",
+     "crossings": [
+      "h2d"
+     ],
+     "ping_pong": false,
+     "note": "single backend per graph: at most one crossing"
+    },
+    "cost_estimate": {
+     "cpu": 613.7714803575797,
+     "gpu": 116.43457845268087
+    },
+    "profile": {
+     "version": "calibrated_v1",
+     "source": "measured:seed42",
+     "age": "48s",
+     "matched": true,
+     "warning": "",
+     "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+    },
+    "gpu_eligible": true,
+    "gpu_blockers": [],
+    "coverage": {
+     "ok": true,
+     "blockers": []
+    },
+    "estimate": {
+     "cpu_ms": 613.7714803575797,
+     "gpu_host_ms": 116.43457845268087,
+     "slots": {
+      "cold": {
+       "device_init_one_time": {
+        "status": "none",
+        "ms": 0.0,
+        "note": "warm: setup already paid"
+       },
+       "compile_miss": {
+        "status": "none",
+        "ms": 0.0,
+        "ops": [],
+        "note": "warm: pipelines already compiled"
+       }
+      },
+      "transfer": {
+       "h2d": {
+        "status": "absorbed-in-fit",
+        "ms": 0.0,
+        "note": "host->resident: warm fits absorb steady-state transfer (DELTA-10)"
+       },
+       "d2h": {
+        "status": "zero-by-residence",
+        "ms": 0.0,
+        "note": "host->resident: no bytes cross"
+       },
+       "residence": {
+        "from": "host",
+        "to": "resident",
+        "n": 10000000
+       }
+      }
+     },
+     "unknown_slots": [],
+     "breakdown": [
+      {
+       "node": "r",
+       "op": "rng_fill_i32",
+       "n_op": 10000000,
+       "cpu_ms": 613.7714803575797,
+       "gpu_ms": 116.43457845268087,
+       "note": ""
+      }
+     ],
+     "unmeasured": [],
+     "state": "warm",
+     "selectivity": 0.5,
+     "context": {
+      "op_multiset": [
+       [
+        "rng_fill_i32",
+        1
+       ]
+      ],
+      "n": 10000000,
+      "n_ops": 1,
+      "dtypes": [],
+      "cardinalities": {},
+      "nearest": {},
+      "selectivity": 0.5,
+      "residence_from": "host",
+      "device_state": "warm",
+      "profile": {
+       "version": "calibrated_v1",
+       "source": "measured:seed42",
+       "age": "48s",
+       "matched": true,
+       "warning": "",
+       "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+      }
+     },
+     "note": "resident multi-node GPU can only remove round trips already inside host fits: gpu_host_ms is a conservative upper bound; measured chains in dataset quantify it; v1: cold+transfer structural, unknown slots force safe CPU"
+    }
+   }
+  },
+  {
+   "n": 10000000,
+   "scenario": "S1-cpu-resident",
+   "hints": {
+    "residence_from": "host",
+    "device_state": "cold"
+   },
+   "predicted_cpu_ms": 613.7714803575797,
+   "predicted_gpu_ms": null,
+   "chosen_select": "cpu",
+   "chosen_actual": "cpu",
+   "reason": "measured calibrated_v1 (cold): gpu cost unknown (device_init_one_time unmeasured); safe CPU choice (cpu=613.771ms; selectivity=0.5)",
+   "gpu_eligible": true,
+   "gpu_blockers": [],
+   "coverage": {
+    "ok": true,
+    "blockers": []
+   },
+   "profile": {
+    "version": "calibrated_v1",
+    "source": "measured:seed42",
+    "age": "48s",
+    "matched": true,
+    "warning": "",
+    "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+   },
+   "estimate": {
+    "cpu_ms": 613.7714803575797,
+    "gpu_host_ms": null,
+    "slots": {
+     "cold": {
+      "device_init_one_time": {
+       "status": "unmeasured",
+       "ms": null,
+       "note": "first-GPU-call setup is discarded at calibration; no dedicated measurement: unknown"
+      },
+      "compile_miss": {
+       "status": "measured",
+       "ms": 0.45230000250739977,
+       "ops": [
+        "rng_fill_i32"
+       ],
+       "unmeasured_ops": [],
+       "note": "median cold-warm gap per op pipeline"
+      }
+     },
+     "transfer": {
+      "h2d": {
+       "status": "absorbed-in-fit",
+       "ms": 0.0,
+       "note": "host->resident: warm fits absorb steady-state transfer (DELTA-10)"
+      },
+      "d2h": {
+       "status": "zero-by-residence",
+       "ms": 0.0,
+       "note": "host->resident: no bytes cross"
+      },
+      "residence": {
+       "from": "host",
+       "to": "resident",
+       "n": 10000000
+      }
+     }
+    },
+    "unknown_slots": [
+     "device_init_one_time"
+    ],
+    "breakdown": [
+     {
+      "node": "r",
+      "op": "rng_fill_i32",
+      "n_op": 10000000,
+      "cpu_ms": 613.7714803575797,
+      "gpu_ms": 116.43457845268087,
+      "note": ""
+     }
+    ],
+    "unmeasured": [],
+    "state": "cold",
+    "selectivity": 0.5,
+    "context": {
+     "op_multiset": [
+      [
+       "rng_fill_i32",
+       1
+      ]
+     ],
+     "n": 10000000,
+     "n_ops": 1,
+     "dtypes": [],
+     "cardinalities": {},
+     "nearest": {},
+     "selectivity": 0.5,
+     "residence_from": "host",
+     "device_state": "cold",
+     "profile": {
+      "version": "calibrated_v1",
+      "source": "measured:seed42",
+      "age": "48s",
+      "matched": true,
+      "warning": "",
+      "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+     }
+    },
+    "note": "resident multi-node GPU can only remove round trips already inside host fits: gpu_host_ms is a conservative upper bound; measured chains in dataset quantify it; v1: cold+transfer structural, unknown slots force safe CPU"
+   },
+   "actual_cpu_warm_best_ms": 607.5160000036703,
+   "actual_cpu_warm_med_ms": 609.0990999946371,
+   "actual_cpu_warm_runs_ms": [
+    609.0990999946371,
+    607.5160000036703,
+    615.357499998936
+   ],
+   "actual_gpu_warm_best_ms": 95.56979999615578,
+   "actual_gpu_warm_med_ms": 98.92930000205524,
+   "actual_gpu_warm_runs_ms": [
+    98.92930000205524,
+    99.52489999704994,
+    95.56979999615578
+   ],
+   "actual_cpu_cold_ms": 614.5235000003595,
+   "actual_gpu_cold_ms": 2726.9732000058866,
+   "regret_warm_ms": 511.94620000751456,
+   "regret_cold_ms": 0.0,
+   "speedup_warm_cpu_over_gpu": 6.356777978274593,
+   "execution_info": {
+    "requested": "auto",
+    "actual": "cpu",
+    "reason": "measured calibrated_v1 (cold): gpu cost unknown (device_init_one_time unmeasured); safe CPU choice (cpu=613.771ms; selectivity=0.5)",
+    "dispatches": 1,
+    "h2d": 1,
+    "d2h": 1,
+    "num_chunks": 1,
+    "placement": "host",
+    "residence": {
+     "from": "host",
+     "to": "host",
+     "crossings": [],
+     "ping_pong": false,
+     "note": "single backend per graph: at most one crossing"
+    },
+    "cost_estimate": {
+     "cpu": 613.7714803575797,
+     "gpu": null
+    },
+    "profile": {
+     "version": "calibrated_v1",
+     "source": "measured:seed42",
+     "age": "48s",
+     "matched": true,
+     "warning": "",
+     "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+    },
+    "gpu_eligible": true,
+    "gpu_blockers": [],
+    "coverage": {
+     "ok": true,
+     "blockers": []
+    },
+    "estimate": {
+     "cpu_ms": 613.7714803575797,
+     "gpu_host_ms": null,
+     "slots": {
+      "cold": {
+       "device_init_one_time": {
+        "status": "unmeasured",
+        "ms": null,
+        "note": "first-GPU-call setup is discarded at calibration; no dedicated measurement: unknown"
+       },
+       "compile_miss": {
+        "status": "measured",
+        "ms": 0.45230000250739977,
+        "ops": [
+         "rng_fill_i32"
+        ],
+        "unmeasured_ops": [],
+        "note": "median cold-warm gap per op pipeline"
+       }
+      },
+      "transfer": {
+       "h2d": {
+        "status": "absorbed-in-fit",
+        "ms": 0.0,
+        "note": "host->resident: warm fits absorb steady-state transfer (DELTA-10)"
+       },
+       "d2h": {
+        "status": "zero-by-residence",
+        "ms": 0.0,
+        "note": "host->resident: no bytes cross"
+       },
+       "residence": {
+        "from": "host",
+        "to": "resident",
+        "n": 10000000
+       }
+      }
+     },
+     "unknown_slots": [
+      "device_init_one_time"
+     ],
+     "breakdown": [
+      {
+       "node": "r",
+       "op": "rng_fill_i32",
+       "n_op": 10000000,
+       "cpu_ms": 613.7714803575797,
+       "gpu_ms": 116.43457845268087,
+       "note": ""
+      }
+     ],
+     "unmeasured": [],
+     "state": "cold",
+     "selectivity": 0.5,
+     "context": {
+      "op_multiset": [
+       [
+        "rng_fill_i32",
+        1
+       ]
+      ],
+      "n": 10000000,
+      "n_ops": 1,
+      "dtypes": [],
+      "cardinalities": {},
+      "nearest": {},
+      "selectivity": 0.5,
+      "residence_from": "host",
+      "device_state": "cold",
+      "profile": {
+       "version": "calibrated_v1",
+       "source": "measured:seed42",
+       "age": "48s",
+       "matched": true,
+       "warning": "",
+       "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+      }
+     },
+     "note": "resident multi-node GPU can only remove round trips already inside host fits: gpu_host_ms is a conservative upper bound; measured chains in dataset quantify it; v1: cold+transfer structural, unknown slots force safe CPU"
+    }
+   }
+  },
+  {
+   "n": 10000000,
+   "scenario": "S2-gpu-resident",
+   "hints": {
+    "residence_from": "resident",
+    "device_state": "warm"
+   },
+   "predicted_cpu_ms": 613.7714803575797,
+   "predicted_gpu_ms": 116.43457845268087,
+   "chosen_select": "gpu",
+   "chosen_actual": "gpu",
+   "reason": "measured calibrated_v1 (warm): cpu=613.771ms vs gpu_host=116.435ms (selectivity=0.5); resident only removes round trips",
+   "gpu_eligible": true,
+   "gpu_blockers": [],
+   "coverage": {
+    "ok": true,
+    "blockers": []
+   },
+   "profile": {
+    "version": "calibrated_v1",
+    "source": "measured:seed42",
+    "age": "49s",
+    "matched": true,
+    "warning": "",
+    "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+   },
+   "estimate": {
+    "cpu_ms": 613.7714803575797,
+    "gpu_host_ms": 116.43457845268087,
+    "slots": {
+     "cold": {
+      "device_init_one_time": {
+       "status": "none",
+       "ms": 0.0,
+       "note": "warm: setup already paid"
+      },
+      "compile_miss": {
+       "status": "none",
+       "ms": 0.0,
+       "ops": [],
+       "note": "warm: pipelines already compiled"
+      }
+     },
+     "transfer": {
+      "h2d": {
+       "status": "zero-by-residence",
+       "ms": 0.0,
+       "note": "resident->resident: no bytes cross"
+      },
+      "d2h": {
+       "status": "zero-by-residence",
+       "ms": 0.0,
+       "note": "resident->resident: no bytes cross"
+      },
+      "residence": {
+       "from": "resident",
+       "to": "resident",
+       "n": 10000000
+      }
+     }
+    },
+    "unknown_slots": [],
+    "breakdown": [
+     {
+      "node": "r",
+      "op": "rng_fill_i32",
+      "n_op": 10000000,
+      "cpu_ms": 613.7714803575797,
+      "gpu_ms": 116.43457845268087,
+      "note": ""
+     }
+    ],
+    "unmeasured": [],
+    "state": "warm",
+    "selectivity": 0.5,
+    "context": {
+     "op_multiset": [
+      [
+       "rng_fill_i32",
+       1
+      ]
+     ],
+     "n": 10000000,
+     "n_ops": 1,
+     "dtypes": [],
+     "cardinalities": {},
+     "nearest": {},
+     "selectivity": 0.5,
+     "residence_from": "resident",
+     "device_state": "warm",
+     "profile": {
+      "version": "calibrated_v1",
+      "source": "measured:seed42",
+      "age": "49s",
+      "matched": true,
+      "warning": "",
+      "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+     }
+    },
+    "note": "resident multi-node GPU can only remove round trips already inside host fits: gpu_host_ms is a conservative upper bound; measured chains in dataset quantify it; v1: cold+transfer structural, unknown slots force safe CPU"
+   },
+   "actual_cpu_warm_best_ms": 607.5160000036703,
+   "actual_cpu_warm_med_ms": 609.0990999946371,
+   "actual_cpu_warm_runs_ms": [
+    609.0990999946371,
+    607.5160000036703,
+    615.357499998936
+   ],
+   "actual_gpu_warm_best_ms": 95.56979999615578,
+   "actual_gpu_warm_med_ms": 98.92930000205524,
+   "actual_gpu_warm_runs_ms": [
+    98.92930000205524,
+    99.52489999704994,
+    95.56979999615578
+   ],
+   "actual_cpu_cold_ms": 614.5235000003595,
+   "actual_gpu_cold_ms": 2726.9732000058866,
+   "regret_warm_ms": 0.0,
+   "regret_cold_ms": 2112.449700005527,
+   "speedup_warm_cpu_over_gpu": 6.356777978274593,
+   "execution_info": {
+    "requested": "auto",
+    "actual": "gpu",
+    "reason": "measured calibrated_v1 (warm): cpu=613.771ms vs gpu_host=116.435ms (selectivity=0.5); resident only removes round trips",
+    "dispatches": 1,
+    "h2d": 1,
+    "d2h": 1,
+    "num_chunks": 1,
+    "placement": "resident",
+    "residence": {
+     "from": "resident",
+     "to": "resident",
+     "crossings": [],
+     "ping_pong": false,
+     "note": "single backend per graph: at most one crossing"
+    },
+    "cost_estimate": {
+     "cpu": 613.7714803575797,
+     "gpu": 116.43457845268087
+    },
+    "profile": {
+     "version": "calibrated_v1",
+     "source": "measured:seed42",
+     "age": "49s",
+     "matched": true,
+     "warning": "",
+     "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+    },
+    "gpu_eligible": true,
+    "gpu_blockers": [],
+    "coverage": {
+     "ok": true,
+     "blockers": []
+    },
+    "estimate": {
+     "cpu_ms": 613.7714803575797,
+     "gpu_host_ms": 116.43457845268087,
+     "slots": {
+      "cold": {
+       "device_init_one_time": {
+        "status": "none",
+        "ms": 0.0,
+        "note": "warm: setup already paid"
+       },
+       "compile_miss": {
+        "status": "none",
+        "ms": 0.0,
+        "ops": [],
+        "note": "warm: pipelines already compiled"
+       }
+      },
+      "transfer": {
+       "h2d": {
+        "status": "zero-by-residence",
+        "ms": 0.0,
+        "note": "resident->resident: no bytes cross"
+       },
+       "d2h": {
+        "status": "zero-by-residence",
+        "ms": 0.0,
+        "note": "resident->resident: no bytes cross"
+       },
+       "residence": {
+        "from": "resident",
+        "to": "resident",
+        "n": 10000000
+       }
+      }
+     },
+     "unknown_slots": [],
+     "breakdown": [
+      {
+       "node": "r",
+       "op": "rng_fill_i32",
+       "n_op": 10000000,
+       "cpu_ms": 613.7714803575797,
+       "gpu_ms": 116.43457845268087,
+       "note": ""
+      }
+     ],
+     "unmeasured": [],
+     "state": "warm",
+     "selectivity": 0.5,
+     "context": {
+      "op_multiset": [
+       [
+        "rng_fill_i32",
+        1
+       ]
+      ],
+      "n": 10000000,
+      "n_ops": 1,
+      "dtypes": [],
+      "cardinalities": {},
+      "nearest": {},
+      "selectivity": 0.5,
+      "residence_from": "resident",
+      "device_state": "warm",
+      "profile": {
+       "version": "calibrated_v1",
+       "source": "measured:seed42",
+       "age": "49s",
+       "matched": true,
+       "warning": "",
+       "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+      }
+     },
+     "note": "resident multi-node GPU can only remove round trips already inside host fits: gpu_host_ms is a conservative upper bound; measured chains in dataset quantify it; v1: cold+transfer structural, unknown slots force safe CPU"
+    }
+   }
+  },
+  {
+   "n": 10000000,
+   "scenario": "S2-gpu-resident",
+   "hints": {
+    "residence_from": "resident",
+    "device_state": "cold"
+   },
+   "predicted_cpu_ms": 613.7714803575797,
+   "predicted_gpu_ms": null,
+   "chosen_select": "cpu",
+   "chosen_actual": "cpu",
+   "reason": "measured calibrated_v1 (cold): gpu cost unknown (device_init_one_time unmeasured); safe CPU choice (cpu=613.771ms; selectivity=0.5)",
+   "gpu_eligible": true,
+   "gpu_blockers": [],
+   "coverage": {
+    "ok": true,
+    "blockers": []
+   },
+   "profile": {
+    "version": "calibrated_v1",
+    "source": "measured:seed42",
+    "age": "49s",
+    "matched": true,
+    "warning": "",
+    "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+   },
+   "estimate": {
+    "cpu_ms": 613.7714803575797,
+    "gpu_host_ms": null,
+    "slots": {
+     "cold": {
+      "device_init_one_time": {
+       "status": "unmeasured",
+       "ms": null,
+       "note": "first-GPU-call setup is discarded at calibration; no dedicated measurement: unknown"
+      },
+      "compile_miss": {
+       "status": "measured",
+       "ms": 0.45230000250739977,
+       "ops": [
+        "rng_fill_i32"
+       ],
+       "unmeasured_ops": [],
+       "note": "median cold-warm gap per op pipeline"
+      }
+     },
+     "transfer": {
+      "h2d": {
+       "status": "zero-by-residence",
+       "ms": 0.0,
+       "note": "resident->resident: no bytes cross"
+      },
+      "d2h": {
+       "status": "zero-by-residence",
+       "ms": 0.0,
+       "note": "resident->resident: no bytes cross"
+      },
+      "residence": {
+       "from": "resident",
+       "to": "resident",
+       "n": 10000000
+      }
+     }
+    },
+    "unknown_slots": [
+     "device_init_one_time"
+    ],
+    "breakdown": [
+     {
+      "node": "r",
+      "op": "rng_fill_i32",
+      "n_op": 10000000,
+      "cpu_ms": 613.7714803575797,
+      "gpu_ms": 116.43457845268087,
+      "note": ""
+     }
+    ],
+    "unmeasured": [],
+    "state": "cold",
+    "selectivity": 0.5,
+    "context": {
+     "op_multiset": [
+      [
+       "rng_fill_i32",
+       1
+      ]
+     ],
+     "n": 10000000,
+     "n_ops": 1,
+     "dtypes": [],
+     "cardinalities": {},
+     "nearest": {},
+     "selectivity": 0.5,
+     "residence_from": "resident",
+     "device_state": "cold",
+     "profile": {
+      "version": "calibrated_v1",
+      "source": "measured:seed42",
+      "age": "49s",
+      "matched": true,
+      "warning": "",
+      "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+     }
+    },
+    "note": "resident multi-node GPU can only remove round trips already inside host fits: gpu_host_ms is a conservative upper bound; measured chains in dataset quantify it; v1: cold+transfer structural, unknown slots force safe CPU"
+   },
+   "actual_cpu_warm_best_ms": 607.5160000036703,
+   "actual_cpu_warm_med_ms": 609.0990999946371,
+   "actual_cpu_warm_runs_ms": [
+    609.0990999946371,
+    607.5160000036703,
+    615.357499998936
+   ],
+   "actual_gpu_warm_best_ms": 95.56979999615578,
+   "actual_gpu_warm_med_ms": 98.92930000205524,
+   "actual_gpu_warm_runs_ms": [
+    98.92930000205524,
+    99.52489999704994,
+    95.56979999615578
+   ],
+   "actual_cpu_cold_ms": 614.5235000003595,
+   "actual_gpu_cold_ms": 2726.9732000058866,
+   "regret_warm_ms": 511.94620000751456,
+   "regret_cold_ms": 0.0,
+   "speedup_warm_cpu_over_gpu": 6.356777978274593,
+   "execution_info": {
+    "requested": "auto",
+    "actual": "cpu",
+    "reason": "measured calibrated_v1 (cold): gpu cost unknown (device_init_one_time unmeasured); safe CPU choice (cpu=613.771ms; selectivity=0.5)",
+    "dispatches": 1,
+    "h2d": 1,
+    "d2h": 1,
+    "num_chunks": 1,
+    "placement": "host",
+    "residence": {
+     "from": "resident",
+     "to": "host",
+     "crossings": [
+      "d2h"
+     ],
+     "ping_pong": false,
+     "note": "single backend per graph: at most one crossing"
+    },
+    "cost_estimate": {
+     "cpu": 613.7714803575797,
+     "gpu": null
+    },
+    "profile": {
+     "version": "calibrated_v1",
+     "source": "measured:seed42",
+     "age": "49s",
+     "matched": true,
+     "warning": "",
+     "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+    },
+    "gpu_eligible": true,
+    "gpu_blockers": [],
+    "coverage": {
+     "ok": true,
+     "blockers": []
+    },
+    "estimate": {
+     "cpu_ms": 613.7714803575797,
+     "gpu_host_ms": null,
+     "slots": {
+      "cold": {
+       "device_init_one_time": {
+        "status": "unmeasured",
+        "ms": null,
+        "note": "first-GPU-call setup is discarded at calibration; no dedicated measurement: unknown"
+       },
+       "compile_miss": {
+        "status": "measured",
+        "ms": 0.45230000250739977,
+        "ops": [
+         "rng_fill_i32"
+        ],
+        "unmeasured_ops": [],
+        "note": "median cold-warm gap per op pipeline"
+       }
+      },
+      "transfer": {
+       "h2d": {
+        "status": "zero-by-residence",
+        "ms": 0.0,
+        "note": "resident->resident: no bytes cross"
+       },
+       "d2h": {
+        "status": "zero-by-residence",
+        "ms": 0.0,
+        "note": "resident->resident: no bytes cross"
+       },
+       "residence": {
+        "from": "resident",
+        "to": "resident",
+        "n": 10000000
+       }
+      }
+     },
+     "unknown_slots": [
+      "device_init_one_time"
+     ],
+     "breakdown": [
+      {
+       "node": "r",
+       "op": "rng_fill_i32",
+       "n_op": 10000000,
+       "cpu_ms": 613.7714803575797,
+       "gpu_ms": 116.43457845268087,
+       "note": ""
+      }
+     ],
+     "unmeasured": [],
+     "state": "cold",
+     "selectivity": 0.5,
+     "context": {
+      "op_multiset": [
+       [
+        "rng_fill_i32",
+        1
+       ]
+      ],
+      "n": 10000000,
+      "n_ops": 1,
+      "dtypes": [],
+      "cardinalities": {},
+      "nearest": {},
+      "selectivity": 0.5,
+      "residence_from": "resident",
+      "device_state": "cold",
+      "profile": {
+       "version": "calibrated_v1",
+       "source": "measured:seed42",
+       "age": "49s",
+       "matched": true,
+       "warning": "",
+       "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+      }
+     },
+     "note": "resident multi-node GPU can only remove round trips already inside host fits: gpu_host_ms is a conservative upper bound; measured chains in dataset quantify it; v1: cold+transfer structural, unknown slots force safe CPU"
+    }
+   }
+  },
+  {
+   "n": 16000000,
+   "scenario": "S1-cpu-resident",
+   "hints": {
+    "residence_from": "host",
+    "device_state": "warm"
+   },
+   "predicted_cpu_ms": 981.9912784656267,
+   "predicted_gpu_ms": 184.89047813811536,
+   "chosen_select": "gpu",
+   "chosen_actual": "gpu",
+   "reason": "measured calibrated_v1 (warm): cpu=981.991ms vs gpu_host=184.890ms (selectivity=0.5); resident only removes round trips",
+   "gpu_eligible": true,
+   "gpu_blockers": [],
+   "coverage": {
+    "ok": true,
+    "blockers": []
+   },
+   "profile": {
+    "version": "calibrated_v1",
+    "source": "measured:seed42",
+    "age": "62s",
+    "matched": true,
+    "warning": "",
+    "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+   },
+   "estimate": {
+    "cpu_ms": 981.9912784656267,
+    "gpu_host_ms": 184.89047813811536,
+    "slots": {
+     "cold": {
+      "device_init_one_time": {
+       "status": "none",
+       "ms": 0.0,
+       "note": "warm: setup already paid"
+      },
+      "compile_miss": {
+       "status": "none",
+       "ms": 0.0,
+       "ops": [],
+       "note": "warm: pipelines already compiled"
+      }
+     },
+     "transfer": {
+      "h2d": {
+       "status": "absorbed-in-fit",
+       "ms": 0.0,
+       "note": "host->resident: warm fits absorb steady-state transfer (DELTA-10)"
+      },
+      "d2h": {
+       "status": "zero-by-residence",
+       "ms": 0.0,
+       "note": "host->resident: no bytes cross"
+      },
+      "residence": {
+       "from": "host",
+       "to": "resident",
+       "n": 16000000
+      }
+     }
+    },
+    "unknown_slots": [],
+    "breakdown": [
+     {
+      "node": "r",
+      "op": "rng_fill_i32",
+      "n_op": 16000000,
+      "cpu_ms": 981.9912784656267,
+      "gpu_ms": 184.89047813811536,
+      "note": ""
+     }
+    ],
+    "unmeasured": [],
+    "state": "warm",
+    "selectivity": 0.5,
+    "context": {
+     "op_multiset": [
+      [
+       "rng_fill_i32",
+       1
+      ]
+     ],
+     "n": 16000000,
+     "n_ops": 1,
+     "dtypes": [],
+     "cardinalities": {},
+     "nearest": {},
+     "selectivity": 0.5,
+     "residence_from": "host",
+     "device_state": "warm",
+     "profile": {
+      "version": "calibrated_v1",
+      "source": "measured:seed42",
+      "age": "62s",
+      "matched": true,
+      "warning": "",
+      "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+     }
+    },
+    "note": "resident multi-node GPU can only remove round trips already inside host fits: gpu_host_ms is a conservative upper bound; measured chains in dataset quantify it; v1: cold+transfer structural, unknown slots force safe CPU"
+   },
+   "actual_cpu_warm_best_ms": 967.2691000014311,
+   "actual_cpu_warm_med_ms": 975.7708000033745,
+   "actual_cpu_warm_runs_ms": [
+    988.4022000042023,
+    967.2691000014311,
+    975.7708000033745
+   ],
+   "actual_gpu_warm_best_ms": 131.7001999996137,
+   "actual_gpu_warm_med_ms": 132.86640000296757,
+   "actual_gpu_warm_runs_ms": [
+    133.6726000008639,
+    131.7001999996137,
+    132.86640000296757
+   ],
+   "actual_cpu_cold_ms": 1006.7861999996239,
+   "actual_gpu_cold_ms": 2814.9076999980025,
+   "regret_warm_ms": 0.0,
+   "regret_cold_ms": 1808.1214999983786,
+   "speedup_warm_cpu_over_gpu": 7.3444770775159665,
+   "execution_info": {
+    "requested": "auto",
+    "actual": "gpu",
+    "reason": "measured calibrated_v1 (warm): cpu=981.991ms vs gpu_host=184.890ms (selectivity=0.5); resident only removes round trips",
+    "dispatches": 1,
+    "h2d": 1,
+    "d2h": 1,
+    "num_chunks": 1,
+    "placement": "resident",
+    "residence": {
+     "from": "host",
+     "to": "resident",
+     "crossings": [
+      "h2d"
+     ],
+     "ping_pong": false,
+     "note": "single backend per graph: at most one crossing"
+    },
+    "cost_estimate": {
+     "cpu": 981.9912784656267,
+     "gpu": 184.89047813811536
+    },
+    "profile": {
+     "version": "calibrated_v1",
+     "source": "measured:seed42",
+     "age": "62s",
+     "matched": true,
+     "warning": "",
+     "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+    },
+    "gpu_eligible": true,
+    "gpu_blockers": [],
+    "coverage": {
+     "ok": true,
+     "blockers": []
+    },
+    "estimate": {
+     "cpu_ms": 981.9912784656267,
+     "gpu_host_ms": 184.89047813811536,
+     "slots": {
+      "cold": {
+       "device_init_one_time": {
+        "status": "none",
+        "ms": 0.0,
+        "note": "warm: setup already paid"
+       },
+       "compile_miss": {
+        "status": "none",
+        "ms": 0.0,
+        "ops": [],
+        "note": "warm: pipelines already compiled"
+       }
+      },
+      "transfer": {
+       "h2d": {
+        "status": "absorbed-in-fit",
+        "ms": 0.0,
+        "note": "host->resident: warm fits absorb steady-state transfer (DELTA-10)"
+       },
+       "d2h": {
+        "status": "zero-by-residence",
+        "ms": 0.0,
+        "note": "host->resident: no bytes cross"
+       },
+       "residence": {
+        "from": "host",
+        "to": "resident",
+        "n": 16000000
+       }
+      }
+     },
+     "unknown_slots": [],
+     "breakdown": [
+      {
+       "node": "r",
+       "op": "rng_fill_i32",
+       "n_op": 16000000,
+       "cpu_ms": 981.9912784656267,
+       "gpu_ms": 184.89047813811536,
+       "note": ""
+      }
+     ],
+     "unmeasured": [],
+     "state": "warm",
+     "selectivity": 0.5,
+     "context": {
+      "op_multiset": [
+       [
+        "rng_fill_i32",
+        1
+       ]
+      ],
+      "n": 16000000,
+      "n_ops": 1,
+      "dtypes": [],
+      "cardinalities": {},
+      "nearest": {},
+      "selectivity": 0.5,
+      "residence_from": "host",
+      "device_state": "warm",
+      "profile": {
+       "version": "calibrated_v1",
+       "source": "measured:seed42",
+       "age": "62s",
+       "matched": true,
+       "warning": "",
+       "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+      }
+     },
+     "note": "resident multi-node GPU can only remove round trips already inside host fits: gpu_host_ms is a conservative upper bound; measured chains in dataset quantify it; v1: cold+transfer structural, unknown slots force safe CPU"
+    }
+   }
+  },
+  {
+   "n": 16000000,
+   "scenario": "S1-cpu-resident",
+   "hints": {
+    "residence_from": "host",
+    "device_state": "cold"
+   },
+   "predicted_cpu_ms": 981.9912784656267,
+   "predicted_gpu_ms": null,
+   "chosen_select": "cpu",
+   "chosen_actual": "cpu",
+   "reason": "measured calibrated_v1 (cold): gpu cost unknown (device_init_one_time unmeasured); safe CPU choice (cpu=981.991ms; selectivity=0.5)",
+   "gpu_eligible": true,
+   "gpu_blockers": [],
+   "coverage": {
+    "ok": true,
+    "blockers": []
+   },
+   "profile": {
+    "version": "calibrated_v1",
+    "source": "measured:seed42",
+    "age": "63s",
+    "matched": true,
+    "warning": "",
+    "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+   },
+   "estimate": {
+    "cpu_ms": 981.9912784656267,
+    "gpu_host_ms": null,
+    "slots": {
+     "cold": {
+      "device_init_one_time": {
+       "status": "unmeasured",
+       "ms": null,
+       "note": "first-GPU-call setup is discarded at calibration; no dedicated measurement: unknown"
+      },
+      "compile_miss": {
+       "status": "measured",
+       "ms": 0.45230000250739977,
+       "ops": [
+        "rng_fill_i32"
+       ],
+       "unmeasured_ops": [],
+       "note": "median cold-warm gap per op pipeline"
+      }
+     },
+     "transfer": {
+      "h2d": {
+       "status": "absorbed-in-fit",
+       "ms": 0.0,
+       "note": "host->resident: warm fits absorb steady-state transfer (DELTA-10)"
+      },
+      "d2h": {
+       "status": "zero-by-residence",
+       "ms": 0.0,
+       "note": "host->resident: no bytes cross"
+      },
+      "residence": {
+       "from": "host",
+       "to": "resident",
+       "n": 16000000
+      }
+     }
+    },
+    "unknown_slots": [
+     "device_init_one_time"
+    ],
+    "breakdown": [
+     {
+      "node": "r",
+      "op": "rng_fill_i32",
+      "n_op": 16000000,
+      "cpu_ms": 981.9912784656267,
+      "gpu_ms": 184.89047813811536,
+      "note": ""
+     }
+    ],
+    "unmeasured": [],
+    "state": "cold",
+    "selectivity": 0.5,
+    "context": {
+     "op_multiset": [
+      [
+       "rng_fill_i32",
+       1
+      ]
+     ],
+     "n": 16000000,
+     "n_ops": 1,
+     "dtypes": [],
+     "cardinalities": {},
+     "nearest": {},
+     "selectivity": 0.5,
+     "residence_from": "host",
+     "device_state": "cold",
+     "profile": {
+      "version": "calibrated_v1",
+      "source": "measured:seed42",
+      "age": "63s",
+      "matched": true,
+      "warning": "",
+      "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+     }
+    },
+    "note": "resident multi-node GPU can only remove round trips already inside host fits: gpu_host_ms is a conservative upper bound; measured chains in dataset quantify it; v1: cold+transfer structural, unknown slots force safe CPU"
+   },
+   "actual_cpu_warm_best_ms": 967.2691000014311,
+   "actual_cpu_warm_med_ms": 975.7708000033745,
+   "actual_cpu_warm_runs_ms": [
+    988.4022000042023,
+    967.2691000014311,
+    975.7708000033745
+   ],
+   "actual_gpu_warm_best_ms": 131.7001999996137,
+   "actual_gpu_warm_med_ms": 132.86640000296757,
+   "actual_gpu_warm_runs_ms": [
+    133.6726000008639,
+    131.7001999996137,
+    132.86640000296757
+   ],
+   "actual_cpu_cold_ms": 1006.7861999996239,
+   "actual_gpu_cold_ms": 2814.9076999980025,
+   "regret_warm_ms": 835.5689000018174,
+   "regret_cold_ms": 0.0,
+   "speedup_warm_cpu_over_gpu": 7.3444770775159665,
+   "execution_info": {
+    "requested": "auto",
+    "actual": "cpu",
+    "reason": "measured calibrated_v1 (cold): gpu cost unknown (device_init_one_time unmeasured); safe CPU choice (cpu=981.991ms; selectivity=0.5)",
+    "dispatches": 1,
+    "h2d": 1,
+    "d2h": 1,
+    "num_chunks": 1,
+    "placement": "host",
+    "residence": {
+     "from": "host",
+     "to": "host",
+     "crossings": [],
+     "ping_pong": false,
+     "note": "single backend per graph: at most one crossing"
+    },
+    "cost_estimate": {
+     "cpu": 981.9912784656267,
+     "gpu": null
+    },
+    "profile": {
+     "version": "calibrated_v1",
+     "source": "measured:seed42",
+     "age": "63s",
+     "matched": true,
+     "warning": "",
+     "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+    },
+    "gpu_eligible": true,
+    "gpu_blockers": [],
+    "coverage": {
+     "ok": true,
+     "blockers": []
+    },
+    "estimate": {
+     "cpu_ms": 981.9912784656267,
+     "gpu_host_ms": null,
+     "slots": {
+      "cold": {
+       "device_init_one_time": {
+        "status": "unmeasured",
+        "ms": null,
+        "note": "first-GPU-call setup is discarded at calibration; no dedicated measurement: unknown"
+       },
+       "compile_miss": {
+        "status": "measured",
+        "ms": 0.45230000250739977,
+        "ops": [
+         "rng_fill_i32"
+        ],
+        "unmeasured_ops": [],
+        "note": "median cold-warm gap per op pipeline"
+       }
+      },
+      "transfer": {
+       "h2d": {
+        "status": "absorbed-in-fit",
+        "ms": 0.0,
+        "note": "host->resident: warm fits absorb steady-state transfer (DELTA-10)"
+       },
+       "d2h": {
+        "status": "zero-by-residence",
+        "ms": 0.0,
+        "note": "host->resident: no bytes cross"
+       },
+       "residence": {
+        "from": "host",
+        "to": "resident",
+        "n": 16000000
+       }
+      }
+     },
+     "unknown_slots": [
+      "device_init_one_time"
+     ],
+     "breakdown": [
+      {
+       "node": "r",
+       "op": "rng_fill_i32",
+       "n_op": 16000000,
+       "cpu_ms": 981.9912784656267,
+       "gpu_ms": 184.89047813811536,
+       "note": ""
+      }
+     ],
+     "unmeasured": [],
+     "state": "cold",
+     "selectivity": 0.5,
+     "context": {
+      "op_multiset": [
+       [
+        "rng_fill_i32",
+        1
+       ]
+      ],
+      "n": 16000000,
+      "n_ops": 1,
+      "dtypes": [],
+      "cardinalities": {},
+      "nearest": {},
+      "selectivity": 0.5,
+      "residence_from": "host",
+      "device_state": "cold",
+      "profile": {
+       "version": "calibrated_v1",
+       "source": "measured:seed42",
+       "age": "63s",
+       "matched": true,
+       "warning": "",
+       "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+      }
+     },
+     "note": "resident multi-node GPU can only remove round trips already inside host fits: gpu_host_ms is a conservative upper bound; measured chains in dataset quantify it; v1: cold+transfer structural, unknown slots force safe CPU"
+    }
+   }
+  },
+  {
+   "n": 16000000,
+   "scenario": "S2-gpu-resident",
+   "hints": {
+    "residence_from": "resident",
+    "device_state": "warm"
+   },
+   "predicted_cpu_ms": 981.9912784656267,
+   "predicted_gpu_ms": 184.89047813811536,
+   "chosen_select": "gpu",
+   "chosen_actual": "gpu",
+   "reason": "measured calibrated_v1 (warm): cpu=981.991ms vs gpu_host=184.890ms (selectivity=0.5); resident only removes round trips",
+   "gpu_eligible": true,
+   "gpu_blockers": [],
+   "coverage": {
+    "ok": true,
+    "blockers": []
+   },
+   "profile": {
+    "version": "calibrated_v1",
+    "source": "measured:seed42",
+    "age": "64s",
+    "matched": true,
+    "warning": "",
+    "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+   },
+   "estimate": {
+    "cpu_ms": 981.9912784656267,
+    "gpu_host_ms": 184.89047813811536,
+    "slots": {
+     "cold": {
+      "device_init_one_time": {
+       "status": "none",
+       "ms": 0.0,
+       "note": "warm: setup already paid"
+      },
+      "compile_miss": {
+       "status": "none",
+       "ms": 0.0,
+       "ops": [],
+       "note": "warm: pipelines already compiled"
+      }
+     },
+     "transfer": {
+      "h2d": {
+       "status": "zero-by-residence",
+       "ms": 0.0,
+       "note": "resident->resident: no bytes cross"
+      },
+      "d2h": {
+       "status": "zero-by-residence",
+       "ms": 0.0,
+       "note": "resident->resident: no bytes cross"
+      },
+      "residence": {
+       "from": "resident",
+       "to": "resident",
+       "n": 16000000
+      }
+     }
+    },
+    "unknown_slots": [],
+    "breakdown": [
+     {
+      "node": "r",
+      "op": "rng_fill_i32",
+      "n_op": 16000000,
+      "cpu_ms": 981.9912784656267,
+      "gpu_ms": 184.89047813811536,
+      "note": ""
+     }
+    ],
+    "unmeasured": [],
+    "state": "warm",
+    "selectivity": 0.5,
+    "context": {
+     "op_multiset": [
+      [
+       "rng_fill_i32",
+       1
+      ]
+     ],
+     "n": 16000000,
+     "n_ops": 1,
+     "dtypes": [],
+     "cardinalities": {},
+     "nearest": {},
+     "selectivity": 0.5,
+     "residence_from": "resident",
+     "device_state": "warm",
+     "profile": {
+      "version": "calibrated_v1",
+      "source": "measured:seed42",
+      "age": "64s",
+      "matched": true,
+      "warning": "",
+      "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+     }
+    },
+    "note": "resident multi-node GPU can only remove round trips already inside host fits: gpu_host_ms is a conservative upper bound; measured chains in dataset quantify it; v1: cold+transfer structural, unknown slots force safe CPU"
+   },
+   "actual_cpu_warm_best_ms": 967.2691000014311,
+   "actual_cpu_warm_med_ms": 975.7708000033745,
+   "actual_cpu_warm_runs_ms": [
+    988.4022000042023,
+    967.2691000014311,
+    975.7708000033745
+   ],
+   "actual_gpu_warm_best_ms": 131.7001999996137,
+   "actual_gpu_warm_med_ms": 132.86640000296757,
+   "actual_gpu_warm_runs_ms": [
+    133.6726000008639,
+    131.7001999996137,
+    132.86640000296757
+   ],
+   "actual_cpu_cold_ms": 1006.7861999996239,
+   "actual_gpu_cold_ms": 2814.9076999980025,
+   "regret_warm_ms": 0.0,
+   "regret_cold_ms": 1808.1214999983786,
+   "speedup_warm_cpu_over_gpu": 7.3444770775159665,
+   "execution_info": {
+    "requested": "auto",
+    "actual": "gpu",
+    "reason": "measured calibrated_v1 (warm): cpu=981.991ms vs gpu_host=184.890ms (selectivity=0.5); resident only removes round trips",
+    "dispatches": 1,
+    "h2d": 1,
+    "d2h": 1,
+    "num_chunks": 1,
+    "placement": "resident",
+    "residence": {
+     "from": "resident",
+     "to": "resident",
+     "crossings": [],
+     "ping_pong": false,
+     "note": "single backend per graph: at most one crossing"
+    },
+    "cost_estimate": {
+     "cpu": 981.9912784656267,
+     "gpu": 184.89047813811536
+    },
+    "profile": {
+     "version": "calibrated_v1",
+     "source": "measured:seed42",
+     "age": "64s",
+     "matched": true,
+     "warning": "",
+     "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+    },
+    "gpu_eligible": true,
+    "gpu_blockers": [],
+    "coverage": {
+     "ok": true,
+     "blockers": []
+    },
+    "estimate": {
+     "cpu_ms": 981.9912784656267,
+     "gpu_host_ms": 184.89047813811536,
+     "slots": {
+      "cold": {
+       "device_init_one_time": {
+        "status": "none",
+        "ms": 0.0,
+        "note": "warm: setup already paid"
+       },
+       "compile_miss": {
+        "status": "none",
+        "ms": 0.0,
+        "ops": [],
+        "note": "warm: pipelines already compiled"
+       }
+      },
+      "transfer": {
+       "h2d": {
+        "status": "zero-by-residence",
+        "ms": 0.0,
+        "note": "resident->resident: no bytes cross"
+       },
+       "d2h": {
+        "status": "zero-by-residence",
+        "ms": 0.0,
+        "note": "resident->resident: no bytes cross"
+       },
+       "residence": {
+        "from": "resident",
+        "to": "resident",
+        "n": 16000000
+       }
+      }
+     },
+     "unknown_slots": [],
+     "breakdown": [
+      {
+       "node": "r",
+       "op": "rng_fill_i32",
+       "n_op": 16000000,
+       "cpu_ms": 981.9912784656267,
+       "gpu_ms": 184.89047813811536,
+       "note": ""
+      }
+     ],
+     "unmeasured": [],
+     "state": "warm",
+     "selectivity": 0.5,
+     "context": {
+      "op_multiset": [
+       [
+        "rng_fill_i32",
+        1
+       ]
+      ],
+      "n": 16000000,
+      "n_ops": 1,
+      "dtypes": [],
+      "cardinalities": {},
+      "nearest": {},
+      "selectivity": 0.5,
+      "residence_from": "resident",
+      "device_state": "warm",
+      "profile": {
+       "version": "calibrated_v1",
+       "source": "measured:seed42",
+       "age": "64s",
+       "matched": true,
+       "warning": "",
+       "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+      }
+     },
+     "note": "resident multi-node GPU can only remove round trips already inside host fits: gpu_host_ms is a conservative upper bound; measured chains in dataset quantify it; v1: cold+transfer structural, unknown slots force safe CPU"
+    }
+   }
+  },
+  {
+   "n": 16000000,
+   "scenario": "S2-gpu-resident",
+   "hints": {
+    "residence_from": "resident",
+    "device_state": "cold"
+   },
+   "predicted_cpu_ms": 981.9912784656267,
+   "predicted_gpu_ms": null,
+   "chosen_select": "cpu",
+   "chosen_actual": "cpu",
+   "reason": "measured calibrated_v1 (cold): gpu cost unknown (device_init_one_time unmeasured); safe CPU choice (cpu=981.991ms; selectivity=0.5)",
+   "gpu_eligible": true,
+   "gpu_blockers": [],
+   "coverage": {
+    "ok": true,
+    "blockers": []
+   },
+   "profile": {
+    "version": "calibrated_v1",
+    "source": "measured:seed42",
+    "age": "64s",
+    "matched": true,
+    "warning": "",
+    "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+   },
+   "estimate": {
+    "cpu_ms": 981.9912784656267,
+    "gpu_host_ms": null,
+    "slots": {
+     "cold": {
+      "device_init_one_time": {
+       "status": "unmeasured",
+       "ms": null,
+       "note": "first-GPU-call setup is discarded at calibration; no dedicated measurement: unknown"
+      },
+      "compile_miss": {
+       "status": "measured",
+       "ms": 0.45230000250739977,
+       "ops": [
+        "rng_fill_i32"
+       ],
+       "unmeasured_ops": [],
+       "note": "median cold-warm gap per op pipeline"
+      }
+     },
+     "transfer": {
+      "h2d": {
+       "status": "zero-by-residence",
+       "ms": 0.0,
+       "note": "resident->resident: no bytes cross"
+      },
+      "d2h": {
+       "status": "zero-by-residence",
+       "ms": 0.0,
+       "note": "resident->resident: no bytes cross"
+      },
+      "residence": {
+       "from": "resident",
+       "to": "resident",
+       "n": 16000000
+      }
+     }
+    },
+    "unknown_slots": [
+     "device_init_one_time"
+    ],
+    "breakdown": [
+     {
+      "node": "r",
+      "op": "rng_fill_i32",
+      "n_op": 16000000,
+      "cpu_ms": 981.9912784656267,
+      "gpu_ms": 184.89047813811536,
+      "note": ""
+     }
+    ],
+    "unmeasured": [],
+    "state": "cold",
+    "selectivity": 0.5,
+    "context": {
+     "op_multiset": [
+      [
+       "rng_fill_i32",
+       1
+      ]
+     ],
+     "n": 16000000,
+     "n_ops": 1,
+     "dtypes": [],
+     "cardinalities": {},
+     "nearest": {},
+     "selectivity": 0.5,
+     "residence_from": "resident",
+     "device_state": "cold",
+     "profile": {
+      "version": "calibrated_v1",
+      "source": "measured:seed42",
+      "age": "64s",
+      "matched": true,
+      "warning": "",
+      "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+     }
+    },
+    "note": "resident multi-node GPU can only remove round trips already inside host fits: gpu_host_ms is a conservative upper bound; measured chains in dataset quantify it; v1: cold+transfer structural, unknown slots force safe CPU"
+   },
+   "actual_cpu_warm_best_ms": 967.2691000014311,
+   "actual_cpu_warm_med_ms": 975.7708000033745,
+   "actual_cpu_warm_runs_ms": [
+    988.4022000042023,
+    967.2691000014311,
+    975.7708000033745
+   ],
+   "actual_gpu_warm_best_ms": 131.7001999996137,
+   "actual_gpu_warm_med_ms": 132.86640000296757,
+   "actual_gpu_warm_runs_ms": [
+    133.6726000008639,
+    131.7001999996137,
+    132.86640000296757
+   ],
+   "actual_cpu_cold_ms": 1006.7861999996239,
+   "actual_gpu_cold_ms": 2814.9076999980025,
+   "regret_warm_ms": 835.5689000018174,
+   "regret_cold_ms": 0.0,
+   "speedup_warm_cpu_over_gpu": 7.3444770775159665,
+   "execution_info": {
+    "requested": "auto",
+    "actual": "cpu",
+    "reason": "measured calibrated_v1 (cold): gpu cost unknown (device_init_one_time unmeasured); safe CPU choice (cpu=981.991ms; selectivity=0.5)",
+    "dispatches": 1,
+    "h2d": 1,
+    "d2h": 1,
+    "num_chunks": 1,
+    "placement": "host",
+    "residence": {
+     "from": "resident",
+     "to": "host",
+     "crossings": [
+      "d2h"
+     ],
+     "ping_pong": false,
+     "note": "single backend per graph: at most one crossing"
+    },
+    "cost_estimate": {
+     "cpu": 981.9912784656267,
+     "gpu": null
+    },
+    "profile": {
+     "version": "calibrated_v1",
+     "source": "measured:seed42",
+     "age": "64s",
+     "matched": true,
+     "warning": "",
+     "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+    },
+    "gpu_eligible": true,
+    "gpu_blockers": [],
+    "coverage": {
+     "ok": true,
+     "blockers": []
+    },
+    "estimate": {
+     "cpu_ms": 981.9912784656267,
+     "gpu_host_ms": null,
+     "slots": {
+      "cold": {
+       "device_init_one_time": {
+        "status": "unmeasured",
+        "ms": null,
+        "note": "first-GPU-call setup is discarded at calibration; no dedicated measurement: unknown"
+       },
+       "compile_miss": {
+        "status": "measured",
+        "ms": 0.45230000250739977,
+        "ops": [
+         "rng_fill_i32"
+        ],
+        "unmeasured_ops": [],
+        "note": "median cold-warm gap per op pipeline"
+       }
+      },
+      "transfer": {
+       "h2d": {
+        "status": "zero-by-residence",
+        "ms": 0.0,
+        "note": "resident->resident: no bytes cross"
+       },
+       "d2h": {
+        "status": "zero-by-residence",
+        "ms": 0.0,
+        "note": "resident->resident: no bytes cross"
+       },
+       "residence": {
+        "from": "resident",
+        "to": "resident",
+        "n": 16000000
+       }
+      }
+     },
+     "unknown_slots": [
+      "device_init_one_time"
+     ],
+     "breakdown": [
+      {
+       "node": "r",
+       "op": "rng_fill_i32",
+       "n_op": 16000000,
+       "cpu_ms": 981.9912784656267,
+       "gpu_ms": 184.89047813811536,
+       "note": ""
+      }
+     ],
+     "unmeasured": [],
+     "state": "cold",
+     "selectivity": 0.5,
+     "context": {
+      "op_multiset": [
+       [
+        "rng_fill_i32",
+        1
+       ]
+      ],
+      "n": 16000000,
+      "n_ops": 1,
+      "dtypes": [],
+      "cardinalities": {},
+      "nearest": {},
+      "selectivity": 0.5,
+      "residence_from": "resident",
+      "device_state": "cold",
+      "profile": {
+       "version": "calibrated_v1",
+       "source": "measured:seed42",
+       "age": "64s",
+       "matched": true,
+       "warning": "",
+       "path": "C:\\App\\numfast\\numfast\\calibration.toml"
+      }
+     },
+     "note": "resident multi-node GPU can only remove round trips already inside host fits: gpu_host_ms is a conservative upper bound; measured chains in dataset quantify it; v1: cold+transfer structural, unknown slots force safe CPU"
+    }
+   }
+  }
+ ],
+ "stages": [
+  "calibrate hooks=[('rng-i32', 'measured'), ('map', 'not-applicable'), ('filter', 'measured'), ('groupby-card', 'measured'), ('sort-nonpow2', 'not-applicable'), ('transfer', 'unmeasured'), ('device-init', 'unmeasured')]",
+  "device warmup 1x rng@1K gpu 2450.6ms (discarded)",
+  "actual-warm n=1000000 cpu_best=63.88ms gpu_best=11.77ms speedup=5.43x",
+  "actual-cold n=1000000 cpu=65.81ms gpu=2484.26ms",
+  "auto n=1000000 host/warm: pred=(61.44178319550919,13.750728924529147) chosen=gpu regret_warm=0.00ms regret_cold=2418.45ms cross=['h2d'] h2d/d2h=1/1",
+  "auto n=1000000 host/cold: pred=(61.44178319550919,None) chosen=cpu regret_warm=52.11ms regret_cold=0.00ms cross=[] h2d/d2h=1/1",
+  "auto n=1000000 resident/warm: pred=(61.44178319550919,13.750728924529147) chosen=gpu regret_warm=0.00ms regret_cold=2418.45ms cross=[] h2d/d2h=1/1",
+  "auto n=1000000 resident/cold: pred=(61.44178319550919,None) chosen=cpu regret_warm=52.11ms regret_cold=0.00ms cross=['d2h'] h2d/d2h=1/1",
+  "actual-warm n=10000000 cpu_best=607.52ms gpu_best=95.57ms speedup=6.36x",
+  "actual-cold n=10000000 cpu=614.52ms gpu=2726.97ms",
+  "auto n=10000000 host/warm: pred=(613.7714803575797,116.43457845268087) chosen=gpu regret_warm=0.00ms regret_cold=2112.45ms cross=['h2d'] h2d/d2h=1/1",
+  "auto n=10000000 host/cold: pred=(613.7714803575797,None) chosen=cpu regret_warm=511.95ms regret_cold=0.00ms cross=[] h2d/d2h=1/1",
+  "auto n=10000000 resident/warm: pred=(613.7714803575797,116.43457845268087) chosen=gpu regret_warm=0.00ms regret_cold=2112.45ms cross=[] h2d/d2h=1/1",
+  "auto n=10000000 resident/cold: pred=(613.7714803575797,None) chosen=cpu regret_warm=511.95ms regret_cold=0.00ms cross=['d2h'] h2d/d2h=1/1",
+  "actual-warm n=16000000 cpu_best=967.27ms gpu_best=131.70ms speedup=7.34x",
+  "actual-cold n=16000000 cpu=1006.79ms gpu=2814.91ms",
+  "auto n=16000000 host/warm: pred=(981.9912784656267,184.89047813811536) chosen=gpu regret_warm=0.00ms regret_cold=1808.12ms cross=['h2d'] h2d/d2h=1/1",
+  "auto n=16000000 host/cold: pred=(981.9912784656267,None) chosen=cpu regret_warm=835.57ms regret_cold=0.00ms cross=[] h2d/d2h=1/1",
+  "auto n=16000000 resident/warm: pred=(981.9912784656267,184.89047813811536) chosen=gpu regret_warm=0.00ms regret_cold=1808.12ms cross=[] h2d/d2h=1/1",
+  "auto n=16000000 resident/cold: pred=(981.9912784656267,None) chosen=cpu regret_warm=835.57ms regret_cold=0.00ms cross=['d2h'] h2d/d2h=1/1"
+ ],
+ "elapsed_s": 37.174920999997994
+}

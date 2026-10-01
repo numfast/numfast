@@ -1,0 +1,15 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+name = "q30_affine"
+version = "0.1.0"
+suite = "benchmarks_public/q30_affine"
+seed = 42
+summary = "develop/benchmarks_public/q30_affine/summary.json"
+sources = ["C:/App/numfast/develop/bench_q30_auto_affine.json", "C:/App/numfast/develop/bench_hll_q30.json", "C:/App/numfast/develop/bench_q30_ab_fusion.json"]
+# HONESTY FIX (no remeasure, no methodology change): 181->2 / ~43x is UNCONFIRMED prototype-only
+# (develop/OptimizerAffine reference artifact). Current code CSE+DCE gives 181->181 EXACT
+# (compile ~24ms exec ~208ms). EXACT correctness retained, speedup NOT claimed.
+# ORIGINAL heavy measurement (reference only, NOT run by run_all):
+# export PYTHONPATH="/c/App/numfast/develop/HLL/_lib:/c/App/numfast/develop/OptimizerAffine/_lib:/c/App/numfast/app-builder:/c/App/numfast/numfast/src" && python develop/bench_q30_auto_affine.py develop/bench_q30_auto_affine.toml
+# LIGHT verification:
+# export PYTHONPATH="/c/App/numfast/numfast/src" && python develop/benchmarks_public/q30_affine/present_q30_affine.py

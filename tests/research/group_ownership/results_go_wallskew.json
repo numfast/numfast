@@ -1,0 +1,60 @@
+{
+ "heavy": {
+  "P4": {
+   "A_wall": 1.8,
+   "D_wall": 3.34,
+   "route": 22.5,
+   "D_merge": 0.293,
+   "A_merge": 0.093,
+   "imbD": 0.01,
+   "win_pct": -85.6
+  },
+  "P8": {
+   "A_wall": 1.36,
+   "D_wall": 2.35,
+   "route": 24.8,
+   "D_merge": 0.316,
+   "A_merge": 0.238,
+   "imbD": 0.01,
+   "win_pct": -73.3
+  },
+  "P16": {
+   "A_wall": 1.96,
+   "D_wall": 2.34,
+   "route": 26.0,
+   "D_merge": 0.328,
+   "A_merge": 0.412,
+   "imbD": 0.01,
+   "win_pct": -19.3
+  }
+ },
+ "extreme": {
+  "P4": {
+   "A_wall": 1.46,
+   "D_wall": 3.37,
+   "route": 23.6,
+   "D_merge": 0.266,
+   "A_merge": 0.082,
+   "imbD": 0.0,
+   "win_pct": -131.5
+  },
+  "P8": {
+   "A_wall": 1.24,
+   "D_wall": 2.36,
+   "route": 23.9,
+   "D_merge": 0.291,
+   "A_merge": 0.309,
+   "imbD": 0.01,
+   "win_pct": -90.9
+  },
+  "P16": {
+   "A_wall": 1.36,
+   "D_wall": 2.17,
+   "route": 22.4,
+   "D_merge": 0.335,
+   "A_merge": 0.33,
+   "imbD": 0.02,
+   "win_pct": -60.1
+  }
+ }
+}

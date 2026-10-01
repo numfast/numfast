@@ -1,0 +1,22 @@
+{
+ "algo": "C",
+ "regime": "pipe4q4",
+ "ms": 248.4066999895731,
+ "bytes": 15592896,
+ "finfo": {
+  "merge_ms": 126.46569999924395,
+  "comparisons": 1014762,
+  "wall_ms": 130.87870000163093
+ },
+ "wall_ms": 248.4066999895731,
+ "put_ms": 58.01029999565799,
+ "worker_idle_ms": 0.14740000187885016,
+ "compute_sum_ms": 451.8654000276001,
+ "merge_collect_ms": 115.25540000002366,
+ "merge_ms": 130.89109999418724,
+ "overlap_ms": 334.34980003221426,
+ "overlap_ratio": 0.5737384310938,
+ "throughput_rows_s": 4221206.594041199,
+ "qmax": 4,
+ "nworkers": 4
+}

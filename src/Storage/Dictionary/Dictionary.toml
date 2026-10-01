@@ -1,0 +1,10 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+name = "Dictionary"
+version = "0.1.0"
+depends = ["Core"]
+alias = ["dictionary_encode", "dictionary_decode", "dictionary_metadata", "dict_lookup", "dict_equal_codes", "dict_not_empty_codes", "dict_contains", "dict_startswith", "dict_len_lut", "dict_ordering", "dict_min_max", "dict_range_codes", "codes_member_mask", "codes_count_allowed", "dict_encode_arrow", "dict_encode_arrow_metadata"]
+mods = ["dictionary_encode", "dictionary_decode", "dictionary_metadata", "dict_lookup", "dict_equal_codes", "dict_not_empty_codes", "dict_contains", "dict_startswith", "dict_len_lut", "dict_ordering", "dict_min_max", "dict_range_codes", "codes_member_mask", "codes_count_allowed", "dict_encode_arrow", "dict_encode_arrow_metadata"]
+
+[metadata]
+level = "storage"

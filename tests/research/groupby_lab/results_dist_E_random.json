@@ -1,0 +1,57 @@
+[
+ {
+  "algo": "E",
+  "regime": "M100/random",
+  "M": 100,
+  "pattern": "random",
+  "ms": 3.184999994118698,
+  "local_ms": 2.6408999983686954,
+  "bytes": 2400,
+  "ngroups": 100,
+  "extra": {}
+ },
+ {
+  "algo": "E",
+  "regime": "M10000/random",
+  "M": 10000,
+  "pattern": "random",
+  "ms": 5.952100007561967,
+  "local_ms": 5.297600000631064,
+  "bytes": 239688,
+  "ngroups": 9987,
+  "extra": {}
+ },
+ {
+  "algo": "E",
+  "regime": "M100000/random",
+  "M": 100000,
+  "pattern": "random",
+  "ms": 5.822100007208064,
+  "local_ms": 5.761099993833341,
+  "bytes": 1156320,
+  "ngroups": 48180,
+  "extra": {}
+ },
+ {
+  "algo": "E",
+  "regime": "M1000000/random",
+  "M": 1000000,
+  "pattern": "random",
+  "ms": 5.584499987890013,
+  "local_ms": 5.519600003026426,
+  "bytes": 1522752,
+  "ngroups": 63448,
+  "extra": {}
+ },
+ {
+  "algo": "E",
+  "regime": "M10000000/random",
+  "M": 10000000,
+  "pattern": "random",
+  "ms": 5.376700006308965,
+  "local_ms": 5.142399997566827,
+  "bytes": 1567968,
+  "ngroups": 65332,
+  "extra": {}
+ }
+]

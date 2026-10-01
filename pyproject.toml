@@ -1,0 +1,26 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "numfast"
+version = "0.2.1"
+description = "NumFast: packaged GPU-numeric boundary (Series/Table + NumPy/Pandas/Arrow adapters)"
+readme = "README.packaging.md"
+license = { text = "AGPL-3.0-only" }
+requires-python = ">=3.11"
+dependencies = ["numpy>=1.24"]
+
+[project.optional-dependencies]
+pandas = ["pandas>=1.5"]
+arrow = ["pyarrow>=10"]
+test = ["pandas>=1.5", "pyarrow>=10", "pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["numfast*"]
+
+[tool.setuptools.package-data]
+numfast = ["_native/*.dll", "_native/*.so", "full.toml"]

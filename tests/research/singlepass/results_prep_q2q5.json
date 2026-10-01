@@ -1,0 +1,66 @@
+{
+ "tag": "prep_q2q5",
+ "N": 10000000,
+ "encode_ms": {
+  "id1": 1439.3,
+  "id2": 1420.2,
+  "id3": 2043.2,
+  "id6_v1_v2_v3": 80.3
+ },
+ "Q2_pack": {
+  "m2": 101,
+  "ngroups": 10000,
+  "OLD_radix_best": 152.2,
+  "OLD_radix_med": 157.2,
+  "OLD_bitpack_best": 93.5,
+  "OLD_bitpack_med": 98.7,
+  "NEW_i32_best": 37.5,
+  "NEW_i32_med": 38.3,
+  "OLD_split_ms": {
+   "alloc_i64": 25.0,
+   "mul_add": 109.7,
+   "downcast": 23.5
+  },
+  "TIME_RATIO_i32_vs_radix": 4.06,
+  "TIME_RATIO_i32_vs_bitpack": 2.49,
+  "PRECOMP_amort_per_q": {
+   "1": 37.48,
+   "10": 3.75,
+   "100": 0.37
+  },
+  "correctness": "i32 bit-identical to radix; bitpack grouping-equal"
+ },
+ "Q3_dict": {
+  "m": 100001,
+  "ngroups": 100000,
+  "OLD_dict_best": 205.9,
+  "OLD_dict_med": 230.4,
+  "NEW_zip_best": 210.9,
+  "NEW_zip_med": 247.5,
+  "NEW_columnar_pack_ms": 0.003,
+  "OLD_split_ms": {
+   "tolist": 4.1,
+   "mean_temp": 2.8,
+   "loop_insert": 199.0
+  },
+  "TIME_RATIO_zip_vs_old": 0.98,
+  "correctness": "zip dict == OLD dict (==); columnar value-identical"
+ },
+ "Q5_dict": {
+  "m": 100001,
+  "ngroups": 100000,
+  "OLD_dict_best": 226.6,
+  "OLD_dict_med": 297.4,
+  "NEW_zip_best": 339.1,
+  "NEW_zip_med": 346.9,
+  "NEW_columnar_pack_ms": 0.003,
+  "OLD_split_ms": {
+   "tolist": 4.8,
+   "mean_temp": 0.0,
+   "loop_insert": 221.9
+  },
+  "TIME_RATIO_zip_vs_old": 0.67,
+  "correctness": "zip dict == OLD dict (==); columnar value-identical"
+ },
+ "notes": "keys stay int32 codes end-to-end: no per-query decode; string prep (id1/id2/id3) is ingest-once via resident_prepare; per-query preparation = Q2 composite + Q3/Q5 dict materialization"
+}

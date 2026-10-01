@@ -1,0 +1,19 @@
+[package]
+name = "numfast-native"
+version = "0.1.0"
+edition = "2021"
+description = "Feasibility: one dense fused group-by primitive (buffers in/out) for Python(ctypes) + WASM + Node"
+license = "AGPL-3.0-only"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+# Single-package workspace root (NOT part of the Python package).
+[workspace]
+
+[profile.release]
+opt-level = 3
+# NOTE: lto=true crashes zig 0.16 COFF/LLD link on this host (no VS/mingw);
+# loop is memory-bound, LTO impact negligible. Revisit with real toolchain.
+lto = false
+panic = "abort"

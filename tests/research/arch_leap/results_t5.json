@@ -1,0 +1,25 @@
+{
+ "seed": 42,
+ "n": 1000000,
+ "g": 100000,
+ "gen_ms": 42.60919999796897,
+ "int_hot_med": 9.66449998668395,
+ "int_hot_min": 9.116799978073686,
+ "div_after_ms": 0.97490000189282,
+ "f64_hot_med": 8.89120000647381,
+ "f64_hot_min": 8.607600000686944,
+ "div_f64_ms": 0.5587000050581992,
+ "multi_3x_med": 27.27349998895079,
+ "multi_3x_min": 26.17700002156198,
+ "prep_bytes": 28000000,
+ "multi_fused": {
+  "attempted": true,
+  "rc": 0,
+  "ms": 21.13340000505559,
+  "exact": true,
+  "note": "keys,vals(f64 SoA),n,ncols,sums,counts,g",
+  "rep_ms": 20.218899997416884
+ },
+ "rss_end_gb": 0.12120064,
+ "bottleneck_hint": "see report: prep bytes 3x vs kernel 3x evaluated"
+}

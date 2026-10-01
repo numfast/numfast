@@ -1,0 +1,147 @@
+[
+ {
+  "algo": "C",
+  "regime": "M100/random",
+  "M": 100,
+  "pattern": "random",
+  "ms": 7.472199999028817,
+  "local_ms": 7.387700010440312,
+  "bytes": 2400,
+  "ngroups": 100,
+  "extra": {
+   "parts": [
+    9220,
+    8531,
+    7820,
+    7967,
+    8440,
+    7906,
+    7837,
+    7815
+   ],
+   "p": 8,
+   "max_part": 9220,
+   "cap": 16384,
+   "overflow": false,
+   "spill_rows": 0,
+   "spill_model_ms": 0.0,
+   "imbalance": 1.179782469609725
+  }
+ },
+ {
+  "algo": "C",
+  "regime": "M10000/random",
+  "M": 10000,
+  "pattern": "random",
+  "ms": 11.469299992313609,
+  "local_ms": 10.737099990365095,
+  "bytes": 239688,
+  "ngroups": 9987,
+  "extra": {
+   "parts": [
+    8265,
+    8140,
+    8140,
+    8176,
+    8296,
+    8108,
+    8265,
+    8146
+   ],
+   "p": 8,
+   "max_part": 8296,
+   "cap": 16384,
+   "overflow": false,
+   "spill_rows": 0,
+   "spill_model_ms": 0.0,
+   "imbalance": 1.0231869758263443
+  }
+ },
+ {
+  "algo": "C",
+  "regime": "M100000/random",
+  "M": 100000,
+  "pattern": "random",
+  "ms": 14.416000005439855,
+  "local_ms": 12.336899992078543,
+  "bytes": 1156320,
+  "ngroups": 48180,
+  "extra": {
+   "parts": [
+    8169,
+    8119,
+    8290,
+    8098,
+    8266,
+    8176,
+    8214,
+    8204
+   ],
+   "p": 8,
+   "max_part": 8290,
+   "cap": 16384,
+   "overflow": false,
+   "spill_rows": 0,
+   "spill_model_ms": 0.0,
+   "imbalance": 1.0237095579155346
+  }
+ },
+ {
+  "algo": "C",
+  "regime": "M1000000/random",
+  "M": 1000000,
+  "pattern": "random",
+  "ms": 16.354599996702746,
+  "local_ms": 12.756500000250526,
+  "bytes": 1522752,
+  "ngroups": 63448,
+  "extra": {
+   "parts": [
+    8195,
+    8156,
+    8184,
+    8176,
+    8156,
+    8237,
+    8273,
+    8159
+   ],
+   "p": 8,
+   "max_part": 8273,
+   "cap": 16384,
+   "overflow": false,
+   "spill_rows": 0,
+   "spill_model_ms": 0.0,
+   "imbalance": 1.0143452672878863
+  }
+ },
+ {
+  "algo": "C",
+  "regime": "M10000000/random",
+  "M": 10000000,
+  "pattern": "random",
+  "ms": 17.708800005493686,
+  "local_ms": 14.547500002663583,
+  "bytes": 1567968,
+  "ngroups": 65332,
+  "extra": {
+   "parts": [
+    8257,
+    8103,
+    8182,
+    8118,
+    8290,
+    8227,
+    8160,
+    8199
+   ],
+   "p": 8,
+   "max_part": 8290,
+   "cap": 16384,
+   "overflow": false,
+   "spill_rows": 0,
+   "spill_model_ms": 0.0,
+   "imbalance": 1.0230778723929408
+  }
+ }
+]

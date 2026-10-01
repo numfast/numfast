@@ -1,0 +1,11 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+name = "CompositeGroup"
+version = "0.1.0"
+depends = []
+alias = ["composite_group_plan", "composite_group_read", "composite_group_fused_plan", "composite_group_fused_topk", "composite_group_shift_plan", "composite_group_shift_run", "composite_group_shift_topk"]
+mods = ["composite_group_plan", "composite_group_read", "composite_group_fused_plan", "composite_group_fused_topk", "composite_group_shift_plan", "composite_group_shift_run", "composite_group_shift_topk"]
+
+[metadata]
+level = "relational"
+member = "single-pass composite grouping"

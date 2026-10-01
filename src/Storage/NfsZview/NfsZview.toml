@@ -1,0 +1,11 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+name = "NfsZview"
+version = "0.1.0"
+depends = ["NfsStream"]
+alias = ["nfs_zview_read_block"]
+mods = ["nfs_zview_read_block"]
+
+[metadata]
+description = "SPEC-DELTA NFS stream zero-copy reader: one raw blob buffer + column views, old path as flagged fallback"
+level = "storage"

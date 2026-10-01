@@ -1,0 +1,15 @@
+{
+ "n": 10000,
+ "g": 128,
+ "seed": 42,
+ "numpy_ms": {
+  "sums": 0.10389997623860836,
+  "counts": 0.02400000812485814
+ },
+ "rust_maxdiff": 0.0,
+ "rust_count_bad": 0,
+ "wasm_maxdiff": 0.0,
+ "wasm_count_bad": 0,
+ "wasm_cold_ms": 0.35259999999999536,
+ "pass": true
+}

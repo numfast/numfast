@@ -1,0 +1,282 @@
+{
+ "seed": 42,
+ "n": 100000000,
+ "chunks": [
+  5000000,
+  10000000,
+  16000000
+ ],
+ "device": "RTX 2060 Vulkan",
+ "queries": {
+  "Q1": {
+   "m": 100,
+   "points": [
+    {
+     "chunk_rows": 5000000,
+     "num_chunks": 20,
+     "m": 100,
+     "h2d_ms": 1141.8202000040765,
+     "kernel_ms": 66.43699999403907,
+     "d2h_ms": 12.972599999557133,
+     "merge_ms": 0.0090000012278324,
+     "total_ms": 1221.2387999989005,
+     "d2h_bytes": 1600,
+     "exact_vs_numpy": true,
+     "reversed_bitexact": true
+    },
+    {
+     "chunk_rows": 10000000,
+     "num_chunks": 10,
+     "m": 100,
+     "h2d_ms": 1166.2793999985297,
+     "kernel_ms": 97.6786999963224,
+     "d2h_ms": 14.228699999875971,
+     "merge_ms": 0.008799999704933725,
+     "total_ms": 1278.195599994433,
+     "d2h_bytes": 1600,
+     "exact_vs_numpy": true,
+     "reversed_bitexact": true
+    },
+    {
+     "chunk_rows": 16000000,
+     "num_chunks": 7,
+     "m": 100,
+     "h2d_ms": 1187.411399996563,
+     "kernel_ms": 131.96769999740354,
+     "d2h_ms": 8.977199999208096,
+     "merge_ms": 0.008400000297115184,
+     "total_ms": 1328.3646999934717,
+     "d2h_bytes": 1600,
+     "exact_vs_numpy": true,
+     "reversed_bitexact": true
+    }
+   ]
+  },
+  "Q2": {
+   "m": 10000,
+   "m2": 100,
+   "points": [
+    {
+     "chunk_rows": 5000000,
+     "num_chunks": 20,
+     "m": 10000,
+     "h2d_ms": 1163.5948999992252,
+     "kernel_ms": 56.85399999674701,
+     "d2h_ms": 11.6254000004119,
+     "merge_ms": 0.03330000072310213,
+     "total_ms": 1232.1075999971072,
+     "d2h_bytes": 160000,
+     "exact_vs_numpy": true,
+     "reversed_bitexact": true
+    },
+    {
+     "chunk_rows": 10000000,
+     "num_chunks": 10,
+     "m": 10000,
+     "h2d_ms": 1203.013499998633,
+     "kernel_ms": 86.28370000405994,
+     "d2h_ms": 14.94019999881857,
+     "merge_ms": 0.02769999991869554,
+     "total_ms": 1304.2651000014303,
+     "d2h_bytes": 160000,
+     "exact_vs_numpy": true,
+     "reversed_bitexact": true
+    },
+    {
+     "chunk_rows": 16000000,
+     "num_chunks": 7,
+     "m": 10000,
+     "h2d_ms": 1223.066700000345,
+     "kernel_ms": 83.94679999764776,
+     "d2h_ms": 8.7946000003285,
+     "merge_ms": 0.028700000257231295,
+     "total_ms": 1315.8367999985785,
+     "d2h_bytes": 160000,
+     "exact_vs_numpy": true,
+     "reversed_bitexact": true
+    }
+   ]
+  },
+  "Q3": {
+   "m": 1000000,
+   "points": [
+    {
+     "chunk_rows": 5000000,
+     "num_chunks": 20,
+     "m": 1000000,
+     "h2d_ms": 1188.6449999983597,
+     "kernel_ms": 35.53239999928337,
+     "d2h_ms": 97.8291999999783,
+     "merge_ms": 3.424000000450178,
+     "total_ms": 1325.4305999980716,
+     "d2h_bytes": 16000000,
+     "exact_vs_numpy": true,
+     "reversed_bitexact": true
+    },
+    {
+     "chunk_rows": 10000000,
+     "num_chunks": 10,
+     "m": 1000000,
+     "h2d_ms": 1190.8594000015,
+     "kernel_ms": 83.795900000041,
+     "d2h_ms": 113.00859999937529,
+     "merge_ms": 2.9922000012447825,
+     "total_ms": 1390.656100002161,
+     "d2h_bytes": 16000000,
+     "exact_vs_numpy": true,
+     "reversed_bitexact": true
+    },
+    {
+     "chunk_rows": 16000000,
+     "num_chunks": 7,
+     "m": 1000000,
+     "h2d_ms": 1200.0865999980306,
+     "kernel_ms": 63.31950000094366,
+     "d2h_ms": 103.84410000006028,
+     "merge_ms": 3.1570999999530613,
+     "total_ms": 1370.4072999989876,
+     "d2h_bytes": 16000000,
+     "exact_vs_numpy": true,
+     "reversed_bitexact": true
+    }
+   ]
+  },
+  "Q5": {
+   "m": 1000000,
+   "nsums": 2,
+   "points": [
+    {
+     "chunk_rows": 5000000,
+     "num_chunks": 20,
+     "m": 1000000,
+     "nsums": 2,
+     "h2d_ms": 2363.91960000401,
+     "kernel_ms": 76.27810000303725,
+     "d2h_ms": 184.53909999880125,
+     "merge_ms": 5.673400000887341,
+     "total_ms": 2630.410200006736,
+     "d2h_bytes": 32000000,
+     "exact_vs_numpy": true,
+     "reversed_bitexact": true,
+     "per_sum": [
+      {
+       "chunk_rows": 5000000,
+       "num_chunks": 20,
+       "m": 1000000,
+       "h2d_ms": 1212.8687000022182,
+       "kernel_ms": 38.477899999634246,
+       "d2h_ms": 93.31919999931415,
+       "merge_ms": 2.9412999992928235,
+       "total_ms": 1347.6071000004595,
+       "d2h_bytes": 16000000,
+       "exact_vs_numpy": true,
+       "reversed_bitexact": true
+      },
+      {
+       "chunk_rows": 5000000,
+       "num_chunks": 20,
+       "m": 1000000,
+       "h2d_ms": 1151.050900001792,
+       "kernel_ms": 37.800200003403006,
+       "d2h_ms": 91.2198999994871,
+       "merge_ms": 2.7321000015945174,
+       "total_ms": 1282.8031000062765,
+       "d2h_bytes": 16000000,
+       "exact_vs_numpy": true,
+       "reversed_bitexact": true
+      }
+     ]
+    },
+    {
+     "chunk_rows": 10000000,
+     "num_chunks": 10,
+     "m": 1000000,
+     "nsums": 2,
+     "h2d_ms": 2374.064499999804,
+     "kernel_ms": 158.92539999913424,
+     "d2h_ms": 224.30879999956232,
+     "merge_ms": 5.694800000128453,
+     "total_ms": 2762.993499998629,
+     "d2h_bytes": 32000000,
+     "exact_vs_numpy": true,
+     "reversed_bitexact": true,
+     "per_sum": [
+      {
+       "chunk_rows": 10000000,
+       "num_chunks": 10,
+       "m": 1000000,
+       "h2d_ms": 1181.0538999980054,
+       "kernel_ms": 79.75249999981315,
+       "d2h_ms": 113.08780000035767,
+       "merge_ms": 3.035499999896274,
+       "total_ms": 1376.9296999980725,
+       "d2h_bytes": 16000000,
+       "exact_vs_numpy": true,
+       "reversed_bitexact": true
+      },
+      {
+       "chunk_rows": 10000000,
+       "num_chunks": 10,
+       "m": 1000000,
+       "h2d_ms": 1193.0106000017986,
+       "kernel_ms": 79.17289999932109,
+       "d2h_ms": 111.22099999920465,
+       "merge_ms": 2.6593000002321787,
+       "total_ms": 1386.0638000005565,
+       "d2h_bytes": 16000000,
+       "exact_vs_numpy": true,
+       "reversed_bitexact": true
+      }
+     ]
+    },
+    {
+     "chunk_rows": 16000000,
+     "num_chunks": 7,
+     "m": 1000000,
+     "nsums": 2,
+     "h2d_ms": 2326.112800001283,
+     "kernel_ms": 124.66620000486728,
+     "d2h_ms": 220.23300000000745,
+     "merge_ms": 6.781199999750243,
+     "total_ms": 2677.793200005908,
+     "d2h_bytes": 32000000,
+     "exact_vs_numpy": true,
+     "reversed_bitexact": true,
+     "per_sum": [
+      {
+       "chunk_rows": 16000000,
+       "num_chunks": 7,
+       "m": 1000000,
+       "h2d_ms": 1172.5895000035962,
+       "kernel_ms": 64.55410000125994,
+       "d2h_ms": 106.85039999953005,
+       "merge_ms": 3.0055000006541377,
+       "total_ms": 1346.9995000050403,
+       "d2h_bytes": 16000000,
+       "exact_vs_numpy": true,
+       "reversed_bitexact": true
+      },
+      {
+       "chunk_rows": 16000000,
+       "num_chunks": 7,
+       "m": 1000000,
+       "h2d_ms": 1153.523299997687,
+       "kernel_ms": 60.11210000360734,
+       "d2h_ms": 113.3826000004774,
+       "merge_ms": 3.775699999096105,
+       "total_ms": 1330.7937000008678,
+       "d2h_bytes": 16000000,
+       "exact_vs_numpy": true,
+       "reversed_bitexact": true
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "chunk_20M": {
+  "supported": false,
+  "reason": "dispatch [78125,1,1] > 65535 (20M/256); ceiling 16776960 rows",
+  "observed": "Q1-20M fwd GPUValidationError wgpuCommandEncoderFinish/dispatch"
+ }
+}

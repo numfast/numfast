@@ -1,0 +1,180 @@
+{
+ "T": [
+  1,
+  8,
+  12,
+  16
+ ],
+ "matrix": {
+  "1": {
+   "Q1": {
+    "carry_ms": 0.1,
+    "dict_ms": 52.4,
+    "gi_ms": 0.0,
+    "agg_ms": 54.9,
+    "merge_ms": 0.0,
+    "backend": "native"
+   },
+   "Q2": {
+    "carry_ms": 0.2,
+    "dict_ms": 124.4,
+    "gi_ms": 0.0,
+    "agg_ms": 74.9,
+    "merge_ms": 0.0,
+    "backend": "native"
+   },
+   "Q3": {
+    "carry_ms": 2.1,
+    "dict_ms": 430.3,
+    "gi_ms": 0.0,
+    "agg_ms": 228.5,
+    "merge_ms": 0.0,
+    "backend": "native"
+   },
+   "Q4": {
+    "carry_ms": 0.1,
+    "dict_ms": 198.8,
+    "gi_ms": 0.0,
+    "agg_ms": 181.2,
+    "merge_ms": 0.0,
+    "backend": "native"
+   },
+   "Q5": {
+    "carry_ms": 3.5,
+    "dict_ms": 593.3,
+    "gi_ms": 0.0,
+    "agg_ms": 341.6,
+    "merge_ms": 0.0,
+    "backend": "native"
+   }
+  },
+  "8": {
+   "Q1": {
+    "carry_ms": 0.1,
+    "dict_ms": 23.3,
+    "gi_ms": 0.1,
+    "agg_ms": 14.5,
+    "merge_ms": 0.1,
+    "backend": "native"
+   },
+   "Q2": {
+    "carry_ms": 0.2,
+    "dict_ms": 58.0,
+    "gi_ms": 0.0,
+    "agg_ms": 16.5,
+    "merge_ms": 0.3,
+    "backend": "native"
+   },
+   "Q3": {
+    "carry_ms": 2.3,
+    "dict_ms": 247.6,
+    "gi_ms": 0.0,
+    "agg_ms": 52.3,
+    "merge_ms": 2.9,
+    "backend": "native"
+   },
+   "Q4": {
+    "carry_ms": 0.1,
+    "dict_ms": 64.2,
+    "gi_ms": 0.0,
+    "agg_ms": 54.4,
+    "merge_ms": 0.4,
+    "backend": "native"
+   },
+   "Q5": {
+    "carry_ms": 3.5,
+    "dict_ms": 317.8,
+    "gi_ms": 0.0,
+    "agg_ms": 73.7,
+    "merge_ms": 3.3,
+    "backend": "native"
+   }
+  },
+  "12": {
+   "Q1": {
+    "carry_ms": 0.1,
+    "dict_ms": 21.2,
+    "gi_ms": 0.1,
+    "agg_ms": 14.3,
+    "merge_ms": 0.1,
+    "backend": "native"
+   },
+   "Q2": {
+    "carry_ms": 0.1,
+    "dict_ms": 54.2,
+    "gi_ms": 0.0,
+    "agg_ms": 14.7,
+    "merge_ms": 0.3,
+    "backend": "native"
+   },
+   "Q3": {
+    "carry_ms": 2.5,
+    "dict_ms": 249.6,
+    "gi_ms": 0.0,
+    "agg_ms": 43.4,
+    "merge_ms": 3.5,
+    "backend": "native"
+   },
+   "Q4": {
+    "carry_ms": 0.2,
+    "dict_ms": 59.1,
+    "gi_ms": 0.0,
+    "agg_ms": 51.6,
+    "merge_ms": 0.7,
+    "backend": "native"
+   },
+   "Q5": {
+    "carry_ms": 3.6,
+    "dict_ms": 320.4,
+    "gi_ms": 0.1,
+    "agg_ms": 70.6,
+    "merge_ms": 4.8,
+    "backend": "native"
+   }
+  },
+  "16": {
+   "Q1": {
+    "carry_ms": 0.1,
+    "dict_ms": 20.7,
+    "gi_ms": 0.0,
+    "agg_ms": 13.4,
+    "merge_ms": 0.1,
+    "backend": "native"
+   },
+   "Q2": {
+    "carry_ms": 0.2,
+    "dict_ms": 56.1,
+    "gi_ms": 0.0,
+    "agg_ms": 14.4,
+    "merge_ms": 0.5,
+    "backend": "native"
+   },
+   "Q3": {
+    "carry_ms": 2.7,
+    "dict_ms": 245.7,
+    "gi_ms": 0.0,
+    "agg_ms": 40.4,
+    "merge_ms": 5.2,
+    "backend": "native"
+   },
+   "Q4": {
+    "carry_ms": 0.1,
+    "dict_ms": 60.5,
+    "gi_ms": 0.0,
+    "agg_ms": 50.3,
+    "merge_ms": 0.6,
+    "backend": "native"
+   },
+   "Q5": {
+    "carry_ms": 3.7,
+    "dict_ms": 335.3,
+    "gi_ms": 0.0,
+    "agg_ms": 68.4,
+    "merge_ms": 5.9,
+    "backend": "native"
+   }
+  }
+ },
+ "rss_gb": 0.452083712,
+ "gold": "EXACT/PASS"
+}

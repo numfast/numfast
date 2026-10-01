@@ -1,0 +1,41 @@
+# Auto-tuner SEARCH V1 -- research only (no prod Planner/Driver change).
+# Generated: 2026-09-19T07:46:33.034024+00:00 | command: export PYTHONPATH="develop/auto-tuner" && python develop/auto-tuner/AutoTuner.py
+# Calibration data: tune split seed42 N=200000, eval split seed43 (held-out).
+model_version = "calibrated_v1"
+profile_kind = "workload_tuning"
+source = "measured:seed42:tune-eval-split"
+
+[workload]
+query = "filter(values>thresh) -> groupby(keys) sum(values)"
+n = 200000
+tune_seed = 42
+eval_seed = 43
+tune_selectivity = 0.4888
+eval_selectivity = 0.4892
+tune_nunique = 9998
+tune_span = 10000
+is_sorted = false
+
+[baseline]
+id = "Plan A"
+exec = "ST"
+threads = 1
+groupby = "hash"
+path = "materialize"
+ms = 12.751
+
+[chosen]
+id = "Plan F"
+exec = "ST"
+threads = 1
+groupby = "dense_fused"
+path = "fused"
+ms = 5.084
+reason = "eliminated materialization (2->0 intermediate allocs, rows_read 400000->200000), chose dense_fused ST"
+
+[guard]
+scope_A = "customer/workload tuning (tune split only)"
+scope_B = "benchmark research (eval split held-out)"
+best_eval_id = "Plan F"
+overfit_flag = false
+rule = "winner picked on tune split; reported on eval split; NOT benchmark-specific; NOT OPT4/5/6; no hot-path training"

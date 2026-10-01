@@ -1,0 +1,72 @@
+[
+ {
+  "algo": "B",
+  "regime": "M100/random",
+  "M": 100,
+  "pattern": "random",
+  "ms": 4.081699997186661,
+  "local_ms": 3.990099998190999,
+  "bytes": 2400,
+  "ngroups": 100,
+  "extra": {
+   "seg": 4,
+   "partial_rows": 400
+  }
+ },
+ {
+  "algo": "B",
+  "regime": "M10000/random",
+  "M": 10000,
+  "pattern": "random",
+  "ms": 7.652699991012923,
+  "local_ms": 4.859900000155903,
+  "bytes": 239688,
+  "ngroups": 9987,
+  "extra": {
+   "seg": 4,
+   "partial_rows": 32199
+  }
+ },
+ {
+  "algo": "B",
+  "regime": "M100000/random",
+  "M": 100000,
+  "pattern": "random",
+  "ms": 11.882999999215826,
+  "local_ms": 5.219099999521859,
+  "bytes": 1156320,
+  "ngroups": 48180,
+  "extra": {
+   "seg": 4,
+   "partial_rows": 60454
+  }
+ },
+ {
+  "algo": "B",
+  "regime": "M1000000/random",
+  "M": 1000000,
+  "pattern": "random",
+  "ms": 13.420000002952293,
+  "local_ms": 5.814799995278008,
+  "bytes": 1522752,
+  "ngroups": 63448,
+  "extra": {
+   "seg": 4,
+   "partial_rows": 65010
+  }
+ },
+ {
+  "algo": "B",
+  "regime": "M10000000/random",
+  "M": 10000000,
+  "pattern": "random",
+  "ms": 13.338300006580539,
+  "local_ms": 5.886499988264404,
+  "bytes": 1567968,
+  "ngroups": 65332,
+  "extra": {
+   "seg": 4,
+   "partial_rows": 65484
+  }
+ }
+]

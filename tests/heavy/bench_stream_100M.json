@@ -1,0 +1,18 @@
+{
+ "out": "C:\\App\\numfast\\numfast-ponytail\\scratch\\nfs_stream\\G1_1e8.stream.nfs",
+ "format": "nfs-stream-v1",
+ "N": 100000000,
+ "nblocks": 10,
+ "block_rows": 10000000,
+ "refs": {
+  "v1": 299991302,
+  "v2": 799978221,
+  "v3": 5000103937.77157
+ },
+ "bytes": 3600030662,
+ "prep_ms": 101165.22040002019,
+ "save_ms": 14776.709300007496,
+ "total_ms": 293571.5135999999,
+ "rss_gb": 1.47574784,
+ "wall_ms": 293966.8684999997
+}

@@ -1,0 +1,95 @@
+{
+  "seed": 42,
+  "threads": 16,
+  "backend": "loaded:C:\\App\\numfast\\numfast\\src\\numfast\\_native\\numfast_native.dll",
+  "native_available": true,
+  "validation": [
+    "empty: PASS",
+    "single: PASS",
+    "duplicates: PASS",
+    "int64-min-max: PASS",
+    "noncontig+ widen: PASS",
+    "deterministic: PASS",
+    "join-parity: PASS"
+  ],
+  "validation_ms": 90.347,
+  "benchmark_ms": 1147.956,
+  "rows": [
+    {
+      "q": "Q2",
+      "s": 5000,
+      "n": 50000,
+      "numpy_build_ms": 0.494,
+      "numpy_probe_ms": 2.625,
+      "native_build_cold_ms": 0.713,
+      "native_probe_cold_ms": 4.146,
+      "native_probe_warm_ms": 4.003,
+      "speedup_probe_cold": 0.633,
+      "speedup_probe_warm": 0.656,
+      "mem_numpy_b": 510000,
+      "mem_native_b": 762992,
+      "chk": [
+        2274332,
+        2269006
+      ],
+      "parity": "exact"
+    },
+    {
+      "q": "Q3",
+      "s": 25000,
+      "n": 200000,
+      "numpy_build_ms": 2.524,
+      "numpy_probe_ms": 16.672,
+      "native_build_cold_ms": 4.191,
+      "native_probe_cold_ms": 11.411,
+      "native_probe_warm_ms": 12.302,
+      "speedup_probe_cold": 1.461,
+      "speedup_probe_warm": 1.355,
+      "mem_numpy_b": 2100000,
+      "mem_native_b": 3151968,
+      "chk": [
+        8083237,
+        8104786
+      ],
+      "parity": "exact"
+    },
+    {
+      "q": "Q4",
+      "s": 100000,
+      "n": 500000,
+      "numpy_build_ms": 13.239,
+      "numpy_probe_ms": 47.204,
+      "native_build_cold_ms": 18.881,
+      "native_probe_cold_ms": 27.668,
+      "native_probe_warm_ms": 28.37,
+      "speedup_probe_cold": 1.706,
+      "speedup_probe_warm": 1.664,
+      "mem_numpy_b": 5700000,
+      "mem_native_b": 9907872,
+      "chk": [
+        17672969,
+        17687711
+      ],
+      "parity": "exact"
+    },
+    {
+      "q": "Q5",
+      "s": 400000,
+      "n": 1000000,
+      "numpy_build_ms": 62.721,
+      "numpy_probe_ms": 123.409,
+      "native_build_cold_ms": 89.759,
+      "native_probe_cold_ms": 58.529,
+      "native_probe_warm_ms": 57.886,
+      "speedup_probe_cold": 2.109,
+      "speedup_probe_warm": 2.132,
+      "mem_numpy_b": 13800000,
+      "mem_native_b": 30631488,
+      "chk": [
+        30340465,
+        30284480
+      ],
+      "parity": "exact"
+    }
+  ]
+}

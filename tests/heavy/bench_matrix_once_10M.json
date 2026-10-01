@@ -1,0 +1,219 @@
+{
+ "N": 10000000,
+ "dataset": "G1_1e7_1e2_0_0",
+ "threads": [
+  1,
+  2,
+  4,
+  8,
+  12,
+  16
+ ],
+ "stages": {
+  "import_ms": 173.7,
+  "build_ms": 701.5,
+  "snap_load_ms": 247.4,
+  "snap": "hit",
+  "compile_all_ms": 0.9,
+  "warmup_ms": 73.0,
+  "matrix_ms": 29838.3,
+  "wall_ms": 31426.6
+ },
+ "matrix": {
+  "1": {
+   "Q1": {
+    "carry_ms": 53.6,
+    "dict_ms": 56.6,
+    "threads_seen": 1,
+    "ngroups": 100
+   },
+   "Q2": {
+    "carry_ms": 118.8,
+    "dict_ms": 122.4,
+    "threads_seen": 1,
+    "ngroups": 10000
+   },
+   "Q3": {
+    "carry_ms": 244.0,
+    "dict_ms": 417.4,
+    "threads_seen": 1,
+    "ngroups": 100000
+   },
+   "Q4": {
+    "carry_ms": 194.9,
+    "dict_ms": 200.0,
+    "threads_seen": 1,
+    "ngroups": 100
+   },
+   "Q5": {
+    "carry_ms": 361.8,
+    "dict_ms": 580.6,
+    "threads_seen": 1,
+    "ngroups": 100000
+   }
+  },
+  "2": {
+   "Q1": {
+    "carry_ms": 39.5,
+    "dict_ms": 38.3,
+    "threads_seen": 2,
+    "ngroups": 100
+   },
+   "Q2": {
+    "carry_ms": 89.2,
+    "dict_ms": 92.4,
+    "threads_seen": 2,
+    "ngroups": 10000
+   },
+   "Q3": {
+    "carry_ms": 142.4,
+    "dict_ms": 324.8,
+    "threads_seen": 2,
+    "ngroups": 100000
+   },
+   "Q4": {
+    "carry_ms": 126.9,
+    "dict_ms": 126.2,
+    "threads_seen": 2,
+    "ngroups": 100
+   },
+   "Q5": {
+    "carry_ms": 214.8,
+    "dict_ms": 437.0,
+    "threads_seen": 2,
+    "ngroups": 100000
+   }
+  },
+  "4": {
+   "Q1": {
+    "carry_ms": 30.9,
+    "dict_ms": 30.5,
+    "threads_seen": 4,
+    "ngroups": 100
+   },
+   "Q2": {
+    "carry_ms": 70.3,
+    "dict_ms": 77.6,
+    "threads_seen": 4,
+    "ngroups": 10000
+   },
+   "Q3": {
+    "carry_ms": 91.6,
+    "dict_ms": 275.1,
+    "threads_seen": 4,
+    "ngroups": 100000
+   },
+   "Q4": {
+    "carry_ms": 91.6,
+    "dict_ms": 90.8,
+    "threads_seen": 4,
+    "ngroups": 100
+   },
+   "Q5": {
+    "carry_ms": 138.1,
+    "dict_ms": 368.2,
+    "threads_seen": 4,
+    "ngroups": 100000
+   }
+  },
+  "8": {
+   "Q1": {
+    "carry_ms": 28.5,
+    "dict_ms": 25.7,
+    "threads_seen": 8,
+    "ngroups": 100
+   },
+   "Q2": {
+    "carry_ms": 67.4,
+    "dict_ms": 68.3,
+    "threads_seen": 8,
+    "ngroups": 10000
+   },
+   "Q3": {
+    "carry_ms": 71.8,
+    "dict_ms": 262.0,
+    "threads_seen": 8,
+    "ngroups": 100000
+   },
+   "Q4": {
+    "carry_ms": 73.5,
+    "dict_ms": 72.4,
+    "threads_seen": 8,
+    "ngroups": 100
+   },
+   "Q5": {
+    "carry_ms": 105.3,
+    "dict_ms": 342.9,
+    "threads_seen": 8,
+    "ngroups": 100000
+   }
+  },
+  "12": {
+   "Q1": {
+    "carry_ms": 26.6,
+    "dict_ms": 27.1,
+    "threads_seen": 12,
+    "ngroups": 100
+   },
+   "Q2": {
+    "carry_ms": 67.3,
+    "dict_ms": 68.6,
+    "threads_seen": 12,
+    "ngroups": 10000
+   },
+   "Q3": {
+    "carry_ms": 68.2,
+    "dict_ms": 254.0,
+    "threads_seen": 12,
+    "ngroups": 100000
+   },
+   "Q4": {
+    "carry_ms": 70.3,
+    "dict_ms": 70.4,
+    "threads_seen": 12,
+    "ngroups": 100
+   },
+   "Q5": {
+    "carry_ms": 101.7,
+    "dict_ms": 335.9,
+    "threads_seen": 12,
+    "ngroups": 100000
+   }
+  },
+  "16": {
+   "Q1": {
+    "carry_ms": 28.1,
+    "dict_ms": 25.7,
+    "threads_seen": 16,
+    "ngroups": 100
+   },
+   "Q2": {
+    "carry_ms": 63.1,
+    "dict_ms": 68.2,
+    "threads_seen": 16,
+    "ngroups": 10000
+   },
+   "Q3": {
+    "carry_ms": 68.4,
+    "dict_ms": 252.9,
+    "threads_seen": 16,
+    "ngroups": 100000
+   },
+   "Q4": {
+    "carry_ms": 69.2,
+    "dict_ms": 71.6,
+    "threads_seen": 16,
+    "ngroups": 100
+   },
+   "Q5": {
+    "carry_ms": 108.2,
+    "dict_ms": 350.8,
+    "threads_seen": 16,
+    "ngroups": 100000
+   }
+  }
+ },
+ "rss_gb": 0.46313472,
+ "gold": "EXACT/PASS",
+ "snapshot": "C:\\App\\numfast\\numfast-ponytail\\scratch\\snap_G1_1e7_1e2_0_0"
+}

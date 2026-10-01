@@ -1,0 +1,77 @@
+{
+ "tag": "go_index",
+ "seed": 42,
+ "index": {
+  "n1000000_K10000_uniform": {
+   "K": 10000,
+   "exact_bpg": 12.0,
+   "exact_total": 120000,
+   "exact_build_ms": 0.02,
+   "quant_bpg": 5.0,
+   "quant_total": 50000,
+   "quant_max_rel": 0.0194,
+   "quant_mean_rel": 0.0079,
+   "approx_build_ms": 0.7,
+   "approx_max_rel": 5.5421,
+   "approx_mean_rel": 0.7637,
+   "storage": {
+    "raw_bytes": 120000,
+    "bytes_per_group_raw": 12.0,
+    "delta_entropy_bits": -0.0,
+    "est_delta_codes_bytes": 8,
+    "est_total_delta_plus_i64": 80008,
+    "est_total_delta_plus_u8q": 10008,
+    "quant_max_rel_err": 0.019447072881850904,
+    "quant_mean_rel_err": 0.007939619363347722
+   }
+  },
+  "n1000000_K10000_heavy": {
+   "K": 10000,
+   "exact_bpg": 12.0,
+   "exact_total": 120000,
+   "exact_build_ms": 0.01,
+   "quant_bpg": 5.0,
+   "quant_total": 50000,
+   "quant_max_rel": 0.0441,
+   "quant_mean_rel": 0.0214,
+   "approx_build_ms": 0.64,
+   "approx_max_rel": 13.8148,
+   "approx_mean_rel": 1.0827,
+   "storage": {
+    "raw_bytes": 120000,
+    "bytes_per_group_raw": 12.0,
+    "delta_entropy_bits": -0.0,
+    "est_delta_codes_bytes": 8,
+    "est_total_delta_plus_i64": 80008,
+    "est_total_delta_plus_u8q": 10008,
+    "quant_max_rel_err": 0.044121895160167846,
+    "quant_mean_rel_err": 0.021361269461197714
+   }
+  },
+  "n1000000_K100000_uniform": {
+   "K": 99997,
+   "exact_bpg": 12.0,
+   "exact_total": 1199964,
+   "exact_build_ms": 0.2,
+   "quant_bpg": 5.0,
+   "quant_total": 499985,
+   "quant_max_rel": 0.0129,
+   "quant_mean_rel": 0.0071,
+   "approx_build_ms": 1.09,
+   "approx_max_rel": 49.0,
+   "approx_mean_rel": 1.8109,
+   "storage": {
+    "raw_bytes": 1199964,
+    "bytes_per_group_raw": 12.0,
+    "delta_entropy_bits": 0.0004940385714671401,
+    "est_delta_codes_bytes": 15,
+    "est_total_delta_plus_i64": 799991,
+    "est_total_delta_plus_u8q": 100012,
+    "quant_max_rel_err": 0.012930417650528861,
+    "quant_mean_rel_err": 0.007096479918636701
+   }
+  }
+ },
+ "index_ms": 2497.9,
+ "total_s": 2.5
+}

@@ -1,0 +1,859 @@
+[
+ {
+  "label": "A/M=100/uniform",
+  "n": 1000000,
+  "ok": true,
+  "errors": [],
+  "ref_ms": 77.17899999988731,
+  "gi_ms": 7.818400001269765,
+  "rss_gb": 0.008003584000000008,
+  "strategy": "dense",
+  "reason": "R=100<=min(64000000,4.0*N=4000000) and est=8.0MB<=budget=2147.5MB: direct indexing, no sort",
+  "R": 100,
+  "est_dense_MB": 8.0016,
+  "strategies": {
+   "unique": {
+    "ms": 55.978899996262044,
+    "mem_gb": 0.007000064,
+    "ok": true,
+    "errors": []
+   },
+   "dense": {
+    "ms": 7.941600008052774,
+    "mem_gb": 0.00800358399999998,
+    "ok": true,
+    "errors": []
+   },
+   "hash": {
+    "ms": 11.677799993776716,
+    "mem_gb": 0.00800767999999999,
+    "ok": true,
+    "errors": []
+   }
+  }
+ },
+ {
+  "label": "A/M=100/skewed",
+  "n": 1000000,
+  "ok": true,
+  "errors": [],
+  "ref_ms": 66.78310000279453,
+  "gi_ms": 8.59100000525359,
+  "rss_gb": 0.008003584000000008,
+  "strategy": "dense",
+  "reason": "R=100<=min(64000000,4.0*N=4000000) and est=8.0MB<=budget=2147.5MB: direct indexing, no sort",
+  "R": 100,
+  "est_dense_MB": 8.0016,
+  "strategies": {
+   "unique": {
+    "ms": 50.45210001117084,
+    "mem_gb": 0.007000064,
+    "ok": true,
+    "errors": []
+   },
+   "dense": {
+    "ms": 7.208499999251217,
+    "mem_gb": 0.008003584000000008,
+    "ok": true,
+    "errors": []
+   },
+   "hash": {
+    "ms": 10.653300007106736,
+    "mem_gb": 0.008003584000000008,
+    "ok": true,
+    "errors": []
+   }
+  }
+ },
+ {
+  "label": "A/M=100/sorted",
+  "n": 1000000,
+  "ok": true,
+  "errors": [],
+  "ref_ms": 44.21530000399798,
+  "gi_ms": 2.9786999948555604,
+  "rss_gb": 0.00100351999999998,
+  "strategy": "sorted",
+  "reason": "sorted input: reduceat over runs",
+  "R": 100,
+  "est_dense_MB": 8.0016,
+  "strategies": {
+   "unique": {
+    "ms": 27.07540000847075,
+    "mem_gb": 0.007000064,
+    "ok": true,
+    "errors": []
+   },
+   "sorted": {
+    "ms": 1.0655999940354377,
+    "mem_gb": 0.0,
+    "ok": true,
+    "errors": []
+   },
+   "dense": {
+    "ms": 8.678000012878329,
+    "mem_gb": 0.008003584000000008,
+    "ok": true,
+    "errors": []
+   },
+   "hash": {
+    "ms": 10.763400001451373,
+    "mem_gb": 0.008003584000000008,
+    "ok": true,
+    "errors": []
+   }
+  }
+ },
+ {
+  "label": "A/M=10000/uniform",
+  "n": 1000000,
+  "ok": true,
+  "errors": [],
+  "ref_ms": 129.5319000055315,
+  "gi_ms": 9.554800009937026,
+  "rss_gb": 0.008085503999999993,
+  "strategy": "dense",
+  "reason": "R=10000<=min(64000000,4.0*N=4000000) and est=8.2MB<=budget=2147.5MB: direct indexing, no sort",
+  "R": 10000,
+  "est_dense_MB": 8.16,
+  "strategies": {
+   "unique": {
+    "ms": 105.84920000110287,
+    "mem_gb": 0.007000064,
+    "ok": true,
+    "errors": []
+   },
+   "dense": {
+    "ms": 9.174399994662963,
+    "mem_gb": 0.008003584000000008,
+    "ok": true,
+    "errors": []
+   },
+   "hash": {
+    "ms": 72.1264999883715,
+    "mem_gb": 0.008491007999999994,
+    "ok": true,
+    "errors": []
+   }
+  }
+ },
+ {
+  "label": "A/M=10000/skewed",
+  "n": 1000000,
+  "ok": true,
+  "errors": [],
+  "ref_ms": 65.71520000579767,
+  "gi_ms": 9.0148000017507,
+  "rss_gb": 0.00800358399999998,
+  "strategy": "dense",
+  "reason": "R=9999<=min(64000000,4.0*N=4000000) and est=8.2MB<=budget=2147.5MB: direct indexing, no sort",
+  "R": 9999,
+  "est_dense_MB": 8.159984,
+  "strategies": {
+   "unique": {
+    "ms": 42.34230000292882,
+    "mem_gb": 0.008003584000000008,
+    "ok": true,
+    "errors": []
+   },
+   "dense": {
+    "ms": 7.515099990996532,
+    "mem_gb": 0.008003584000000008,
+    "ok": true,
+    "errors": []
+   },
+   "hash": {
+    "ms": 45.18310001003556,
+    "mem_gb": 0.008028160000000006,
+    "ok": true,
+    "errors": []
+   }
+  }
+ },
+ {
+  "label": "A/M=10000/sorted",
+  "n": 1000000,
+  "ok": true,
+  "errors": [],
+  "ref_ms": 41.241400002036244,
+  "gi_ms": 2.9171999922255054,
+  "rss_gb": 0.00100351999999998,
+  "strategy": "sorted",
+  "reason": "sorted input: reduceat over runs",
+  "R": 10000,
+  "est_dense_MB": 8.16,
+  "strategies": {
+   "unique": {
+    "ms": 26.22430000337772,
+    "mem_gb": 0.006995968000000019,
+    "ok": true,
+    "errors": []
+   },
+   "sorted": {
+    "ms": 1.6931999998632818,
+    "mem_gb": -0.0008437760000000183,
+    "ok": true,
+    "errors": []
+   },
+   "dense": {
+    "ms": 7.946700003230944,
+    "mem_gb": 0.008085504000000021,
+    "ok": true,
+    "errors": []
+   },
+   "hash": {
+    "ms": 47.95399999420624,
+    "mem_gb": 0.008003584000000008,
+    "ok": true,
+    "errors": []
+   }
+  }
+ },
+ {
+  "label": "A/M=100000/uniform",
+  "n": 1000000,
+  "ok": true,
+  "errors": [],
+  "ref_ms": 130.055400004494,
+  "gi_ms": 15.291200004867278,
+  "rss_gb": 0.008806399999999992,
+  "strategy": "dense",
+  "reason": "R=100000<=min(64000000,4.0*N=4000000) and est=9.6MB<=budget=2147.5MB: direct indexing, no sort",
+  "R": 100000,
+  "est_dense_MB": 9.6,
+  "strategies": {
+   "unique": {
+    "ms": 109.3949999922188,
+    "mem_gb": 0.008003584000000008,
+    "ok": true,
+    "errors": []
+   },
+   "dense": {
+    "ms": 13.795399994705804,
+    "mem_gb": 0.010403839999999998,
+    "ok": true,
+    "errors": []
+   },
+   "hash": {
+    "ms": 96.52649999770802,
+    "mem_gb": 0.010944512000000017,
+    "ok": true,
+    "errors": []
+   }
+  }
+ },
+ {
+  "label": "A/M=100000/skewed",
+  "n": 1000000,
+  "ok": true,
+  "errors": [],
+  "ref_ms": 67.8189000027487,
+  "gi_ms": 9.641800003009848,
+  "rss_gb": 0.009912320000000002,
+  "strategy": "dense",
+  "reason": "R=99962<=min(64000000,4.0*N=4000000) and est=9.6MB<=budget=2147.5MB: direct indexing, no sort",
+  "R": 99962,
+  "est_dense_MB": 9.599392,
+  "strategies": {
+   "unique": {
+    "ms": 47.064500002306886,
+    "mem_gb": 0.007000064,
+    "ok": true,
+    "errors": []
+   },
+   "dense": {
+    "ms": 9.064500001841225,
+    "mem_gb": 0.00800358399999998,
+    "ok": true,
+    "errors": []
+   },
+   "hash": {
+    "ms": 48.37079999560956,
+    "mem_gb": 0.008085503999999993,
+    "ok": true,
+    "errors": []
+   }
+  }
+ },
+ {
+  "label": "A/M=100000/sorted",
+  "n": 1000000,
+  "ok": true,
+  "errors": [],
+  "ref_ms": 45.53930000110995,
+  "gi_ms": 4.518100002314895,
+  "rss_gb": 0.0024002559999999895,
+  "strategy": "sorted",
+  "reason": "sorted input: reduceat over runs",
+  "R": 100000,
+  "est_dense_MB": 9.6,
+  "strategies": {
+   "unique": {
+    "ms": 30.898199998773634,
+    "mem_gb": 0.007000064,
+    "ok": true,
+    "errors": []
+   },
+   "sorted": {
+    "ms": 3.731099990545772,
+    "mem_gb": 0.0007004160000000093,
+    "ok": true,
+    "errors": []
+   },
+   "dense": {
+    "ms": 9.157600012258627,
+    "mem_gb": 0.008810496000000001,
+    "ok": true,
+    "errors": []
+   },
+   "hash": {
+    "ms": 67.39690000540577,
+    "mem_gb": 0.006905856000000016,
+    "ok": true,
+    "errors": []
+   }
+  }
+ },
+ {
+  "label": "A/M=1000000/uniform",
+  "n": 1000000,
+  "ok": true,
+  "errors": [],
+  "ref_ms": 158.26160000870004,
+  "gi_ms": 40.48950001015328,
+  "rss_gb": 0.013062143999999998,
+  "strategy": "dense",
+  "reason": "R=1000000<=min(64000000,4.0*N=4000000) and est=24.0MB<=budget=2147.5MB: direct indexing, no sort",
+  "R": 1000000,
+  "est_dense_MB": 24.0,
+  "strategies": {
+   "unique": {
+    "ms": 114.37390001083259,
+    "mem_gb": 0.012062719999999999,
+    "ok": true,
+    "errors": []
+   },
+   "dense": {
+    "ms": 37.60719999263529,
+    "mem_gb": 0.013062143999999998,
+    "ok": true,
+    "errors": []
+   },
+   "hash": {
+    "ms": 197.62099999934435,
+    "mem_gb": 0.013565951999999992,
+    "ok": true,
+    "errors": []
+   }
+  }
+ },
+ {
+  "label": "A/M=1000000/skewed",
+  "n": 1000000,
+  "ok": true,
+  "errors": [],
+  "ref_ms": 64.19049999385606,
+  "gi_ms": 22.377699991920963,
+  "rss_gb": 0.008130559999999981,
+  "strategy": "dense",
+  "reason": "R=999588<=min(64000000,4.0*N=4000000) and est=24.0MB<=budget=2147.5MB: direct indexing, no sort",
+  "R": 999588,
+  "est_dense_MB": 23.993408,
+  "strategies": {
+   "unique": {
+    "ms": 49.905699997907504,
+    "mem_gb": 0.007000064,
+    "ok": true,
+    "errors": []
+   },
+   "dense": {
+    "ms": 20.634200001950376,
+    "mem_gb": 0.008036351999999997,
+    "ok": true,
+    "errors": []
+   },
+   "hash": {
+    "ms": 48.07660001097247,
+    "mem_gb": 0.008404992,
+    "ok": true,
+    "errors": []
+   }
+  }
+ },
+ {
+  "label": "A/M=1000000/sorted",
+  "n": 1000000,
+  "ok": true,
+  "errors": [],
+  "ref_ms": 53.07300000276882,
+  "gi_ms": 11.806000009528361,
+  "rss_gb": 0.011120639999999987,
+  "strategy": "sorted",
+  "reason": "sorted input: reduceat over runs",
+  "R": 1000000,
+  "est_dense_MB": 24.0,
+  "strategies": {
+   "unique": {
+    "ms": 33.462899998994544,
+    "mem_gb": 0.01205862399999999,
+    "ok": true,
+    "errors": []
+   },
+   "sorted": {
+    "ms": 10.570499987807125,
+    "mem_gb": 0.010117120000000007,
+    "ok": true,
+    "errors": []
+   },
+   "dense": {
+    "ms": 26.38719999231398,
+    "mem_gb": 0.013062143999999998,
+    "ok": true,
+    "errors": []
+   },
+   "hash": {
+    "ms": 105.07309999957215,
+    "mem_gb": 0.013062143999999998,
+    "ok": true,
+    "errors": []
+   }
+  }
+ },
+ {
+  "label": "A/M=10000000/uniform",
+  "n": 1000000,
+  "ok": true,
+  "errors": [],
+  "ref_ms": 164.19320000568405,
+  "gi_ms": 257.34950001060497,
+  "rss_gb": 0.016990208000000007,
+  "strategy": "hash",
+  "reason": "dense rejected (R=9999991>min(64000000,4.0*N=4000000)): generic integer hash, no giant allocs; unique is last-resort fallback",
+  "R": 9999991,
+  "est_dense_MB": 167.999856,
+  "dense_skipped_gate": true,
+  "strategies": {
+   "unique": {
+    "ms": 115.93670000729617,
+    "mem_gb": 0.015618047999999968,
+    "ok": true,
+    "errors": []
+   },
+   "hash": {
+    "ms": 261.9568999944022,
+    "mem_gb": 0.015618047999999995,
+    "ok": true,
+    "errors": []
+   }
+  }
+ },
+ {
+  "label": "A/M=10000000/skewed",
+  "n": 1000000,
+  "ok": true,
+  "errors": [],
+  "ref_ms": 64.63590000930708,
+  "gi_ms": 53.87220000557136,
+  "rss_gb": 0.008056831999999986,
+  "strategy": "hash",
+  "reason": "dense rejected (R=9952958>min(64000000,4.0*N=4000000)): generic integer hash, no giant allocs; unique is last-resort fallback",
+  "R": 9952958,
+  "est_dense_MB": 167.247328,
+  "dense_skipped_gate": true,
+  "strategies": {
+   "unique": {
+    "ms": 46.924499998567626,
+    "mem_gb": 0.007004160000000009,
+    "ok": true,
+    "errors": []
+   },
+   "hash": {
+    "ms": 53.546100010862574,
+    "mem_gb": 0.008450048000000016,
+    "ok": true,
+    "errors": []
+   }
+  }
+ },
+ {
+  "label": "A/M=10000000/sorted",
+  "n": 1000000,
+  "ok": true,
+  "errors": [],
+  "ref_ms": 55.34310000075493,
+  "gi_ms": 16.413800010923296,
+  "rss_gb": 0.01623244800000001,
+  "strategy": "sorted",
+  "reason": "sorted input: reduceat over runs",
+  "R": 9999991,
+  "est_dense_MB": 167.999856,
+  "dense_skipped_gate": true,
+  "strategies": {
+   "unique": {
+    "ms": 28.736099993693642,
+    "mem_gb": 0.014614527999999988,
+    "ok": true,
+    "errors": []
+   },
+   "sorted": {
+    "ms": 15.25749999564141,
+    "mem_gb": 0.014274559999999992,
+    "ok": true,
+    "errors": []
+   },
+   "hash": {
+    "ms": 120.8347999927355,
+    "mem_gb": 0.015618047999999995,
+    "ok": true,
+    "errors": []
+   }
+  }
+ },
+ {
+  "label": "edge/empty",
+  "n": 0,
+  "ok": true,
+  "errors": [],
+  "strategy": "empty",
+  "reason": "no rows"
+ },
+ {
+  "label": "edge/n=1",
+  "n": 1,
+  "ok": true,
+  "errors": [],
+  "ref_ms": 0.08650000381749123,
+  "gi_ms": 0.02750000567175448,
+  "rss_gb": 0.0,
+  "strategy": "sorted",
+  "reason": "sorted input: reduceat over runs",
+  "R": 1,
+  "est_dense_MB": 2.4e-05,
+  "strategies": {
+   "unique": {
+    "ms": 0.05250000685919076,
+    "mem_gb": 0.0,
+    "ok": true,
+    "errors": []
+   },
+   "sorted": {
+    "ms": 0.05630000669043511,
+    "mem_gb": 0.0,
+    "ok": true,
+    "errors": []
+   },
+   "dense": {
+    "ms": 0.06770000618416816,
+    "mem_gb": 0.0,
+    "ok": true,
+    "errors": []
+   },
+   "hash": {
+    "ms": 0.08460000390186906,
+    "mem_gb": 0.0,
+    "ok": true,
+    "errors": []
+   }
+  }
+ },
+ {
+  "label": "edge/all-equal-1K",
+  "n": 1000,
+  "ok": true,
+  "errors": [],
+  "ref_ms": 0.14569998893421143,
+  "gi_ms": 0.05909999890718609,
+  "rss_gb": 0.0,
+  "strategy": "sorted",
+  "reason": "sorted input: reduceat over runs",
+  "R": 1,
+  "est_dense_MB": 0.008016,
+  "strategies": {
+   "unique": {
+    "ms": 0.076299998909235,
+    "mem_gb": 8.191999999990207e-06,
+    "ok": true,
+    "errors": []
+   },
+   "sorted": {
+    "ms": 0.07639999967068434,
+    "mem_gb": 0.0,
+    "ok": true,
+    "errors": []
+   },
+   "dense": {
+    "ms": 0.10369998926762491,
+    "mem_gb": 0.0,
+    "ok": true,
+    "errors": []
+   },
+   "hash": {
+    "ms": 0.09620000491850078,
+    "mem_gb": 4.096000000008981e-06,
+    "ok": true,
+    "errors": []
+   }
+  }
+ },
+ {
+  "label": "edge/trap-0-vs-1e9",
+  "n": 2,
+  "ok": true,
+  "errors": [],
+  "ref_ms": 0.07469998672604561,
+  "gi_ms": 0.033499993151053786,
+  "rss_gb": 0.0,
+  "strategy": "sorted",
+  "reason": "sorted input: reduceat over runs",
+  "R": 1000000001,
+  "est_dense_MB": 16000.000032,
+  "dense_skipped_gate": true,
+  "strategies": {
+   "unique": {
+    "ms": 0.04169999738223851,
+    "mem_gb": 0.0,
+    "ok": true,
+    "errors": []
+   },
+   "sorted": {
+    "ms": 0.04329999501351267,
+    "mem_gb": 0.0,
+    "ok": true,
+    "errors": []
+   },
+   "hash": {
+    "ms": 0.08460000390186906,
+    "mem_gb": 0.0,
+    "ok": true,
+    "errors": []
+   }
+  }
+ },
+ {
+  "label": "edge/neg-100K",
+  "n": 100000,
+  "ok": true,
+  "errors": [],
+  "ref_ms": 11.289700007182546,
+  "gi_ms": 3.654100000858307,
+  "rss_gb": -0.0004915199999999953,
+  "strategy": "dense",
+  "reason": "R=100000<=min(64000000,4.0*N=400000) and est=2.4MB<=budget=2147.5MB: direct indexing, no sort",
+  "R": 100000,
+  "est_dense_MB": 2.4,
+  "strategies": {
+   "unique": {
+    "ms": 11.25359999423381,
+    "mem_gb": -0.00015974399999998945,
+    "ok": true,
+    "errors": []
+   },
+   "dense": {
+    "ms": 2.9931000026408583,
+    "mem_gb": 0.0034119679999999875,
+    "ok": true,
+    "errors": []
+   },
+   "hash": {
+    "ms": 17.65749999321997,
+    "mem_gb": 0.005091328000000006,
+    "ok": true,
+    "errors": []
+   }
+  }
+ },
+ {
+  "label": "B/M=100/uniform",
+  "n": 10000000,
+  "ok": true,
+  "errors": [],
+  "ref_ms": 1201.258000000962,
+  "gi_ms": 100.46899999724701,
+  "rss_gb": 0.08000307200000006,
+  "strategy": "dense",
+  "reason": "R=100<=min(64000000,4.0*N=40000000) and est=80.0MB<=budget=2147.5MB: direct indexing, no sort",
+  "R": 100,
+  "est_dense_MB": 80.0016,
+  "strategies": {
+   "unique": {
+    "ms": 1036.8123999942327,
+    "mem_gb": 0.0800030719999999,
+    "ok": true,
+    "errors": []
+   },
+   "dense": {
+    "ms": 83.28809999511577,
+    "mem_gb": 0.0800030719999999,
+    "ok": true,
+    "errors": []
+   },
+   "hash": {
+    "ms": 87.73509999446105,
+    "mem_gb": 0.0800030719999999,
+    "ok": true,
+    "errors": []
+   }
+  }
+ },
+ {
+  "label": "B/M=100/sorted",
+  "n": 10000000,
+  "ok": true,
+  "errors": [],
+  "ref_ms": 501.57979999494273,
+  "gi_ms": 29.0209000086179,
+  "rss_gb": 0.0,
+  "strategy": "sorted",
+  "reason": "sorted input: reduceat over runs",
+  "R": 100,
+  "est_dense_MB": 80.0016,
+  "strategies": {
+   "unique": {
+    "ms": 285.70190000755247,
+    "mem_gb": 0.08000307200000006,
+    "ok": true,
+    "errors": []
+   },
+   "sorted": {
+    "ms": 14.80799999262672,
+    "mem_gb": 0.0,
+    "ok": true,
+    "errors": []
+   },
+   "dense": {
+    "ms": 93.88280000712257,
+    "mem_gb": 0.08000307200000006,
+    "ok": true,
+    "errors": []
+   },
+   "hash": {
+    "ms": 83.6968999938108,
+    "mem_gb": 0.08000307200000006,
+    "ok": true,
+    "errors": []
+   }
+  }
+ },
+ {
+  "label": "B/M=10M/uniform",
+  "n": 10000000,
+  "ok": true,
+  "errors": [],
+  "ref_ms": 3249.3044000002556,
+  "gi_ms": 726.1921000026632,
+  "rss_gb": 0.13056819200000003,
+  "strategy": "dense",
+  "reason": "R=10000000<=min(64000000,4.0*N=40000000) and est=240.0MB<=budget=2147.5MB: direct indexing, no sort",
+  "R": 10000000,
+  "est_dense_MB": 240.0,
+  "strategies": {
+   "unique": {
+    "ms": 2342.0935000031022,
+    "mem_gb": 0.13056819199999992,
+    "ok": true,
+    "errors": []
+   },
+   "dense": {
+    "ms": 721.3331000093604,
+    "mem_gb": 0.13056819200000003,
+    "ok": true,
+    "errors": []
+   },
+   "hash": {
+    "ms": 2429.9716999958036,
+    "mem_gb": 0.13199360000000004,
+    "ok": true,
+    "errors": []
+   }
+  }
+ },
+ {
+  "label": "B/sparse-0-vs-1e9",
+  "n": 10000000,
+  "ok": true,
+  "errors": [],
+  "ref_ms": 515.5383999954211,
+  "gi_ms": 90.47350000764709,
+  "rss_gb": 0.08000307200000001,
+  "strategy": "hash",
+  "reason": "dense rejected (R=1000000001>min(64000000,4.0*N=40000000); est=16080.0MB>budget=2147.5MB): generic integer hash, no giant allocs; unique is last-resort fallback",
+  "R": 1000000001,
+  "est_dense_MB": 16080.000016,
+  "dense_skipped_gate": true,
+  "strategies": {
+   "unique": {
+    "ms": 343.0856000049971,
+    "mem_gb": 0.08000307200000001,
+    "ok": true,
+    "errors": []
+   },
+   "hash": {
+    "ms": 76.20080000197049,
+    "mem_gb": 0.08000307200000001,
+    "ok": true,
+    "errors": []
+   }
+  }
+ },
+ {
+  "label": "B/packed-Q2-like",
+  "n": 10000000,
+  "ok": true,
+  "errors": [],
+  "ref_ms": 2001.3176999927964,
+  "gi_ms": 578.3620000001974,
+  "rss_gb": 0.08026112000000002,
+  "strategy": "hash",
+  "reason": "dense rejected (R=425201762404>min(64000000,4.0*N=40000000); est=6803308.2MB>budget=2147.5MB): generic integer hash, no giant allocs; unique is last-resort fallback",
+  "R": 425201762404,
+  "est_dense_MB": 6803308.198464,
+  "dense_skipped_gate": true,
+  "strategies": {
+   "unique": {
+    "ms": 1862.3054999916349,
+    "mem_gb": 0.08000307200000001,
+    "ok": true,
+    "errors": []
+   },
+   "hash": {
+    "ms": 576.2567999918247,
+    "mem_gb": 0.08032255999999993,
+    "ok": true,
+    "errors": []
+   }
+  }
+ },
+ {
+  "label": "B/neg-10M",
+  "n": 10000000,
+  "ok": true,
+  "errors": [],
+  "ref_ms": 3330.7895000034478,
+  "gi_ms": 1012.845200006268,
+  "rss_gb": 0.14295039999999992,
+  "strategy": "dense",
+  "reason": "R=19999999<=min(64000000,4.0*N=40000000) and est=400.0MB<=budget=2147.5MB: direct indexing, no sort",
+  "R": 19999999,
+  "est_dense_MB": 399.999984,
+  "strategies": {
+   "unique": {
+    "ms": 2397.6607999939006,
+    "mem_gb": 0.14295039999999992,
+    "ok": true,
+    "errors": []
+   },
+   "dense": {
+    "ms": 994.7966999898199,
+    "mem_gb": 0.14295040000000014,
+    "ok": true,
+    "errors": []
+   },
+   "hash": {
+    "ms": 2899.8196000029566,
+    "mem_gb": 0.14394982400000012,
+    "ok": true,
+    "errors": []
+   }
+  }
+ }
+]

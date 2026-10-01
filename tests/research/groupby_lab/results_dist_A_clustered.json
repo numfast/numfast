@@ -1,0 +1,57 @@
+[
+ {
+  "algo": "A",
+  "regime": "M100/clustered",
+  "M": 100,
+  "pattern": "clustered",
+  "ms": 2.9897999920649454,
+  "local_ms": 2.88169999839738,
+  "bytes": 2400,
+  "ngroups": 100,
+  "extra": {}
+ },
+ {
+  "algo": "A",
+  "regime": "M10000/clustered",
+  "M": 10000,
+  "pattern": "clustered",
+  "ms": 4.361500003142282,
+  "local_ms": 3.897100003086962,
+  "bytes": 54672,
+  "ngroups": 2278,
+  "extra": {}
+ },
+ {
+  "algo": "A",
+  "regime": "M100000/clustered",
+  "M": 100000,
+  "pattern": "clustered",
+  "ms": 4.994400005671196,
+  "local_ms": 4.131599998800084,
+  "bytes": 62784,
+  "ngroups": 2616,
+  "extra": {}
+ },
+ {
+  "algo": "A",
+  "regime": "M1000000/clustered",
+  "M": 1000000,
+  "pattern": "clustered",
+  "ms": 3.887999992002733,
+  "local_ms": 3.5918000066885725,
+  "bytes": 62064,
+  "ngroups": 2586,
+  "extra": {}
+ },
+ {
+  "algo": "A",
+  "regime": "M10000000/clustered",
+  "M": 10000000,
+  "pattern": "clustered",
+  "ms": 4.180599993560463,
+  "local_ms": 3.7471999967237934,
+  "bytes": 62856,
+  "ngroups": 2619,
+  "extra": {}
+ }
+]

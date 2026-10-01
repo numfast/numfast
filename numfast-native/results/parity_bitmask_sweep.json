@@ -1,0 +1,9 @@
+{
+ "parity": true,
+ "wgsl_p50_ms": 2.7209999971091747,
+ "numpy_p50_ms": 1.5334000054281205,
+ "n": 512,
+ "p": 8,
+ "seed": 42,
+ "note": "512x8 dispatch-bound; WGSL bit-exact, host merges counts/popcnt"
+}

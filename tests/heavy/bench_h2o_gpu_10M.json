@@ -1,0 +1,156 @@
+{
+ "N": 10000000,
+ "gpu": "NVIDIA GeForce RTX 2060",
+ "Q": {
+  "Q1": {
+   "cpu": {
+    "cold_ms": 61.30749997100793,
+    "cold_stages": {
+     "compile": 0.019599974621087313,
+     "optimize": 0.09919999865815043,
+     "execute": 61.18869999772869,
+     "total": 61.30749997100793
+    },
+    "warm_ms": 56.75580003298819,
+    "warm_stages": {
+     "compile": 0.0247000134550035,
+     "optimize": 0.06680001388303936,
+     "execute": 56.66430000565015,
+     "total": 56.75580003298819
+    },
+    "chk": 29998789,
+    "status": "ok"
+   },
+   "gpu": {
+    "cold_ms": 1542.338800005382,
+    "cold_stages": {
+     "compile": 0.023900007363408804,
+     "optimize": 0.06500000017695129,
+     "execute": 1542.2498999978416,
+     "total": 1542.338800005382
+    },
+    "warm_ms": 252.0211999944877,
+    "warm_stages": {
+     "compile": 0.024100008886307478,
+     "optimize": 0.07270000060088933,
+     "execute": 251.9243999850005,
+     "total": 252.0211999944877
+    },
+    "chk": 29998789,
+    "status": "ok"
+   }
+  },
+  "Q2": {
+   "cpu": {
+    "cold_ms": 1374.463599990122,
+    "cold_stages": {
+     "compile": 0.029399991035461426,
+     "optimize": 0.08570001227781177,
+     "execute": 1374.3484999868087,
+     "total": 1374.463599990122
+    },
+    "warm_ms": 432.97809996875003,
+    "warm_stages": {
+     "compile": 0.051099981646984816,
+     "optimize": 0.13910001143813133,
+     "execute": 432.7878999756649,
+     "total": 432.97809996875003
+    },
+    "chk": 29998789,
+    "status": "ok"
+   },
+   "gpu": {
+    "cold_ms": 391.3942000071984,
+    "cold_stages": {
+     "compile": 0.05040000542066991,
+     "optimize": 0.12579999747686088,
+     "execute": 391.21800000430085,
+     "total": 391.3942000071984
+    },
+    "warm_ms": 367.4209000018891,
+    "warm_stages": {
+     "compile": 0.032400013878941536,
+     "optimize": 0.10979999206028879,
+     "execute": 367.27869999594986,
+     "total": 367.4209000018891
+    },
+    "chk": 29998789,
+    "status": "ok"
+   }
+  },
+  "Q3": {
+   "cpu": {
+    "cold_ms": 474.611100013135,
+    "cold_stages": {
+     "compile": 0.02780000795610249,
+     "optimize": 0.1060000213328749,
+     "execute": 474.477299983846,
+     "total": 474.611100013135
+    },
+    "warm_ms": 495.90630002785474,
+    "warm_stages": {
+     "compile": 0.03700001980178058,
+     "optimize": 0.16450000111944973,
+     "execute": 495.7048000069335,
+     "total": 495.90630002785474
+    },
+    "chk": 4999719.622344427,
+    "status": "ok"
+   },
+   "gpu": {
+    "status": "guard_error",
+    "error": "GPU driver: series 'v3' float64 needs CPU or float32 (MapF64 guard, spec 06) Fix: pass dtype='float32' or backend='cpu'. See specs-rebuilt/06-drivers-gpu-cpu.md"
+   }
+  },
+  "Q4": {
+   "cpu": {
+    "cold_ms": 204.83149998472072,
+    "cold_stages": {
+     "compile": 0.01960000372491777,
+     "optimize": 0.07680000271648169,
+     "execute": 204.73509997827932,
+     "total": 204.83149998472072
+    },
+    "warm_ms": 212.73070000461303,
+    "warm_stages": {
+     "compile": 0.03580001066438854,
+     "optimize": 0.18579998868517578,
+     "execute": 212.50910000526346,
+     "total": 212.73070000461303
+    },
+    "chk": 9.094947017729282e-13,
+    "status": "ok"
+   },
+   "gpu": {
+    "status": "guard_error",
+    "error": "GPU driver: series 'v3' float64 needs CPU or float32 (MapF64 guard, spec 06) Fix: pass dtype='float32' or backend='cpu'. See specs-rebuilt/06-drivers-gpu-cpu.md"
+   }
+  },
+  "Q5": {
+   "cpu": {
+    "cold_ms": 638.3009999990463,
+    "cold_stages": {
+     "compile": 0.01729998621158302,
+     "optimize": 0.06940000457689166,
+     "execute": 638.2143000082579,
+     "total": 638.3009999990463
+    },
+    "warm_ms": 804.1147000039928,
+    "warm_stages": {
+     "compile": 0.04050001734867692,
+     "optimize": 0.13229998876340687,
+     "execute": 803.9418999978807,
+     "total": 804.1147000039928
+    },
+    "chk": 499976651408061,
+    "status": "ok"
+   },
+   "gpu": {
+    "status": "guard_error",
+    "error": "GPU driver: series 'v3' float64 needs CPU or float32 (MapF64 guard, spec 06) Fix: pass dtype='float32' or backend='cpu'. See specs-rebuilt/06-drivers-gpu-cpu.md"
+   }
+  }
+ },
+ "csv_load_ms": 16858.947100001387,
+ "rss_gb": 2.900185088
+}

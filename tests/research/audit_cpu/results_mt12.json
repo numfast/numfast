@@ -1,0 +1,78 @@
+{
+ "level": "uniform",
+ "N": 10000000,
+ "A": {
+  "Q1@2": {
+   "best_ms": 10.43,
+   "merge_ms": 0.02
+  },
+  "Q1@12": {
+   "best_ms": 5.94,
+   "merge_ms": 0.04
+  },
+  "Q2@2": {
+   "best_ms": 20.0,
+   "merge_ms": 0.08
+  },
+  "Q2@12": {
+   "best_ms": 4.32,
+   "merge_ms": 0.33
+  },
+  "Q3@2": {
+   "best_ms": 66.73,
+   "merge_ms": 1.48
+  },
+  "Q3@12": {
+   "best_ms": 15.18,
+   "merge_ms": 4.48
+  },
+  "Q4@2": {
+   "best_ms": 22.56,
+   "merge_ms": 0.69
+  },
+  "Q4@12": {
+   "best_ms": 8.72,
+   "merge_ms": 0.07
+  },
+  "Q5@2": {
+   "best_ms": 88.52,
+   "merge_ms": 1.91
+  },
+  "Q5@12": {
+   "best_ms": 20.52,
+   "merge_ms": 6.05
+  }
+ },
+ "duck12": {
+  "threads_proof": [
+   [
+    12
+   ]
+  ],
+  "Q1": {
+   "run1_ms": 57.5,
+   "run2_ms": 55.2,
+   "best_ms": 55.2
+  },
+  "Q2": {
+   "run1_ms": 118.8,
+   "run2_ms": 116.6,
+   "best_ms": 116.6
+  },
+  "Q3": {
+   "run1_ms": 705.5,
+   "run2_ms": 810.8,
+   "best_ms": 705.5
+  },
+  "Q4": {
+   "run1_ms": 13.5,
+   "run2_ms": 13.1,
+   "best_ms": 13.1
+  },
+  "Q5": {
+   "run1_ms": 1032.0,
+   "run2_ms": 1098.4,
+   "best_ms": 1032.0
+  }
+ }
+}

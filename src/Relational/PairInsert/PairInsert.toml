@@ -1,0 +1,11 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+name = "PairInsert"
+version = "0.1.0"
+depends = []
+alias = ["pair_insert", "pair_insert_available"]
+mods = ["pair_insert", "pair_insert_available"]
+
+[metadata]
+level = "relational"
+description = "Generic batch-assignment pair insert over typeless i64/u64 lanes"

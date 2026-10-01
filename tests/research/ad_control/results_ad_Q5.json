@@ -1,0 +1,157 @@
+{
+ "tag": "ad_Q5",
+ "Q": "Q5",
+ "N": 10000000,
+ "G": 100000,
+ "m": 100001,
+ "sig": "iif",
+ "seed": 42,
+ "pack_ms": 159.2,
+ "dict_ms": 257.94,
+ "meta": {
+  "v3_physical": "float64",
+  "v3_kind": "series",
+  "id1_kind": "pattern",
+  "id1_physical": "int32",
+  "K1_K": 101,
+  "K2_K": 101
+ },
+ "cells": {
+  "8": {
+   "N": 10000000,
+   "G": 100000,
+   "T": 8,
+   "A": {
+    "agg_ms": 28.05,
+    "merge_ms": 3.781,
+    "total_ms": 289.77
+   },
+   "D": {
+    "route_ms": 186.44,
+    "agg_ms": 46.68,
+    "merge_ms": 5.065,
+    "total_ms": 496.12,
+    "perm_mb": 40.0,
+    "imb_pct": 0.2
+   },
+   "ratio_agg_D_over_A": 1.664,
+   "ratio_total_D_over_A": 1.712,
+   "correct": {
+    "A": {
+     "counts_exact": true,
+     "cols_exact": [
+      true,
+      true,
+      true
+     ],
+     "float_max_diff": 7.275957614183426e-12,
+     "pass": true
+    },
+    "D": {
+     "counts_exact": true,
+     "cols_exact": [
+      true,
+      true,
+      true
+     ],
+     "float_max_diff": 0.0,
+     "pass": true
+    },
+    "chk_v1": 29998789,
+    "chk_pass": true,
+    "ngroups": 100000
+   }
+  },
+  "12": {
+   "N": 10000000,
+   "G": 100000,
+   "T": 12,
+   "A": {
+    "agg_ms": 19.29,
+    "merge_ms": 5.565,
+    "total_ms": 282.79
+   },
+   "D": {
+    "route_ms": 187.17,
+    "agg_ms": 35.07,
+    "merge_ms": 6.102,
+    "total_ms": 486.29,
+    "perm_mb": 40.0,
+    "imb_pct": 0.32
+   },
+   "ratio_agg_D_over_A": 1.819,
+   "ratio_total_D_over_A": 1.72,
+   "correct": {
+    "A": {
+     "counts_exact": true,
+     "cols_exact": [
+      true,
+      true,
+      true
+     ],
+     "float_max_diff": 8.185452315956354e-12,
+     "pass": true
+    },
+    "D": {
+     "counts_exact": true,
+     "cols_exact": [
+      true,
+      true,
+      true
+     ],
+     "float_max_diff": 0.0,
+     "pass": true
+    },
+    "chk_v1": 29998789,
+    "chk_pass": true,
+    "ngroups": 100000
+   }
+  },
+  "16": {
+   "N": 10000000,
+   "G": 100000,
+   "T": 16,
+   "A": {
+    "agg_ms": 25.9,
+    "merge_ms": 9.311,
+    "total_ms": 293.15
+   },
+   "D": {
+    "route_ms": 183.8,
+    "agg_ms": 28.67,
+    "merge_ms": 7.162,
+    "total_ms": 477.57,
+    "perm_mb": 40.0,
+    "imb_pct": 0.4
+   },
+   "ratio_agg_D_over_A": 1.107,
+   "ratio_total_D_over_A": 1.629,
+   "correct": {
+    "A": {
+     "counts_exact": true,
+     "cols_exact": [
+      true,
+      true,
+      true
+     ],
+     "float_max_diff": 8.185452315956354e-12,
+     "pass": true
+    },
+    "D": {
+     "counts_exact": true,
+     "cols_exact": [
+      true,
+      true,
+      true
+     ],
+     "float_max_diff": 0.0,
+     "pass": true
+    },
+    "chk_v1": 29998789,
+    "chk_pass": true,
+    "ngroups": 100000
+   }
+  }
+ },
+ "total_s": 32.6
+}

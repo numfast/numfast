@@ -1,0 +1,504 @@
+{
+ "profile": {
+  "model_version": "calibrated_v1",
+  "profile_version": 2,
+  "generated": "2026-09-10T14:26:01.420933+00:00",
+  "source": "measured:seed42",
+  "quick": false,
+  "hardware": {
+   "cpu": "Intel64 Family 6 Model 79 Stepping 1, GenuineIntel",
+   "platform": "Windows-11-10.0.26100-SP0",
+   "python": "3.14.6",
+   "backend": "webgpu",
+   "gpu_device": "NVIDIA GeForce RTX 2060",
+   "gpu_backend": "Vulkan",
+   "capability_note": "wgpu-py RTX 2060 Vulkan: elementwise pure-GPU; filter=GPU block-partials compact (SPEC-DELTA-8: per-workgroup counts on GPU, mask resident, tiny W prefix on host, workgroup-local scan scatter; host-assisted gather only for n<=2048); reduce=GPU-partials+CPU-int64/float64-final hybrid; groupby/groupby"
+  },
+  "cost": {
+   "device_init_one_time_ms": 2345.039600004384,
+   "transfer_h2d_a_ms_per_byte": 1.1521946796760924e-06,
+   "transfer_h2d_b_ms": -21.217746593403433,
+   "transfer_d2h_a_ms_per_byte": 1.4547144512455487e-06,
+   "transfer_d2h_b_ms": 0.015380101946675495,
+   "rng_fill_i32_cpu_warm_a": 5.9586806024910236e-05,
+   "rng_fill_i32_cpu_warm_b": -0.4577287336693132,
+   "rng_fill_i32_cpu_cold_a": 5.9822845949008974e-05,
+   "rng_fill_i32_cpu_cold_b": 1.250920375355264,
+   "rng_fill_i32_cpu_compile_ms": 1.589799991052132,
+   "rng_fill_i32_gpu_warm_a": 9.115800466122478e-06,
+   "rng_fill_i32_gpu_warm_b": 2.273364205882075,
+   "rng_fill_i32_gpu_cold_a": 5.19734507865272e-06,
+   "rng_fill_i32_gpu_cold_b": 2374.8450490449604,
+   "rng_fill_i32_gpu_compile_ms": 2369.9731000015163,
+   "map_int32_cpu_warm_a": 1.8629205190129395e-06,
+   "map_int32_cpu_warm_b": 0.013838260201737285,
+   "map_int32_cpu_cold_a": 1.49264270112582e-06,
+   "map_int32_cpu_cold_b": 0.01625989746314982,
+   "map_float32_cpu_warm_a": 1.9863879823019977e-06,
+   "map_float32_cpu_warm_b": -0.19291762082293662,
+   "map_float32_cpu_cold_a": 1.7284945810570773e-06,
+   "map_float32_cpu_cold_b": -0.06724369963351151
+  },
+  "metrics": {
+   "transfer_h2d_r2": 0.9980447943089563,
+   "transfer_d2h_r2": 0.999985556980071,
+   "rng_fill_i32_cpu_warm_r2": 0.9999952287831994,
+   "rng_fill_i32_cpu_cold_r2": 0.9999991103811575,
+   "rng_fill_i32_gpu_warm_r2": 0.999939737303688,
+   "rng_fill_i32_gpu_cold_r2": 0.9931396294067207,
+   "map_int32_cpu_warm_r2": 0.9998871880574016,
+   "map_int32_cpu_cold_r2": 0.9995509964813457,
+   "map_float32_cpu_warm_r2": 0.9995399907678163,
+   "map_float32_cpu_cold_r2": 0.9997395829400639
+  },
+  "measurements": {
+   "Ns": [
+    10000,
+    100000,
+    1000000,
+    10000000
+   ],
+   "bytes": [
+    1048576,
+    10485760,
+    104857600,
+    1073741824
+   ],
+   "reps": 3,
+   "warmup": 2,
+   "seed": 42,
+   "note": "candidate only: init+transfer+rng+map; groupby-card/sort-nonpow2 excluded; NOT for calibration.toml"
+  }
+ },
+ "raw": {
+  "device_init": {
+   "state": "cold_process vs warm_process, RTX 2060 Vulkan, seed 42",
+   "cold_first_runs_ms": [
+    2319.1415000037523,
+    2328.7505000043893,
+    2348.958599999605,
+    2353.2096999988426,
+    2359.1162000011536
+   ],
+   "cold_first_median_ms": 2348.958599999605,
+   "warm_second_median_ms": 3.3562000025995076,
+   "compile_only_other_op_median_ms": 3.918999995221384,
+   "device_init_one_time_median_ms": 2345.039600004384,
+   "note": "cold_first=device request+compile(rng)+exec@10K; other=compile(compare)+exec@10K device-warm; init~=cold_first-other (same-N approx)"
+  },
+  "transfer": {
+   "h2d": {
+    "1048576": {
+     "state": "CPU->GPU",
+     "bytes": 1048576,
+     "best_ms": 0.5890000029467046,
+     "median_ms": 0.6241000010049902,
+     "runs_ms": [
+      0.5890000029467046,
+      0.6366000015987083,
+      0.6241000010049902
+     ]
+    },
+    "10485760": {
+     "state": "CPU->GPU",
+     "bytes": 10485760,
+     "best_ms": 5.009699998481665,
+     "median_ms": 5.650799997965805,
+     "runs_ms": [
+      6.14750000386266,
+      5.009699998481665,
+      5.650799997965805
+     ]
+    },
+    "104857600": {
+     "state": "CPU->GPU",
+     "bytes": 104857600,
+     "best_ms": 61.269400001037866,
+     "median_ms": 87.60630000324454,
+     "runs_ms": [
+      87.60630000324454,
+      91.11590000247816,
+      61.269400001037866
+     ]
+    },
+    "1073741824": {
+     "state": "CPU->GPU",
+     "bytes": 1073741824,
+     "best_ms": 1219.5266999988235,
+     "median_ms": 1226.6411000018707,
+     "runs_ms": [
+      1226.6411000018707,
+      1219.5266999988235,
+      1229.268499999307
+     ]
+    }
+   },
+   "d2h": {
+    "1048576": {
+     "state": "GPU->CPU",
+     "bytes": 1048576,
+     "best_ms": 3.2076999996206723,
+     "median_ms": 3.2811999990371987,
+     "runs_ms": [
+      3.2076999996206723,
+      3.2811999990371987,
+      3.562199999578297
+     ]
+    },
+    "10485760": {
+     "state": "GPU->CPU",
+     "bytes": 10485760,
+     "best_ms": 17.38379999733297,
+     "median_ms": 17.83140000043204,
+     "runs_ms": [
+      17.83140000043204,
+      17.38379999733297,
+      19.134200003463775
+     ]
+    },
+    "104857600": {
+     "state": "GPU->CPU",
+     "bytes": 104857600,
+     "best_ms": 148.38709999457933,
+     "median_ms": 150.01199999824166,
+     "runs_ms": [
+      150.84609999757959,
+      148.38709999457933,
+      150.01199999824166
+     ]
+    },
+    "1073741824": {
+     "state": "GPU->CPU",
+     "bytes": 1073741824,
+     "best_ms": 1562.3877000034554,
+     "median_ms": 1629.081799997948,
+     "runs_ms": [
+      1629.081799997948,
+      1562.3877000034554,
+      1673.9184000034584
+     ]
+    }
+   }
+  },
+  "resident": {
+   "mask_and@10M": {
+    "state": "already-resident (no H2D/D2H inside)",
+    "n": 10000000,
+    "best_ms": 3.198700003849808,
+    "median_ms": 5.614099995000288,
+    "runs_ms": [
+     3.198700003849808,
+     7.841600003303029,
+     5.614099995000288
+    ]
+   }
+  },
+  "rng_fill_i32": {
+   "cpu": {
+    "10000": {
+     "warm_state": "warm_process",
+     "warm_best_ms": 0.5329000050551258,
+     "warm_median_ms": 0.538699998287484,
+     "warm_runs_ms": [
+      0.6255000043893233,
+      0.538699998287484,
+      0.5329000050551258
+     ],
+     "cold_state": "cold_process (1st call, fresh proc)",
+     "cold_runs_ms": [
+      2.1848999967915006,
+      1.8053000021609478,
+      2.122699996107258
+     ],
+     "cold_median_ms": 2.122699996107258
+    },
+    "100000": {
+     "warm_state": "warm_process",
+     "warm_best_ms": 5.934399996476714,
+     "warm_median_ms": 6.149499997263774,
+     "warm_runs_ms": [
+      5.934399996476714,
+      6.285800001933239,
+      6.149499997263774
+     ],
+     "cold_state": "cold_process (1st call, fresh proc)",
+     "cold_runs_ms": [
+      7.300500001292676,
+      6.997000004048459,
+      7.499500003177673
+     ],
+     "cold_median_ms": 7.300500001292676
+    },
+    "1000000": {
+     "warm_state": "warm_process",
+     "warm_best_ms": 58.214099997712765,
+     "warm_median_ms": 59.508699996513315,
+     "warm_runs_ms": [
+      58.214099997712765,
+      59.508699996513315,
+      60.31069999880856
+     ],
+     "cold_state": "cold_process (1st call, fresh proc)",
+     "cold_runs_ms": [
+      62.67939999816008,
+      59.03969999781111,
+      60.696100001223385
+     ],
+     "cold_median_ms": 60.696100001223385
+    },
+    "10000000": {
+     "warm_state": "warm_process",
+     "warm_best_ms": 595.4971000028308,
+     "warm_median_ms": 602.6101000024937,
+     "warm_runs_ms": [
+      602.6101000024937,
+      595.4971000028308,
+      605.798099997628
+     ],
+     "cold_state": "cold_process (1st call, fresh proc)",
+     "cold_runs_ms": [
+      608.61450000084,
+      599.5161999962875,
+      597.396100005426
+     ],
+     "cold_median_ms": 599.5161999962875
+    }
+   },
+   "gpu": {
+    "10000": {
+     "warm_state": "warm_process",
+     "warm_best_ms": 2.493300002242904,
+     "warm_median_ms": 2.660700003616512,
+     "warm_runs_ms": [
+      2.493300002242904,
+      2.660700003616512,
+      2.730599997448735
+     ],
+     "cold_state": "cold_process (1st call, fresh proc)",
+     "cold_runs_ms": [
+      2425.719200000458,
+      2375.377100004698,
+      2335.739799993462
+     ],
+     "cold_median_ms": 2375.377100004698
+    },
+    "100000": {
+     "warm_state": "warm_process",
+     "warm_best_ms": 2.730599997448735,
+     "warm_median_ms": 3.691000005346723,
+     "warm_runs_ms": [
+      3.691000005346723,
+      4.0566999959992245,
+      2.730599997448735
+     ],
+     "cold_state": "cold_process (1st call, fresh proc)",
+     "cold_runs_ms": [
+      2339.0940000026603,
+      2372.703699998965,
+      2399.1604000038933
+     ],
+     "cold_median_ms": 2372.703699998965
+    },
+    "1000000": {
+     "warm_state": "warm_process",
+     "warm_best_ms": 11.746000003768131,
+     "warm_median_ms": 11.830499999632593,
+     "warm_runs_ms": [
+      11.830499999632593,
+      11.746000003768131,
+      11.960899995756336
+     ],
+     "cold_state": "cold_process (1st call, fresh proc)",
+     "cold_runs_ms": [
+      2382.4366999979247,
+      2378.636200002802,
+      2392.793499995605
+     ],
+     "cold_median_ms": 2382.4366999979247
+    },
+    "10000000": {
+     "warm_state": "warm_process",
+     "warm_best_ms": 93.40009999868926,
+     "warm_median_ms": 95.37149999960093,
+     "warm_runs_ms": [
+      95.37149999960093,
+      93.40009999868926,
+      97.05649999523303
+     ],
+     "cold_state": "cold_process (1st call, fresh proc)",
+     "cold_runs_ms": [
+      2425.2802999981213,
+      2440.6240999960573,
+      2426.6052000020863
+     ],
+     "cold_median_ms": 2426.6052000020863
+    }
+   }
+  },
+  "map": {
+   "int32": {
+    "cpu": {
+     "10000": {
+      "warm_state": "warm_process",
+      "warm_best_ms": 0.03210000431863591,
+      "warm_median_ms": 0.03460000152699649,
+      "warm_runs_ms": [
+       0.03529999958118424,
+       0.03460000152699649,
+       0.03210000431863591
+      ],
+      "cold_state": "cold_process (1st call, fresh proc)",
+      "cold_runs_ms": [
+       0.10290000500390306,
+       0.09390000195708126,
+       0.1016000023810193
+      ],
+      "cold_median_ms": 0.1016000023810193
+     },
+     "100000": {
+      "warm_state": "warm_process",
+      "warm_best_ms": 0.08910000178730115,
+      "warm_median_ms": 0.09069999941857532,
+      "warm_runs_ms": [
+       0.09229999704984948,
+       0.08910000178730115,
+       0.09069999941857532
+      ],
+      "cold_state": "cold_process (1st call, fresh proc)",
+      "cold_runs_ms": [
+       0.19299999985378236,
+       0.3878999996231869,
+       0.2941999991890043
+      ],
+      "cold_median_ms": 0.2941999991890043
+     },
+     "1000000": {
+      "warm_state": "warm_process",
+      "warm_best_ms": 1.9993000023532659,
+      "warm_median_ms": 2.0197999983793125,
+      "warm_runs_ms": [
+       1.9993000023532659,
+       2.0549999971990474,
+       2.0197999983793125
+      ],
+      "cold_state": "cold_process (1st call, fresh proc)",
+      "cold_runs_ms": [
+       1.4572000000043772,
+       1.2732999966829084,
+       1.2892000013380311
+      ],
+      "cold_median_ms": 1.2892000013380311
+     },
+     "10000000": {
+      "warm_state": "warm_process",
+      "warm_best_ms": 18.631899998581503,
+      "warm_median_ms": 19.265100003394764,
+      "warm_runs_ms": [
+       18.631899998581503,
+       19.4063000017195,
+       19.265100003394764
+      ],
+      "cold_state": "cold_process (1st call, fresh proc)",
+      "cold_runs_ms": [
+       14.752600000065286,
+       14.963299996452406,
+       15.328199995565228
+      ],
+      "cold_median_ms": 14.963299996452406
+     }
+    }
+   },
+   "float32": {
+    "cpu": {
+     "10000": {
+      "warm_state": "warm_process",
+      "warm_best_ms": 0.02939999831141904,
+      "warm_median_ms": 0.03479999577393755,
+      "warm_runs_ms": [
+       0.03479999577393755,
+       0.04310000076657161,
+       0.02939999831141904
+      ],
+      "cold_state": "cold_process (1st call, fresh proc)",
+      "cold_runs_ms": [
+       0.08830000297166407,
+       0.10889999975915998,
+       0.08679999882588163
+      ],
+      "cold_median_ms": 0.08830000297166407
+     },
+     "100000": {
+      "warm_state": "warm_process",
+      "warm_best_ms": 0.06240000220714137,
+      "warm_median_ms": 0.06540000322274864,
+      "warm_runs_ms": [
+       0.06540000322274864,
+       0.07439999899361283,
+       0.06240000220714137
+      ],
+      "cold_state": "cold_process (1st call, fresh proc)",
+      "cold_runs_ms": [
+       0.13449999823933467,
+       0.1412999990861863,
+       0.12900000001536682
+      ],
+      "cold_median_ms": 0.13449999823933467
+     },
+     "1000000": {
+      "warm_state": "warm_process",
+      "warm_best_ms": 1.5064000035636127,
+      "warm_median_ms": 1.7153000007965602,
+      "warm_runs_ms": [
+       1.7153000007965602,
+       1.5064000035636127,
+       1.7539999971631914
+      ],
+      "cold_state": "cold_process (1st call, fresh proc)",
+      "cold_runs_ms": [
+       1.3419999959296547,
+       1.4759999976377003,
+       2.0408000054885633
+      ],
+      "cold_median_ms": 1.4759999976377003
+     },
+     "10000000": {
+      "warm_state": "warm_process",
+      "warm_best_ms": 19.698899996001273,
+      "warm_median_ms": 20.056499997735955,
+      "warm_runs_ms": [
+       20.716500002890825,
+       19.698899996001273,
+       20.056499997735955
+      ],
+      "cold_state": "cold_process (1st call, fresh proc)",
+      "cold_runs_ms": [
+       16.616000000794884,
+       17.240200002561323,
+       17.235799998161383
+      ],
+      "cold_median_ms": 17.235799998161383
+     }
+    }
+   },
+   "gpu": {
+    "state": "warm_process",
+    "status": "explicit-cpu-only-error",
+    "error": "GPU driver: op 'map' CPU-only in v0.2 (encode/gather-text need CPU path) Fix: run this op with backend='cpu'. See specs-rebuilt/06-drivers-gpu-cpu.md"
+   }
+  }
+ },
+ "validation": {
+  "transfer_h2d@1GB_holdout": {
+   "predicted_ms": 632.125989640511,
+   "measured_ms": 1219.5266999988235,
+   "abs_err_ms": -587.4007103583125,
+   "rel_err": -0.4816628535963003
+  },
+  "transfer_d2h@1GB_holdout": {
+   "predicted_ms": 1499.3728103154108,
+   "measured_ms": 1562.3877000034554,
+   "abs_err_ms": -63.014889688044605,
+   "rel_err": -0.04033242817253697
+  }
+ }
+}
