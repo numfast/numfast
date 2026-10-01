@@ -982,8 +982,17 @@ def dictionary_decode_impl(codes, values, validity=None, format_error=None):
     value are indistinguishable once the sidecar is dropped. Pass the
     envelope's ``validity`` to get NULLs back. The one exact exception is
     D=0 (an all-NULL column): no value exists, so every row decodes to None.
+
+    A dict carrier is also the encode ENVELOPE, and an envelope carries its
+    own ``validity`` sidecar. Dropping it silently turned every NULL row
+    into code 0 (a real sorted rank) with no signal to the caller, so an
+    omitted ``validity`` now adopts the envelope's. An explicitly passed
+    ``validity`` always wins -- that stays the way to assert "every code is
+    valid" over a bare list/body carrier.
     """
     c = np.asarray(codes, dtype=np.int64).reshape(-1)
+    if validity is None and isinstance(values, dict):
+        validity = values.get("validity")
     lut = _coerce_int64_lut(values)
     if lut is not None:
         d = lut.size

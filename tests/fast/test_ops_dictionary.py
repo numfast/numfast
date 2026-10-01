@@ -158,6 +158,41 @@ def test_decode_d0_still_rejects_negative_code_and_bad_validity(kernel):
 
 
 @pytest.mark.fast
+def test_decode_envelope_dict_carries_its_own_sidecar(kernel):
+    # P0-7: the encode envelope is a documented dictionary_decode carrier
+    # ("body/enc dict"). Its validity sidecar must NOT be silently dropped --
+    # decode(codes, envelope) must equal decode(codes, envelope['values'],
+    # envelope['validity']), otherwise NULL rows come back as code 0 (a real
+    # sorted rank) with no signal to the caller.
+    a = kernel.alias
+    r = a["dictionary_encode"](["b", "a", None, "b"])
+    assert a["dictionary_decode"](r["codes"], r) == \
+        a["dictionary_decode"](r["codes"], r["values"], r["validity"])
+    assert a["dictionary_decode"](r["codes"], r) == ["b", "a", None, "b"]
+
+
+@pytest.mark.fast
+def test_decode_envelope_dict_carries_its_own_sidecar_int64(kernel):
+    a = kernel.alias
+    r = a["dictionary_encode"]([10, 20, None, 10])
+    assert r["dtype"] == "int64"
+    assert a["dictionary_decode"](r["codes"], r) == \
+        a["dictionary_decode"](r["codes"], r["dictionary"], r["validity"])
+    assert a["dictionary_decode"](r["codes"], r) == [10, 20, None, 10]
+
+
+@pytest.mark.fast
+def test_decode_explicit_validity_wins_over_envelope_sidecar(kernel):
+    # The caller assertion "every code is valid" stays available for a bare
+    # carrier; when it is passed explicitly it overrides the envelope.
+    a = kernel.alias
+    r = a["dictionary_encode"](["b", "a", None, "b"])
+    assert a["dictionary_decode"](r["codes"], r, validity=[True] * 4) == \
+        ["b", "a", "a", "b"]
+    assert a["dictionary_decode"](r["codes"], r["values"]) == ["b", "a", "a", "b"]
+
+
+@pytest.mark.fast
 def test_encode_arrow_dictionary_array_accepted(kernel):
     pa = pytest.importorskip("pyarrow")
     a = kernel.alias
