@@ -3358,16 +3358,13 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                 t_a = time.perf_counter()
                 sums = _tuple_sums(vv, inv, len(ukeys))
                 agg_ms = (time.perf_counter() - t_a) * 1000
-                if gop == "count":
-                    res = {kk: int(cc) for kk, cc in zip(ukeys, counts.tolist())}
-                elif gop == "sum":
-                    res = {kk: ss for kk, ss in zip(ukeys, sums.tolist())}
-                else:
-                    means = np.ascontiguousarray(
-                        np.asarray(sums, dtype=np.float64) / np.asarray(counts))
-                    res = {kk: float(mm) for kk, mm in zip(ukeys, means.tolist())}
-                bufs[p["out"]] = res
-                bufs[p["out"] + "#carry"] = res
+                # Chain: tuple traversal -> ColumnCarry -> explicit dict only.
+                # Same result contract as the packed lane below; the tuple
+                # ukeys are the key representation, so a carry costs no int64
+                # round trip (see _key_store).
+                _carry = _ColumnCarry(ukeys, counts, {"v": sums})
+                _carry_result(p["out"], bufs, _carry, params,
+                              lambda ct: _carry.to_dict_flat(gop, threads=ct))
                 bufs[p["out"] + "#strategy"] = "composite"
                 bufs[p["out"] + "#groupindex"] = {
                     "strategy": "composite",
@@ -3376,6 +3373,7 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                 continue
             gop = params["op"]
             if gop not in ("sum", "count", "mean", "min", "max"):
+
                 raise err(
                     f"CPU driver: unknown groupby op '{gop}'",
                     fix="use one of sum/count/mean/min/max (or groupby_multi for fused)",
@@ -3555,55 +3553,27 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                 ukeys, inv, counts = _composite_tuple_index(ccols)
                 gi_ms = (time.perf_counter() - t0) * 1000
                 t_a = time.perf_counter()
-                sums_d, means_d = {}, {}
+                sums_d = {}
                 for c, vk in zip(cols, vks):
                     s = _tuple_sums(vk, inv, len(ukeys))
                     if np.issubdtype(np.asarray(vk).dtype, np.integer):
                         s = np.ascontiguousarray(s).astype(np.int64, copy=False)
                     sums_d[c] = s
-                    if "mean" in ops_map[c]:
-                        means_d[c] = np.ascontiguousarray(
-                            np.asarray(s, dtype=np.float64) / np.asarray(counts))
                 agg_ms = (time.perf_counter() - t_a) * 1000
-                cl = counts.tolist()
+                # Chain: tuple traversal -> ColumnCarry -> explicit dict only,
+                # same result contract as the packed lane below. Mean stays
+                # derived sum/count, and it is now derived where it is asked
+                # for (ColumnCarry.means, cached) instead of eagerly here.
+                _carry = _ColumnCarry(ukeys, counts, sums_d)
                 if not multi:
-                    c = cols[0]
-                    ops = ops_map[c]
-                    sl = sums_d[c].tolist() if "sum" in ops else None
-                    ml = list(means_d[c].tolist()) if "mean" in ops else None
-                    res = {}
-                    for i, kk in enumerate(ukeys):
-                        sub = {}
-                        if "sum" in ops:
-                            sub["sum"] = sl[i]
-                        if "count" in ops:
-                            sub["count"] = int(cl[i])
-                        if "mean" in ops:
-                            sub["mean"] = float(ml[i])
-                        res[kk] = sub
+                    _c0 = cols[0]
+                    _carry_result(p["out"], bufs, _carry, params,
+                                  lambda ct, _c0=_c0: _carry.to_dict_single(
+                                      _c0, ops_map[_c0], threads=ct))
                 else:
-                    col_sl, col_ml = {}, {}
-                    for c in cols:
-                        ops = ops_map[c]
-                        col_sl[c] = sums_d[c].tolist() if "sum" in ops else None
-                        col_ml[c] = (list(means_d[c].tolist())
-                                     if "mean" in ops else None)
-                    res = {}
-                    for i, kk in enumerate(ukeys):
-                        cell = {}
-                        for c in cols:
-                            ops = ops_map[c]
-                            sub = {}
-                            if "sum" in ops:
-                                sub["sum"] = col_sl[c][i]
-                            if "count" in ops:
-                                sub["count"] = int(cl[i])
-                            if "mean" in ops:
-                                sub["mean"] = float(col_ml[c][i])
-                            cell[c] = sub
-                        res[kk] = cell
-                bufs[p["out"]] = res
-                bufs[p["out"] + "#carry"] = res
+                    _carry_result(p["out"], bufs, _carry, params,
+                                  lambda ct: _carry.to_dict_multi(
+                                      cols, ops_map, threads=ct))
                 bufs[p["out"] + "#strategy"] = "composite"
                 bufs[p["out"] + "#groupindex"] = {
                     "strategy": "composite",

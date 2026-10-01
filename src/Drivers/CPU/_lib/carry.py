@@ -21,10 +21,10 @@ from concurrent.futures import ThreadPoolExecutor
 class ColumnCarry:
     """Columnar groupby result: ukeys/counts/sums, mean derived."""
 
-    __slots__ = ("ukeys", "counts", "sums", "_means", "mins", "maxs")
+    __slots__ = ("_keys", "_ukeys", "counts", "sums", "_means", "mins", "maxs")
 
     def __init__(self, ukeys, counts, sums, mins=None, maxs=None):
-        self.ukeys = np.ascontiguousarray(np.asarray(ukeys, dtype=np.int64))
+        self._keys, self._ukeys = _key_store(ukeys)
         self.counts = np.ascontiguousarray(np.asarray(counts, dtype=np.int64))
         self.sums = {c: np.ascontiguousarray(np.asarray(s)) for c, s in sums.items()}
         self._means = {}
@@ -34,8 +34,23 @@ class ColumnCarry:
                       for c, s in (maxs or {}).items()})
 
     @property
+    def ukeys(self):
+        """Group keys as int64: 1-D for a packed key column, (ngroups,
+        ncols) for a composite tuple key.
+
+        The 2-D form is built on FIRST ACCESS only (ngroups reads it,
+        the dict materializers never do), so a result='carry' hot path
+        that only touches counts/sums/means pays nothing for it.
+        """
+        uk = self._ukeys
+        if uk is None:
+            uk = self._ukeys = np.ascontiguousarray(
+                np.asarray(self._keys, dtype=np.int64))
+        return uk
+
+    @property
     def ngroups(self):
-        return int(self.ukeys.size)
+        return int(self.ukeys.shape[0])
 
     def means(self, col):
         """Derived mean sums/counts (vectorized f64, cached per column)."""
@@ -51,22 +66,22 @@ class ColumnCarry:
     def to_dict_flat(self, op, threads=1):
         """{key: scalar} for op in sum/count/mean/min/max (groupby legacy shape)."""
         if op == "count":
-            return _dict_from_cols(self.ukeys, self.counts, None, None,
+            return _dict_from_cols(self._keys, self.counts, None, None,
                                    "count", threads)
         if op == "mean":
-            return _dict_from_cols(self.ukeys, self.counts, None,
+            return _dict_from_cols(self._keys, self.counts, None,
                                    self.means(_only_col(self.sums)),
                                    "mean", threads)
         if op == "min":
             col = _only_col(self.mins)
-            return _dict_from_cols(self.ukeys, self.counts, self.mins[col],
+            return _dict_from_cols(self._keys, self.counts, self.mins[col],
                                    None, "sum", threads)
         if op == "max":
             col = _only_col(self.maxs)
-            return _dict_from_cols(self.ukeys, self.counts, self.maxs[col],
+            return _dict_from_cols(self._keys, self.counts, self.maxs[col],
                                    None, "sum", threads)
         col = _only_col(self.sums)
-        return _dict_from_cols(self.ukeys, self.counts, self.sums[col],
+        return _dict_from_cols(self._keys, self.counts, self.sums[col],
                                None, "sum", threads)
 
     def to_dict_single(self, col, ops, threads=1):
@@ -74,11 +89,11 @@ class ColumnCarry:
         mins = self.mins.get(col) if "min" in ops else None
         maxs = self.maxs.get(col) if "max" in ops else None
         if mins is None and maxs is None:
-            return _dict_single_from(self.ukeys, self.counts,
+            return _dict_single_from(self._keys, self.counts,
                                      self.sums[col],
                                      self.means(col) if "mean" in ops else None,
                                      ops, threads)
-        return _dict_single_minmax(self.ukeys, self.counts,
+        return _dict_single_minmax(self._keys, self.counts,
                                    self.sums.get(col),
                                    self.means(col) if "mean" in ops else None,
                                    mins, maxs, ops, threads)
@@ -89,15 +104,51 @@ class ColumnCarry:
             sums_list = [self.sums[c] for c in cols]
             means_list = [self.means(c) if "mean" in ops_map[c] else None
                           for c in cols]
-            return _dict_multi_from(self.ukeys, self.counts, cols, sums_list,
+            return _dict_multi_from(self._keys, self.counts, cols, sums_list,
                                     means_list, ops_map, threads)
-        return _dict_multi_minmax(self.ukeys, self.counts, cols, ops_map,
+        return _dict_multi_minmax(self._keys, self.counts, cols, ops_map,
                                   self.sums, self._means_lazy(cols, ops_map),
                                   self.mins, self.maxs, threads)
 
     def _means_lazy(self, cols, ops_map):
         return [self.means(c) if "mean" in ops_map[c] else None
                 for c in cols]
+
+
+def _key_store(ukeys):
+    """(keys, int64 array or None): the one place the two key layouts meet.
+
+    Packed key column: an int64 array (1-D). That array IS the vector
+    representation, and tolist() on it gives the scalar int keys the
+    dict lanes have always produced -- so it is kept as is (same object
+    for both slots, zero extra alloc) and the dict materializers keep
+    paying exactly one tolist() per call, as before.
+
+    Composite tuple key: groupindex already produced the Python
+    list[tuple]. That list IS the key representation, so it is kept
+    verbatim (shallow copy, no per-tuple rebuild) and the int64
+    (ngroups, ncols) view is deferred to first `ukeys` access. A tuple
+    carry therefore pays nothing for a representation it may never ask
+    for -- which is the whole point of result='carry'.
+    """
+    if isinstance(ukeys, np.ndarray):
+        a = np.ascontiguousarray(np.asarray(ukeys, dtype=np.int64))
+        return a, a
+    return list(ukeys), None
+
+
+def _key_list(keys):
+    """Python key list from a carry's key store (both key layouts).
+
+    Packed: int64 array -> tolist(), scalar int keys. Composite: the
+    verbatim list[tuple], returned as is. A 2-D int64 array (a caller
+    that resolved `ukeys` and handed the array back) becomes a list of
+    tuples, so no key path can produce an unhashable list.
+    """
+    if isinstance(keys, list):
+        return keys
+    kl = keys.tolist()
+    return list(map(tuple, kl)) if kl and isinstance(kl[0], list) else kl
 
 
 def _only_col(sums):
@@ -117,7 +168,7 @@ def _chunks(n, threads):
 
 def _dict_from_cols(ukeys, counts, sums, means, op, threads):
     """Flat {key: scalar}: tolist slices + zip (proven shape)."""
-    kl = ukeys.tolist()
+    kl = _key_list(ukeys)
     if threads == 1:
         if op == "count":
             cl = counts.tolist()
@@ -152,7 +203,7 @@ def _dict_from_cols(ukeys, counts, sums, means, op, threads):
 
 def _dict_single_from(ukeys, counts, sums, means, ops, threads):
     """Single-column {key: {op: val}} (proven shape)."""
-    kl = ukeys.tolist()
+    kl = _key_list(ukeys)
     want_sum, want_count, want_mean = ("sum" in ops, "count" in ops,
                                       "mean" in ops)
     if threads == 1:
@@ -205,7 +256,7 @@ def _dict_single_from(ukeys, counts, sums, means, ops, threads):
 def _dict_multi_from(ukeys, counts, cols, sums_list, means_list, ops_map,
                      threads):
     """Multi-column {key: {col: {op: val}}}: columns tolist once, one pass."""
-    kl = ukeys.tolist()
+    kl = _key_list(ukeys)
     if threads == 1:
         cl = counts.tolist()
         col_data = []
@@ -267,7 +318,7 @@ def _dict_multi_from(ukeys, counts, cols, sums_list, means_list, ops_map,
 def _dict_single_minmax(ukeys, counts, sums, means, mins, maxs, ops,
                         threads):
     """Single-column {key: {op: val}} with min/max lanes (proven shape)."""
-    kl = ukeys.tolist()
+    kl = _key_list(ukeys)
     sl = sums.tolist() if sums is not None and "sum" in ops else None
     cl = counts.tolist() if "count" in ops else None
     ml = list(means.tolist()) if means is not None else None
@@ -293,7 +344,7 @@ def _dict_single_minmax(ukeys, counts, sums, means, mins, maxs, ops,
 def _dict_multi_minmax(ukeys, counts, cols, ops_map, sums_d, means_list,
                        mins_d, maxs_d, threads):
     """Multi-column {key: {col: {op: val}}} with min/max lanes."""
-    kl = ukeys.tolist()
+    kl = _key_list(ukeys)
     cl = counts.tolist()
     col_data = []
     for c, means in zip(cols, means_list):
