@@ -5,12 +5,12 @@ __pycache__/
 .pytest_cache/
 
 # Toolchains / scratch (1.7 GB: rustup, zig.exe) — not project sources
-scratch/
+/scratch/
 
 # Build artifacts
-build/
-dist/
-dist_rc/
+/build/
+/dist/
+/dist_rc/
 numfast-native/target/
 
 # Native artifacts
@@ -20,3 +20,4 @@ numfast-native/target/
 # Editors / OS
 .idea/
 .DS_Store
+# Un-anchor: rules above must match at repo root only, so tools/scratch/*.py stays tracked.
