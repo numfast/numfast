@@ -38,7 +38,13 @@ lane a lane and not a special case.
 import numbers
 
 import numpy as np
-import pyarrow as pa
+
+try:  # Arrow is the bulk UTF-8 carrier (Storage/Loaders use it too).
+    import pyarrow as pa
+    _HAS_PA = True
+except ImportError:  # pragma: no cover -- Arrow-less install
+    pa = None
+    _HAS_PA = False
 
 TEXT_DTYPE = "text"
 INT64_DTYPE = "int64"
@@ -159,7 +165,17 @@ def text_dictionary(values, op="text dictionary predicate"):
     The body is handed back so a kernel that wants the raw bytes -- and not
     a pyarrow Array -- can skip the rebuild entirely. It is ``None`` on
     every transcode lane, which is the signal that only the Array exists.
+
+    Arrow is imported lazily-by-guard (see ``_HAS_PA``): an Arrow-less
+    install imports this module and registers every DomainLUT alias, and
+    only a call into a TEXT predicate -- the one place that truly needs
+    an Array -- refuses, with the op in the message. ``native_text_body``
+    and ``codes_lut_mask`` stay NumPy-only and keep working there.
     """
+    if not _HAS_PA:
+        _err(f"{op}: pyarrow is required for the TEXT dictionary carrier "
+             "(pip install pyarrow).",
+             "install pyarrow, or use codes_lut_mask, which is NumPy-only")
     _reject_int64(values, op)
     body = native_text_body(values)
     if body is not None:

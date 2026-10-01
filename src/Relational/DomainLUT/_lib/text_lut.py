@@ -86,8 +86,14 @@ for ``not_contains`` -- which is the 3VL rule ``codes_lut_mask`` relies on.
 import time
 
 import numpy as np
-import pyarrow as pa
-import pyarrow.compute as pc
+
+try:  # Arrow is the bulk UTF-8 carrier (Storage/Loaders use it too).
+    import pyarrow as pa
+    import pyarrow.compute as pc
+    _HAS_PA = True
+except ImportError:  # pragma: no cover -- Arrow-less install
+    pa = pc = None
+    _HAS_PA = False
 
 from _lib.carrier import text_dictionary, text_dictionary_array
 
