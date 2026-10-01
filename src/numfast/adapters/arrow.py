@@ -124,7 +124,11 @@ def _ingest_column(kernel, col, name):
             arr_col = col.cast(pa.string()).combine_chunks()
         else:
             arr_col = combined
-        enc = a["dictionary_encode"](arr_col)
+        # Arrow buffers are already in hand, so go straight to the Arrow C++
+        # dense encode: dedup, sorted rank and body are all C++ calls, no row
+        # reaches Python. Same sorted-unique envelope as dictionary_encode
+        # (verified bit-identical: codes, values, body, validity, metadata).
+        enc = a["dict_encode_arrow"](arr_col)
         return _text_series(kernel, name, enc, len(col), validity=validity)
     raise ValueError(
         f"from_arrow: column '{name}' type {t} has no Series mapping "

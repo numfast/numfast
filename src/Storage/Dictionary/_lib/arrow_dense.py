@@ -133,6 +133,13 @@ def _carrier(values, op, format_error=None):
     try:
         arr = seq.combine_chunks() if isinstance(seq, pa.ChunkedArray) else seq
         arr = pa.array(arr) if not isinstance(arr, pa.Array) else arr
+        # pa.array() itself chunks LARGE numpy string carriers by byte size and
+        # answers with a ChunkedArray (<U61 x 2M -> 5 chunks). pc.dictionary_encode
+        # on a ChunkedArray answers with a ChunkedArray, which has no .dictionary,
+        # so the encode below died on AttributeError at the first .dictionary.
+        # One merge here, in C++ (memcpy), before any row reaches Python.
+        if isinstance(arr, pa.ChunkedArray):
+            arr = arr.combine_chunks()
     except Exception as e:  # noqa: BLE001 -- every Arrow failure is a type error here
         _reject(f"{op} needs a string column ({e}).",
                 "pass str or None per row, never raw numbers", format_error)
