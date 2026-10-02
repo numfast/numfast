@@ -114,3 +114,7 @@ path = "src/Relational/BitmaskSweep"
 [[extensions]]
 name = "DomainLUT"
 path = "src/Relational/DomainLUT"
+
+[[extensions]]
+name = "TableExpr"
+path = "src/Semantic/TableExpr"

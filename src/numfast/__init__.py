@@ -206,12 +206,23 @@ def lookup(build, probe, name=None):
     return _l(get_kernel(), build, probe, name)
 
 
+def app():
+    """v0 consumer facade entry point (Extension Semantic/TableExpr).
+
+    One kernel-alias hop, no private import: ``app()`` is the single context
+    object that hands out column references, capability facts, the lazy
+    nfs-stream reader and the lazy query chain.
+    """
+    return get_kernel().alias["tableexpr_app"]()
+
+
 __all__ = [
     "__version__",
     "Series",
     "Table",
     "get_kernel",
     "native_info",
+    "app",
     "from_numpy",
     "to_numpy",
     "from_pandas",

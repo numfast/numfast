@@ -1,0 +1,12 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+name = "TableExpr"
+version = "0.1.0"
+depends = ["Core", "Schema", "Dictionary", "IR", "Planner", "CPU", "GPU", "TextOps", "Join", "CompositeGroup", "DomainLUT", "NFS", "NfsStream"]
+alias = ["tableexpr_app", "tableexpr_chain", "tableexpr_expr", "tableexpr_names"]
+mods = ["tableexpr_app", "tableexpr_chain", "tableexpr_expr", "tableexpr_names"]
+
+[metadata]
+level = "semantic"
+member = "provider"
+version = "0.1.0"
