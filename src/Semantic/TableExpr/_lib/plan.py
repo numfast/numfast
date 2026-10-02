@@ -45,6 +45,7 @@ PREPASS_ALIAS = {
     "dictionary_encode": "dictionary_encode",
     "dictionary_decode": "dictionary_decode",
     "dict_contains_lut": "dict_contains_lut",
+    "dict_equal_lut": "dict_equal_lut",
     "codes_lut_mask": "codes_lut_mask",
     "nfs_stream_open": "nfs_stream_open",
     "nfs_stream_plan": "nfs_stream_plan",

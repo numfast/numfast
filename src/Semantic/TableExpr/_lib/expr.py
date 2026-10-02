@@ -10,7 +10,7 @@ stops the facade from becoming a second IR (DESIGN §8.3).
     const   -> a literal scalar
     bin     -> ir_map      (add sub mul div floor_div mod pow)
     cmp     -> ir_compare  (== != < <= > >=)
-    logic   -> ir_mask     (and or not)
+    logic   -> ir_mask     (and not; `or` is NOT in v0 -- Expr.or_ refuses)
     isin    -> out-of-DAG dictionary pre-pass + ir_series(bool) + ir_filter
     text    -> ir_text_*   (length contains startswith endswith equals)
     scan    -> ir_cumsum / ir_shift
@@ -86,12 +86,31 @@ class Expr:
     def ge(self, other):
         return Expr("cmp", arg=("ge", self, other))
 
-    # -- logic (V0: and_ or_ not_) ----------------------------------------
+    # -- logic (V0: and_ not_ ; or_ refuses loudly, §3.3) ----------------
     def and_(self, other):
         return Expr("logic", arg=("and", self, other))
 
     def or_(self, other):
-        return Expr("logic", arg=("or", self, other))
+        """REFUSES LOUDLY -- `or_` is not in v0 (owner decision, §3.3).
+
+        `ir_mask(out, a, b, 'or')` computes a correct 3VL DATA vector
+        (`[F,T,T]` for the Kleene fixture) but AND-s the two VALIDITY sides
+        together (`[T,F,F]`), and `ir_filter` ANDs the mask validity in, so
+        every row either operand was UNKNOWN about is dropped. The answer is
+        an empty frame where Kleene / pandas keep rows 1 and 2 -- right
+        shape, plausible numbers, no error. `and_` and `not_` are correct
+        (verified, pinned by tests) and stay; only `or` is broken, and the
+        fix is FROZEN (IR + CPU_Driver).
+        """
+        raise ValueError(
+            "or_ is not in v0: ir_mask(..., 'or') AND-s the validities of its "
+            "two operands, so ir_filter drops every row either side was NULL "
+            "on -- filter((a>1)|(b>10)) returns an empty frame where Kleene "
+            "keeps both rows. The 3VL data vector is right; the validity is "
+            "AND-ed. The fix is FROZEN (IR + CPU_Driver), so the operation is "
+            "deferred, not documented as is. Fix: use .and_() / .not_() "
+            "(both verified correct), or rewrite as the two filters you "
+            "actually mean. See DESIGN_consumer_api_v0.md 3.3.")
 
     def not_(self):
         return Expr("logic", arg=("not", self, None))
@@ -193,7 +212,7 @@ class Expr:
     __rand__ = __and__
 
     def __or__(self, other):
-        return self.or_(other)
+        return self.or_(other)      # refuses loudly -- `or` is not in v0
 
     __ror__ = __or__
 

@@ -69,11 +69,15 @@ def check_alias_delta(before=ALIASES_BEFORE, expected=4):
 # --- V0 itself -------------------------------------------------------------
 
 @pytest.mark.fast
-def test_v0_is_44_names_and_has_no_window():
-    assert len(V0) == 44, len(V0)
+def test_v0_is_43_names_and_has_no_window_or_or():
+    assert len(V0) == 43, len(V0)
     assert "window" not in V0
-    assert len(V0 - NOT_CHAIN) == 30
-    assert len(_NAMES.v0_names()) == 44
+    # `or_` is out of v0 for the same reason as `window`: ir_mask(..., 'or')
+    # AND-s the operands' validities and ir_filter drops UNKNOWN rows. The fix
+    # is FROZEN, so Expr.or_ raises loudly instead of returning [].
+    assert "or_" not in V0
+    assert len(V0 - NOT_CHAIN) == 29
+    assert len(_NAMES.v0_names()) == 43
 
 
 @pytest.mark.fast
@@ -84,6 +88,15 @@ def test_window_is_absent_from_the_chain_surface():
     import numpy as np
     chain = app.query(nf.from_numpy(np.ones((2, 1), np.float64), names=["v"]))
     assert not hasattr(chain, "window")
+
+
+@pytest.mark.fast
+def test_or_is_absent_from_the_v0_registry_and_refuses_loudly():
+    import numfast as nf
+    app = nf.app()
+    assert not hasattr(app, "or_")
+    with pytest.raises(ValueError, match="or_ is not in v0"):
+        (app.c("x") > 1) | (app.c("y") > 10)
 
 
 @pytest.mark.fast
@@ -252,6 +265,13 @@ def test_reduce_and_sort_limit_and_group_topk():
 
 @pytest.mark.fast
 def test_text_isin_never_matches_null_and_survives_a_null_free_column():
+    """isin is POINT MEMBERSHIP: the exact values, never a substring hit.
+
+    Lowered through `dict_contains_lut` the same fixture kept 'abcd' for
+    isin(['a','ab']) because 'abcd' LIKE '%ab%'. It lowers through
+    `dict_equal_lut` (`col = needle`,
+    src/Relational/DomainLUT/_lib/text_lut.py:307) instead.
+    """
     import numfast as nf
     import pandas as pd
     q = nf.app()
@@ -259,11 +279,12 @@ def test_text_isin_never_matches_null_and_survives_a_null_free_column():
         {"utm": pd.array(["ab", "cde", None, "fghij", "abcd", "a"],
                          dtype="string")}))
     kept = (with_null.query().filter(q.c("utm").isin(["a", "ab"])).compile())
-    assert kept.column("utm").to_numpy().tolist() == ["ab", "abcd", "a"]
+    assert kept.column("utm").to_numpy().tolist() == ["ab", "a"]
+    assert None not in kept.column("utm").to_numpy().tolist()
     null_free = nf.from_pandas(pd.DataFrame(
         {"utm": pd.array(["ab", "cde", "fghij", "abcd", "a"], dtype="string")}))
     kept2 = (null_free.query().filter(q.c("utm").isin(["a", "ab"])).compile())
-    assert kept2.column("utm").to_numpy().tolist() == ["ab", "abcd", "a"]
+    assert kept2.column("utm").to_numpy().tolist() == ["ab", "a"]
 
 
 @pytest.mark.fast

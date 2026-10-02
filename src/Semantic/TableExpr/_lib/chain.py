@@ -6,7 +6,7 @@ The 07:60 vocabulary, implemented as a lazy chain over one IR node per
 column. Every op appends nodes to `jobs[]`; `compile()` makes exactly ONE
 planner call over that list and executes it on the CPU oracle.
 
-Three honest deviations, all recorded in DESIGN §2.2a / §2.2b / §3.3:
+Four honest deviations, all recorded in DESIGN §2.2a / §2.2b / §3.3:
 
 1. `group()` is TWO graphs. `ir_groupby_multi(result='carry')` returns a
    ColumnCarry, which is not a column and cannot re-enter the DAG. So
@@ -27,8 +27,23 @@ Three honest deviations, all recorded in DESIGN §2.2a / §2.2b / §3.3:
    (GATE_semantics.md §9). Shipping that order silently is worse than
    refusing.
 
+4. `_bind`'s memo is scoped to ONE row space. `filter`, `sort` and `limit`
+   rebuild every column node into a different row space (new order or new
+   count), so a cached `(expr_key) -> node` entry from before the op still
+   names the PRE-op node -- the rebind would return pre-sort data with the
+   post-sort column beside it, which is a wrong answer with the right shape
+   and no exception (silent). The memo therefore carries a row-space
+   epoch: every op that changes row order or row count bumps it, so a
+   rebind in a new row space misses the cache instead of hitting it. The
+   memo still does its real job inside one row space -- see `_spawn`.
+
 `window` is NOT here and must not be added: `ir_rolling_sum` loses exactness
 silently on int64 above 2**53 (DESIGN §3.3).
+
+`or_` is NOT here either and must not be added: `ir_mask(..., 'or')` AND-s the
+two operands' validity sides, so `ir_filter` silently drops every row either
+side was UNKNOWN on (DESIGN §2.2a п. 8). `Expr.or_` refuses loudly -- the
+`logic` branch below only ever sees `and` / `not`.
 """
 
 import numpy as np
@@ -142,7 +157,7 @@ class Chain:
     """Lazy query chain over one IR node per column."""
 
     def __init__(self, kernel, cols, nrows, jobs=None, pending=None, seq=0,
-                 bufs=None, memo=None):
+                 bufs=None, memo=None, space=0):
         self._kernel = kernel
         self._cols = dict(cols)
         self._order = list(self._cols)
@@ -152,6 +167,10 @@ class Chain:
         self._seq = int(seq)
         self._bufs = bufs
         self._memo = dict(memo or {})
+        # row-space epoch -- bumped by every op that changes row order or row
+        # count. It is part of the memo key, so the cache is valid inside one
+        # row space and unreachable in the next one.
+        self._space = int(space)
 
     # -- construction ---------------------------------------------------
     @classmethod
@@ -182,9 +201,15 @@ class Chain:
         self._jobs = list(self._jobs)
         return self
 
-    def _spawn(self, cols, nrows=None, pending=None):
+    def _spawn(self, cols, nrows=None, pending=None, new_space=False):
+        """Child chain. `new_space=True` for every op that changes row order
+        or row count -- it bumps the epoch, so the child's binds miss the
+        parent's memo instead of reusing a node bound in another row space.
+        `derive` does NOT pass it: it adds a column and keeps the rows.
+        """
         return Chain(self._kernel, cols, self._n if nrows is None else nrows,
-                     self._jobs, pending, self._seq, self._bufs, self._memo)
+                     self._jobs, pending, self._seq, self._bufs, self._memo,
+                     self._space + 1 if new_space else self._space)
 
     def _col(self, name, op="query"):
         col = self._cols.get(name)
@@ -300,11 +325,13 @@ class Chain:
     def _bind(self, expr, op="filter"):
         """Expr -> (node name, declared logical dtype or None).
 
-        Memoized by the expression's structural key, which is also what keeps
-        the Planner's CSE from rewriting a facade node name (see
-        `expr.expr_key`).
+        Memoized by (row-space epoch, the expression's structural key). The key
+        is also what keeps the Planner's CSE from rewriting a facade node name
+        (see `expr.expr_key`); the epoch is what keeps the cache from surviving
+        a change of row order or row count, where the same expression denotes a
+        different column.
         """
-        key = expr_key(expr)
+        key = (self._space, expr_key(expr))
         hit = self._memo.get(key)
         if hit is not None:
             return hit
@@ -390,7 +417,17 @@ class Chain:
             f"{op}(q.c('price') > 0)")
 
     def _bind_isin(self, colname, needles):
-        """`c.isin([...])` on TEXT: out-of-DAG pre-pass -> bool series."""
+        """`c.isin([...])` on TEXT: out-of-DAG pre-pass -> bool series.
+
+        POINT MEMBERSHIP, so the D-scale predicate is EXACT equality:
+        `dict_equal_lut(values, needle)` is `col = needle`
+        (src/Relational/DomainLUT/_lib/text_lut.py:307). `dict_contains_lut`
+        is `col LIKE '%needle%'` (text_lut.py:276) -- substring containment,
+        and lowering `isin` through it made `isin(['app'])` keep `'apple'`
+        with no error. One LUT per needle, OR-ed here, is the whole
+        composition the engine offers (the engine has no isin node), so the
+        disjunction lives here at D scale (GATE §9).
+        """
         col = self._col(colname, "filter")
         if col.dtype != "text":
             raise plan.fail(
@@ -403,12 +440,8 @@ class Chain:
         lut = None
         for needle in needles:
             one = np.asarray(
-                plan.prepass("dict_contains_lut")(list(col.sidecar or []),
-                                                  needle), dtype=bool)
-            # isin is membership: OR across needles. dict_contains_lut is a
-            # LIKE '%needle%' predicate and one LUT per needle is the only
-            # composition the engine offers (GATE §9) -- the engine has no
-            # isin node, so the disjunction lives here at D scale.
+                plan.prepass("dict_equal_lut")(list(col.sidecar or []), needle),
+                dtype=bool)
             lut = one if lut is None else np.logical_or(lut, one)
         # codes_lut_mask(codes, luts, validities): validities is a LIST with
         # one column per code column. A bare array raises (GATE §2.3), and
@@ -435,7 +468,7 @@ class Chain:
             out = self._next(f"f_{name}")
             self._emit("filter", out, self._need(col), node)
             cols[name] = Col(name, col.dtype, out, sidecar=col.sidecar)
-        return self._spawn(cols)
+        return self._spawn(cols, new_space=True)
 
     def derive(self, name, expr):
         if not isinstance(name, str) or not name:
@@ -475,7 +508,7 @@ class Chain:
             out = self._next(f"srt_{name}")
             self._emit("gather", out, self._need(col), perm)
             cols[name] = Col(name, col.dtype, out, sidecar=col.sidecar)
-        return self._spawn(cols)
+        return self._spawn(cols, new_space=True)
 
     def limit(self, n, offset=0):
         self._branch()
@@ -484,7 +517,7 @@ class Chain:
             out = self._next(f"lim_{name}")
             self._emit("slice", out, self._need(col), n, offset)
             cols[name] = Col(name, col.dtype, out, sidecar=col.sidecar)
-        return self._spawn(cols)
+        return self._spawn(cols, new_space=True)
 
     def group(self, keys, aggs):
         self._branch()
