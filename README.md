@@ -207,9 +207,26 @@ export PYTHONPATH="C:/path/to/numfast/src;C:/path/to/app-builder"
 python -m pytest tests/ -q              # fast suite only; heavy needs -m heavy
 ```
 
-Last clean-clone run, 2026-10-04, commit `f2af608`: **653 passed, 4 skipped, 0
-failed**. See the audit note in the repository history for the two failures that
-run originally reported and what was done about each.
+Last clean-clone run — `git clone` of this repository into an empty directory,
+2026-10-04, commit `39e27c3`:
+
+```
+682 passed, 5 skipped, 0 failed in 162.43s (0:02:42)
+```
+
+The 5 skips, and why each one skips on a fresh clone:
+
+| Skipped | Reason |
+|---|---|
+| `test_ops_null_pattern.py` (the wall-clock test) | `heavy` — run with `pytest -m heavy` |
+| `test_ops_text.py`, `test_ops_text_affix.py` | WASM artefact absent (the `wasm32` build is not committed) |
+| `test_packaging_adapters.py` | "wheel venv not built here" — needs `python -m build` to have run first |
+| `test_rng_gate.py` | reference file lives in `scratch/`, which is gitignored |
+
+So on a clean clone **two of these are not optional**: the WASM tests and the
+RNG-gate test never run without artefacts that are not in the tree. They run in
+a developer's checkout and they skip in CI. That is a real coverage hole and it
+is named here rather than hidden behind a green line.
 
 **[.github/workflows/ci.yml](.github/workflows/ci.yml)** has three Windows jobs:
 
@@ -218,7 +235,8 @@ run originally reported and what was done about each.
    build their kernel through `from builder import MAIN`, and `builder` lives in
    a separate repository whose published `main` is 11 commits behind what this
    tree needs, so a job that fetched it would fail. That job is present,
-   non-gating, and says so in its own step name.
+   non-gating, and says so in its own step name. 223 of 682 is the gating
+   coverage; the rest is exercised by developers with a Builder checkout.
 3. **the whole suite** — non-gating for the reason above.
 
 There is **no Linux CI job**: only a Windows `.dll` is committed, and with the
