@@ -12,8 +12,14 @@ stops the facade from becoming a second IR (DESIGN §8.3).
     cmp     -> ir_compare  (== != < <= > >=)
     logic   -> ir_mask     (and not; `or` is NOT in v0 -- Expr.or_ refuses)
     isin    -> out-of-DAG dictionary pre-pass + ir_series(bool) + ir_filter
+    null    -> validity read OUTSIDE the graph + ir_series(bool)
     text    -> ir_text_*   (length contains startswith endswith equals)
     scan    -> ir_cumsum / ir_shift
+
+`null` is NOT `logic`: `not_()` is a 3VL negation of a PREDICATE and is
+correct (Kleene); `is_null()` is a NULL TEST and its answer is hard True/False
+on every row, because "this row is NULL" is a fact about the row, never
+UNKNOWN. See `Chain._bind_is_null`.
 """
 
 BIN_OPS = ("add", "sub", "mul", "truediv", "mod", "pow")
@@ -46,6 +52,8 @@ class Expr:
             return f"Expr(text {self.name} {self.arg[0]} {self.arg[1]!r})"
         if self.kind == "isin":
             return f"Expr(isin {self.name} {list(self.arg)!r})"
+        if self.kind == "null":
+            return f"Expr(null {self.name!r})"
         return f"Expr({self.kind} {self.arg!r})"
 
     # -- arithmetic (V0: add sub mul truediv mod pow) --------------------
@@ -115,7 +123,7 @@ class Expr:
     def not_(self):
         return Expr("logic", arg=("not", self, None))
 
-    # -- set / scan ------------------------------------------------------
+    # -- set / null ------------------------------------------------------
     def isin(self, values):
         seq = list(values)
         if not seq:
@@ -132,11 +140,44 @@ class Expr:
                     "See specs/core/07-builder-extension.md")
         return Expr("isin", self.name, seq)
 
+    # -- NULL test -- NOT the negation of a predicate --------------------
+    def is_null(self):
+        """True exactly where this column's value is NULL.
+
+        DISTINCT FROM `not_()`, and it shares no path with it. `not_()` is a
+        3VL negation of a PREDICATE: `NOT(NULL)` is UNKNOWN, so `not_()` is
+        correct under Kleene and drops the UNKNOWN row on `filter`. `is_null()`
+        asks a different question -- "is this row NULL?" -- and its answer is
+        HARD True/False on every row: NULL-ness is a fact about a row, not a
+        three-valued unknown. So `c('k').is_null()` on `[1, NULL, 3]` is
+        `[F, T, F]` (no validity sidecar at all), and
+        `c('k').is_null().not_()` keeps rows 0 and 2 -- where
+        `~(c('k') > 1)` keeps only row 0, because `NULL > 1` is UNKNOWN. Both
+        are correct; they answer different questions and are pinned apart by
+        `test_is_null_is_not_the_negation_of_a_predicate`.
+
+        Lowering is an out-of-graph validity read plus one `ir_series(bool)`
+        (`Chain._bind_is_null`) -- the same `material()` the two NULL-key
+        guards use, so this verb introduces no mechanism the facade does not
+        already run in production.
+
+        Only a COLUMN REFERENCE carries a validity sidecar. A derived
+        expression does not, so this refuses rather than guess which of the
+        two questions was meant.
+        """
+        if self.kind != "col":
+            raise ValueError(
+                f"is_null() needs a column reference, got {self!r}: validity "
+                "is a property of a COLUMN, not of an expression. "
+                "Fix: derive('s', ...) first, then c('s').is_null()."
+            )
+        return Expr("null", self.name)
+
     def cumsum(self):
-        return Expr("scan", self.name, ("cumsum", None))
+        return _scan("cumsum", None, self)
 
     def shift(self, periods):
-        return Expr("scan", self.name, ("shift", int(periods)))
+        return _scan("shift", int(periods), self)
 
     # -- text ------------------------------------------------------------
     def str_len(self):
@@ -222,6 +263,26 @@ class Expr:
     __hash__ = None
 
 
+def _scan(op, arg, src):
+    """One `cumsum`/`shift` over `src`.
+
+    `src` is either the column reference itself -- the flat case, which keeps
+    the historical two-slot `arg` `(op, arg)` on `Expr.name` so a source scan
+    is keyed and bound exactly as before -- or a NESTED expression, stored as
+    the third element of `arg`.
+
+    Nesting is the whole point: `c('y').cumsum().shift(2)` must read
+    `cumsum(y)`, not `y`. The IR already takes a node as `inp`
+    (`nodes.py:234 ir_shift(out, inp, periods)`, `:253 ir_cumsum(out, inp)`),
+    so the facade only has to hand it the inner node. A nested source that
+    carries no column name is exactly what used to make the outer scan
+    silently re-resolve `expr.name` and drop the inner expression.
+    """
+    if isinstance(src, Expr) and src.kind == "col":
+        return Expr("scan", src.name, (op, arg))
+    return Expr("scan", None, (op, arg, src))
+
+
 def ref(name):
     """Column reference -- what `q.c('price')` returns."""
     if not isinstance(name, str) or not name:
@@ -267,11 +328,23 @@ def expr_key(expr):
         if kind == "const":
             return ("const", _scalar_key(expr.arg))
         if kind == "scan":
-            return ("scan", expr.name, expr.arg)
+            # (op, periods) plus the SOURCE: a flat scan's source is its own
+            # column name, a nested scan's is the inner expression. Keying on
+            # the source -- not on the (absent) name -- is what keeps
+            # `cumsum().shift(2)` and `shift(2)` from sharing one memo slot.
+            scan_op, *rest = expr.arg
+            source = expr.arg[2] if len(expr.arg) == 3 else expr.name
+            return ("scan", scan_op, expr_key(source),
+                    _scalar_key(expr.arg[1]))
         if kind == "text":
             return ("text", expr.name, expr.arg[0], _scalar_key(expr.arg[1]))
         if kind == "isin":
             return ("isin", expr.name, tuple(expr.arg))
+        if kind == "null":
+            # keyed on the COLUMN: one `is_null` node per column per row space,
+            # so two spellings of it share one node instead of two identical
+            # ones the Planner's CSE would merge (and rewrite the `out` of).
+            return ("null", expr.name)
         if kind == "bin":
             fn, left, right = expr.arg
             return ("bin", fn, expr_key(left), _operand_key(right))

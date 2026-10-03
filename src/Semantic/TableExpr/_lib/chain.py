@@ -37,6 +37,15 @@ Four honest deviations, all recorded in DESIGN §2.2a / §2.2b / §3.3:
    rebind in a new row space misses the cache instead of hitting it. The
    memo still does its real job inside one row space -- see `_spawn`.
 
+5. `is_null()` is the guards' own reader, returned instead of refused.
+   Deviation 2 and 3 read validity OUTSIDE the graph (`material()`) in order
+   to raise. `is_null()` reuses that exact helper and turns the answer into an
+   `ir_series(bool)` (`_bind_is_null`), so the §2.2b advice "filter those rows
+   out before group()" is executable from the public surface. It is NOT
+   `not_()`: `not_` is a 3VL negation of a predicate and is correct as it
+   stands; `is_null` is a null test whose answer is hard True/False on every
+   row, so the mask carries no validity sidecar.
+
 `window` is NOT here and must not be added: `ir_rolling_sum` loses exactness
 silently on int64 above 2**53 (DESIGN §3.3).
 
@@ -219,6 +228,37 @@ class Chain:
                 "use q.c() with one of the existing column names")
         return col
 
+    # -- declared dtype, WITHOUT emitting a node ---------------------------
+    def _dtype_of(self, expr, op="query"):
+        """Declared logical dtype of `expr`, or None when it is not knowable.
+
+        Read-only on purpose: the guards below have to decide BEFORE any node
+        goes into jobs[], so they cannot ask `_bind` for it. `_dtype_of`
+        answers only what the chain's own column records already say and
+        returns None for `bin` / nested-derived expressions -- those carry no
+        declared dtype, and `None` is what makes the callers refuse rather
+        than guess. Guessing here would be the whole defect class this facade
+        exists to remove.
+        """
+        if isinstance(expr, str):
+            return self._col(expr, op).dtype
+        if isinstance(expr, Expr):
+            if expr.kind == "col":
+                return self._col(expr.name, op).dtype
+            if expr.kind == "scan":
+                scan_op, *rest = expr.arg
+                source = expr.arg[2] if len(expr.arg) == 3 else expr.name
+                return self._dtype_of(source, op)
+            if expr.kind == "text":
+                return "int32" if expr.arg[0] == "str_len" else "bool"
+            if expr.kind == "cmp" or expr.kind == "logic":
+                return "bool"
+            if expr.kind == "isin":
+                return "bool"
+            if expr.kind == "null":
+                return "bool"
+        return None
+
     def _buffers(self):
         if self._bufs is None:
             self._bufs = plan.buffers_of(self._jobs)
@@ -321,6 +361,139 @@ class Chain:
                 "(GATE_semantics.md §9).",
                 "filter those rows out (or fill them) before sort()")
 
+    # -- the text-comparison and integer-division guards -------------------
+    def _cmp_guard(self, cmp_op, left, right, op):
+        """Every way a `cmp` can reach a text column or a bare string.
+
+        Measured on the pre-fix tree: `ir_compare` takes its right operand as
+        a BUFFER NAME (`Drivers/CPU/_lib/cpu.py:3139`), so a string literal
+        arrives as a lookup key and the driver answers `KeyError: 'pro'` --
+        an exception that names nothing. The capability exists (`str_eq`), the
+        public comparison spelling was a trap.
+
+        The decisions, per operator:
+
+        * `==` / `!=`, TEXT column against a **string scalar**: lower through
+          `dict_equal_lut` (`col = needle`,
+          `src/Relational/DomainLUT/_lib/text_lut.py:307`) -- the same
+          primitive, and the same `codes_lut_mask(validities=[...])` LIST
+          discipline, that `isin` uses and that the semantic gate verified.
+          `!=` is `==` composed with `not_()`, which is correct under 3VL.
+          A NULL value never matches: the codes sidecar carries the validity.
+        * `<`, `<=`, `>`, `>=` on text: NO lowering. Ordering on text needs a
+          collation, and the engine defines none -- its dictionary codes are
+          RANKs, not values, so comparing them would answer a different
+          question than the one asked.
+        * everything else that involves text or a string literal: refuse.
+          None of it may reach the driver as a buffer lookup.
+        """
+        ltype = self._dtype_of(left, op)
+        left_is_text = ltype == "text"
+        right_is_expr = isinstance(right, Expr)
+        right_is_str = isinstance(right, str)
+        if not left_is_text:
+            if right_is_str:
+                raise plan.fail(
+                    op,
+                    f"{_CMP_TO_NODE[cmp_op]} against the string literal "
+                    f"{right!r}: column {left.name!r} is {ltype!r}, not text, "
+                    "and the driver would receive the literal as a buffer "
+                    "name to look up (Drivers/CPU/_lib/cpu.py:3139).",
+                    "compare a numeric column with a number: "
+                    f"q.c('price') > 0")
+            return
+        colname = left.name if isinstance(left, Expr) else left
+        if cmp_op in ("lt", "le", "gt", "ge"):
+            raise plan.fail(
+                op,
+                f"{_CMP_TO_NODE[cmp_op]} on TEXT column {colname!r}: ordering on "
+                "text has no lowering, because it needs a collation the engine "
+                "does not define (the dictionary codes are ranks, not values).",
+                "compare membership instead: "
+                f"q.c({colname!r}).isin([...]) or "
+                f"q.c({colname!r}).str_eq({right!r})")
+        if right_is_expr or not right_is_str:
+            raise plan.fail(
+                op,
+                f"{_CMP_TO_NODE[cmp_op]} on TEXT column {colname!r} against "
+                f"{right!r}: v0 compares text only against a string scalar. "
+                "There is no text-to-text comparison node, and a non-string "
+                "right operand would reach the driver as a buffer lookup "
+                "(Drivers/CPU/_lib/cpu.py:3139).",
+                f"q.c({colname!r}).str_eq('...') -- and for 'not equal', "
+                f"q.c({colname!r}).str_eq('...').not_()")
+        # == / != against a string scalar: the one supported spelling.
+        # Returns the NODE (not the (node, dtype) pair), so the caller wraps
+        # it; `return None` below means "proceed with ir_compare".
+        needle = Expr("isin", colname, [right])
+        if cmp_op == "ne":
+            needle = Expr("logic", arg=("not", needle, None))
+        # rebind through the memo so the eq/ne pair shares one node with any
+        # isin() of the same needle and the row-space epoch still applies.
+        return self._bind(needle, op)[0]
+
+    def _refuse_int_div(self, left, op):
+        """`truediv` whose LEFT operand is an integer.
+
+        `ir_map(..., 'div')` computes in float64 and then ROUNDS THE QUOTIENT
+        BACK to the left operand's integer dtype
+        (`Drivers/CPU/_lib/cpu.py:3109-3111`):
+
+            r = (a.astype(np.float64) / b)
+            if np.issubdtype(a.dtype, np.integer):
+                r = np.rint(r).astype(a.dtype)
+
+        The trigger is the LEFT operand's dtype, not "both are integers":
+        `int64 / float_literal` rounds too (measured `i / 2.0` ->
+        `[0,1,2]` where pandas gives `[0.5,1.0,1.5]`). So the guard keys on the
+        left, and it refuses on an UNDECLARED left dtype as well: the facade
+        cannot prove a derived expression is float, and the engine rounds
+        whenever it is not.
+
+        Not worked around by materialising a float64 copy of the column
+        outside the DAG -- rule 02 (float64 at display only, never for series
+        data), and it would make a column's dtype depend on which expression
+        happened to consume it, which is a different lie.
+        """
+        ltype = self._dtype_of(left, op)
+        if ltype not in ("int32", "int64", None):
+            return
+        colname = (left.name if isinstance(left, Expr) else left) \
+            if isinstance(left, (Expr, str)) else repr(left)
+        # The honest fix, because v0 has NO dtype-promotion verb: no cast, no
+        # where, and a float LITERAL does not promote either -- ir_map casts
+        # add/sub/mul back to the left dtype too
+        # (Drivers/CPU/_lib/cpu.py:3133), measured `int64 * 2.0` -> int64.
+        promote = ("v0 has no dtype-promotion verb: no cast and no where, and "
+                   "a float literal does not promote either (ir_map casts "
+                   "add/sub/mul back to the left dtype, "
+                   "Drivers/CPU/_lib/cpu.py:3133), so an int column cannot "
+                   "become a float column inside the DAG. Load the column as "
+                   "float (from_pandas / from_numpy with float values), or "
+                   "express the ratio with mul/add.")
+        if ltype is None:
+            raise plan.fail(
+                op,
+                f"truediv over {colname!r}: the left operand has no declared "
+                "dtype -- it is a derived expression -- and ir_map('div') "
+                "rounds the quotient back whenever the LEFT operand's buffer "
+                "is an integer dtype (Drivers/CPU/_lib/cpu.py:3109-3111), so "
+                "v0 cannot promise the float result it would be asked for. "
+                + promote,
+                "divide a column that is float at the source: "
+                "q.c('rate') / q.c('other')")
+        raise plan.fail(
+            op,
+            f"truediv over {ltype} column {colname!r} is refused: ir_map"
+            "('div') computes in float64 and then ROUNDS THE QUOTIENT BACK to "
+            "the left operand's integer dtype (Drivers/CPU/_lib/cpu.py:3109-"
+            "3111), so i / 2.0 answers [0, 1, 2] where pandas gives "
+            "[0.5, 1.0, 1.5]. The trigger is the LEFT dtype, so int / float "
+            "rounds too. The fix is FROZEN (CPU_Driver). " + promote,
+            "truediv needs a float LEFT operand. Note that v0 also has no "
+            "honest INTEGER-division spelling: floor_div is in the driver's op "
+            "list (cpu.py:3116) but not in v0.")
+
     # -- expression binding ---------------------------------------------
     def _bind(self, expr, op="filter"):
         """Expr -> (node name, declared logical dtype or None).
@@ -350,6 +523,10 @@ class Chain:
                     "compare a column: q.c('price') > 0")
             if expr.kind == "bin":
                 fn, left, right = expr.arg
+                if fn == "truediv":
+                    # BEFORE any bind: the guard must not even emit the left
+                    # operand's own node, so a refusal leaves jobs[] untouched.
+                    self._refuse_int_div(left, op)
                 lnode, _ = self._bind(left, op)
                 target = (self._bind(right, op)[0]
                           if isinstance(right, Expr) else right)
@@ -358,6 +535,11 @@ class Chain:
                 return out, None
             if expr.kind == "cmp":
                 cmp_op, left, right = expr.arg
+                lowered = self._cmp_guard(cmp_op, left, right, op)
+                if lowered is not None:
+                    # text == / != a string scalar: lowered through the LUT,
+                    # so there is no ir_compare node to emit at all.
+                    return lowered, "bool"
                 lnode, _ = self._bind(left, op)
                 target = (self._bind(right, op)[0]
                           if isinstance(right, Expr) else right)
@@ -376,6 +558,8 @@ class Chain:
                 return out, "bool"
             if expr.kind == "isin":
                 return self._bind_isin(expr.name, expr.arg), "bool"
+            if expr.kind == "null":
+                return self._bind_is_null(expr.name), "bool"
             if expr.kind == "text":
                 text_op, arg = expr.arg
                 col = self._col(expr.name, op)
@@ -391,20 +575,44 @@ class Chain:
                            *(() if arg is None else (arg,)))
                 return out, ("int32" if text_op == "str_len" else "bool")
             if expr.kind == "scan":
-                scan_op, arg = expr.arg
-                col = self._col(expr.name, op)
-                if col.dtype == "text":
+                scan_op, arg = expr.arg[0], expr.arg[1]
+                # The SOURCE is a nested expression when there is one, and the
+                # column name otherwise (`expr._scan`). Binding it through
+                # `_bind` -- not through `_col`/`_need` -- is what keeps the
+                # row-space epoch: `sort`/`filter`/`limit` bump `_space`, so a
+                # re-bound nested scan misses the memo and reads POST-op data
+                # instead of handing back the pre-op node.
+                source = expr.arg[2] if len(expr.arg) == 3 else expr.name
+                snode, sdtype = self._bind(source, op)
+                if sdtype == "text":
+                    colname = source if isinstance(source, str) else source.name
                     raise plan.fail(
                         op,
-                        f"{scan_op} on TEXT column {col.name!r} is meaningless "
+                        f"{scan_op} on TEXT column {colname!r} is meaningless "
                         "(dictionary codes are ranks, not values).",
                         f"derive a numeric column, then {scan_op}")
+                if sdtype == "bool":
+                    # Measured: ir_cumsum / ir_shift accept int32/float32/float64
+                    # only and refuse a packed bool vector
+                    # (Drivers/CPU/_lib/cpu.py:1262, :3308). So a scan over a
+                    # comparison has NO lowering -- and the engine says so only
+                    # at execute time, after the node is already in jobs[].
+                    # Refused here instead, at bind time, with a v0 fix.
+                    raise plan.fail(
+                        op,
+                        f"{scan_op} has no lowering over the boolean mask "
+                        f"{source!r}: ir_cumsum/ir_shift cover int32/float32/"
+                        "float64 only and reject a packed bool vector "
+                        "(Drivers/CPU/_lib/cpu.py:1262). v0 has no cast and no "
+                        "where, so a mask cannot become numbers inside the DAG.",
+                        "use the comparison as a filter mask: "
+                        f".filter(q.c('y') > 3)")
                 out = self._next("sc")
                 if scan_op == "cumsum":
-                    self._emit("cumsum", out, self._need(col))
+                    self._emit("cumsum", out, snode)
                 else:
-                    self._emit("shift", out, self._need(col), arg)
-                return out, col.dtype
+                    self._emit("shift", out, snode, arg)
+                return out, sdtype
             raise plan.fail(op, f"unsupported expression {expr!r}.",
                             "use filter(q.c('x') > 0)")
         if isinstance(expr, str):
@@ -453,7 +661,68 @@ class Chain:
                 [codes], [lut],
                 [None if validity is None else np.asarray(validity, dtype=bool)]),
                 dtype=bool))
-        return self._emit("series", self._next("isin"), mask, "bool")
+        # The codes' validity goes onto the mask node as well. codes_lut_mask
+        # gates a NULL row to DATA-False, and a data-False that is not marked
+        # invalid is a hard False: `not_()` would then turn a NULL row into
+        # `True` and `c != 'x'` would KEEP it, where pandas drops it (3VL:
+        # NULL != 'x' is UNKNOWN). Carrying the validity makes the NULL row
+        # UNKNOWN, which `filter` drops and `not_()` preserves. Measured on the
+        # pre-fix tree: `filter(c != 'pro')` returned ['free', None, 'pro ']
+        # where pandas returns ['free', 'pro '].
+        out = self._next("isin")
+        if validity is None:
+            return self._emit("series", out, mask, "bool")
+        return self._emit("series", out, mask, "bool",
+                          np.ascontiguousarray(np.asarray(validity, dtype=bool)))
+
+    def _bind_is_null(self, colname):
+        """`c.is_null()` -> `ir_series(bool)`, True exactly on NULL rows.
+
+        THE SAME `material()` THE TWO NULL-KEY GUARDS ALREADY CALL, and that is
+        the whole justification for shipping the verb. `_refuse_null_key` and
+        `_refuse_null_sort_key` both do exactly
+
+            _, validity = self.material(col)
+            n_null = plan.null_count(validity)
+
+        and both run in production on every `group()`/`sort()` build, so an
+        out-of-graph validity read is already how this facade answers "is this
+        row NULL" -- it was answering it in order to REFUSE. `is_null()` returns
+        that answer instead. A second materialisation helper would have destroyed
+        the argument for shipping: it would be a new mechanism, not a
+        composition of existing ones.
+
+        `material()` returns HOST arrays when `col.node is None` (a source
+        column), so a source column costs zero executions; it reads the node's
+        `#validity` buffer once the column has a DAG node. Both row-space
+        directions hold for free: after `sort`/`filter`/`limit` the Col's `node`
+        is already the post-op gather/filter/slice node, so the read sees
+        post-op rows, and a `sort` AFTER this verb emits
+        `ir_gather(nul_N, perm_M)` over the mask column like any other column.
+        No extra node, no new op, no FROZEN component touched.
+
+        No validity sidecar on the mask node, deliberately. "This row is NULL"
+        is a fact about the row, so the answer is hard False on every non-NULL
+        row -- and a sidecar would make those rows UNKNOWN under 3VL, so
+        `is_null().not_()` would drop them in `filter` and the guard's own advice
+        would not work. (`_bind_isin` is the opposite case: there the predicate
+        really is UNKNOWN on a NULL row, so it carries the codes' validity.)
+
+        Per-row types, as pinned by `test_is_null_agrees_with_the_pandas_oracle`:
+        a sidecar-bearing column gives `~validity`; a column with no sidecar
+        (NULL-free source, aggregate output of `group`, empty column) gives
+        all-False; a TEXT column's sidecar is `Series.validity`, measured equal
+        to `dictionary_encode(...)['validity']` row for row, which is the second
+        observer §2.2b names.
+        """
+        col = self._col(colname, "filter")
+        values, validity = self.material(col)
+        if validity is None:
+            mask = np.zeros(len(values), dtype=bool)
+        else:
+            mask = np.ascontiguousarray(~np.asarray(validity, dtype=bool))
+        out = self._next("nul")
+        return self._emit("series", out, mask, "bool")
 
     # -- the chain vocabulary (07:60) ------------------------------------
     def filter(self, expr):
@@ -666,7 +935,19 @@ class Chain:
                           "meaning.", "str_len(...) first, then reduce('sum')")
         self._branch()
         out = self._next("red")
-        self._emit("reduce", out, self._need(target), op)
+        # skipna=True is the ONE NULL semantics of the v0 aggregates, shared
+        # with `group`: NULL values are skipped, as in pandas' default.
+        # Measured on the pre-fix tree, without it `reduce('count')` returned
+        # the ROW count (3 where pandas `.count()` says 2) and
+        # `reduce('sum')` returned NaN with only a UserWarning -- so the two
+        # v0 verbs disagreed on the same aggregate over the same fixture.
+        # `count` therefore means the number of NON-NULL values, here and in
+        # `group`; pandas' `.size` (rows including NULL) is a different
+        # quantity and is not what `count` means in v0. The engine already
+        # carries the flag (`nodes.py:210 ir_reduce(..., skipna=False)`,
+        # read at `Drivers/CPU/_lib/cpu.py:3849`); the facade was not passing
+        # it.
+        self._emit("reduce", out, self._need(target), op, skipna=True)
         value = np.asarray(self._buffers()[out]).reshape(-1)
         return value[0].item() if value.size else None
 

@@ -69,15 +69,15 @@ def check_alias_delta(before=ALIASES_BEFORE, expected=4):
 # --- V0 itself -------------------------------------------------------------
 
 @pytest.mark.fast
-def test_v0_is_43_names_and_has_no_window_or_or():
-    assert len(V0) == 43, len(V0)
+def test_v0_is_44_names_and_has_no_window_or_or():
+    assert len(V0) == 44, len(V0)
     assert "window" not in V0
     # `or_` is out of v0 for the same reason as `window`: ir_mask(..., 'or')
     # AND-s the operands' validities and ir_filter drops UNKNOWN rows. The fix
     # is FROZEN, so Expr.or_ raises loudly instead of returning [].
     assert "or_" not in V0
-    assert len(V0 - NOT_CHAIN) == 29
-    assert len(_NAMES.v0_names()) == 43
+    assert len(V0 - NOT_CHAIN) == 30
+    assert len(_NAMES.v0_names()) == 44
 
 
 @pytest.mark.fast
@@ -134,9 +134,9 @@ def test_every_v0_name_is_reachable_from_nf():
                      "compile", "jobs", "explain", "nrows"}
     expr_surface = {"add", "sub", "mul", "truediv", "mod", "pow",
                     "eq", "ne", "lt", "le", "gt", "ge", "and_", "or_",
-                    "not_", "isin", "cumsum", "shift", "str_len",
-                    "str_contains", "str_startswith", "str_endswith",
-                    "str_eq"}
+                    "not_", "isin", "is_null", "cumsum", "shift",
+                    "str_len", "str_contains", "str_startswith",
+                    "str_endswith", "str_eq"}
     reachable = set(nf.__all__) | table_surface | chain_surface | expr_surface
     reachable |= {"capabilities", "open_stream"}
     missing = sorted(V0 - reachable)
@@ -313,6 +313,7 @@ def test_text_group_key_source_carries_validity():
     assert g.column("v.sum").to_numpy().tolist() == [60.0]
 
 
+@pytest.mark.fast
 def test_text_group_on_a_null_free_key():
     import numfast as nf
     import pandas as pd
