@@ -182,17 +182,32 @@ def test_group_refuses_null_key_loudly():
 
 
 @pytest.mark.fast
-def test_sort_refuses_null_key_loudly():
+def test_numeric_nullable_key_group_refuses_but_sort_does_not():
+    """GATE §4.2 case: keys [1,2,NULL,1,3] with validity [T,T,F,T,T].
+
+    `group` refuses (a NULL group is an ABSENT value, cpu.py:3325 drops it).
+    `sort` does not refuse and does not need to: `ir_sort` keeps the NULL row
+    last, which is pandas' own `na_position="last"` answer.
+    """
     import numfast as nf
-    with pytest.raises(ValueError) as err:
-        _nullable_table().query().sort("plan").compile()
-    msg = str(err.value)
-    assert "key column 'plan' has 2 NULL rows" in msg
-    assert "NULL rows first" in msg
+    import pandas as pd
+    nullable = pd.DataFrame({"k": pd.array([1, 2, None, 1, 3], dtype="Int64"),
+                             "v": [10.0, 20.0, 30.0, 40.0, 50.0]})
+    t = nf.from_pandas(nullable)
+    with pytest.raises(ValueError, match="key column 'k' has 1 NULL rows"):
+        t.query().group("k", {"v": ("sum",)})
+    ordered = t.query().sort("k").compile().to_pandas()
+    ref = nullable.sort_values("k", kind="stable", na_position="last")
+    # check_dtype=False: numfast returns a NULLABLE dtype where pandas' own
+    # `.loc[2] = None` upcast produced a plain float64 + NaN. That dtype choice
+    # is a separate documented behaviour; ORDER and VALUES are what is pinned.
+    pd.testing.assert_frame_equal(
+        ordered.reset_index(drop=True)[["k", "v"]],
+        ref.reset_index(drop=True)[["k", "v"]], check_dtype=False)
 
 
 @pytest.mark.fast
-def test_null_free_group_and_sort_still_work():
+def test_null_free_group_and_sort_still_work_after_guard_removal():
     grouped = (_clean_table().query()
                .group("plan", {"rev": ("sum",)}).compile())
     assert grouped.column("plan").to_numpy().tolist() == ["a", "b", "c"]
@@ -200,23 +215,11 @@ def test_null_free_group_and_sort_still_work():
     ordered = _clean_table().query().sort("plan").compile()
     assert ordered.column("plan").to_numpy().tolist() == [
         "a", "a", "b", "b", "c"]
-
-
-@pytest.mark.fast
-def test_guards_also_fire_on_a_numeric_nullable_key():
-    """GATE §4.2 case: keys [1,2,0,1,3] with validity [T,T,F,T,T]."""
     import numfast as nf
     import numpy as np
     import pandas as pd
     frame = pd.DataFrame({"k": np.array([1, 2, 0, 1, 3], np.int32),
                           "v": [10.0, 20.0, 30.0, 40.0, 50.0]})
-    nullable = frame.copy()
-    nullable.loc[2, "k"] = None
-    t = nf.from_pandas(nullable)
-    with pytest.raises(ValueError, match="key column 'k' has 1 NULL rows"):
-        t.query().group("k", {"v": ("sum",)})
-    with pytest.raises(ValueError, match="key column 'k' has 1 NULL rows"):
-        t.query().sort("k")
     clean = nf.from_pandas(frame)
     ordered = clean.query().sort("k").compile()
     assert ordered.column("k").to_numpy().tolist() == [0, 1, 1, 2, 3]
@@ -388,14 +391,24 @@ def test_group_null_key_guard_names_the_users_column():
 
 
 @pytest.mark.fast
-def test_sort_null_key_guard_names_the_users_column():
-    t = _default_named_table(plan=["a", "b", None, "a"], rev=[1.0, 2.0, 9.0, 1.0])
-    with pytest.raises(ValueError) as err:
-        t.query().sort("plan").compile()
-    msg = str(err.value)
-    assert "key column 'plan' has 1 NULL rows" in msg
-    assert "'v'" not in msg
-    assert "NULL rows first" in msg
+def test_sort_null_key_keeps_the_row_last_in_input_order():
+    """NULL sort keys are NOT refused: `ir_sort` keeps them and puts them
+    LAST, in input order -- which is exactly pandas `sort_values`
+    (`na_position="last"`, stable). GATE_semantics.md §9 inferred the
+    opposite from its own rendered `[1, 2, 3, 0]`; that inference was
+    corrected on 2026-10-04 and the refusal it produced was removed.
+
+    Pinned here so the behaviour cannot silently regress.
+    """
+    t = _nullable_table()          # plan = [a, NULL, b, NULL, c], rev = 1..5
+    out = t.query().sort("plan").compile()
+    assert out.column("plan").to_numpy().tolist() == ["a", "b", "c", None, None]
+    # the payload rides the same permutation
+    assert out.column("rev").to_numpy().tolist() == [1.0, 3.0, 5.0, 2.0, 4.0]
+    # descending does NOT move the NULL rows: they stay last either way
+    desc = t.query().sort("plan", desc=True).compile()
+    assert desc.column("plan").to_numpy().tolist() == ["c", "b", "a", None, None]
+    assert desc.column("rev").to_numpy().tolist() == [5.0, 3.0, 1.0, 2.0, 4.0]
 
 
 @pytest.mark.fast

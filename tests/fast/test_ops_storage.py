@@ -8,6 +8,7 @@ int — exact; float — tolerance/ULP из conformance-profile.toml.
 import time
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 from harness import assert_float_close, assert_int_exact, load_profile
@@ -68,10 +69,46 @@ def test_load_missing_file_rejected(kernel, tmp_path):
 
 
 @pytest.mark.fast
-def test_persist_int64_raw_rejected(kernel, tmp_path):
+def test_persist_int64_stays_int64_and_roundtrips_exact(kernel, tmp_path):
+    """int64 is NOT rejected, and must not be narrowed on the way through.
+
+    This test used to assert the opposite (`test_persist_int64_raw_rejected`:
+    `pytest.raises(ValueError, match="int64")`). That contract was superseded:
+    `NFS/_lib/nfs.py` now keeps an int64 column int64 -- "int64 columns stay
+    int64 (no check) for int64-capable ops; execution codes stay int32" --
+    because narrowing at persist time would silently corrupt a value that the
+    engine computes exactly. Measured 2026-10-04: a column holding 2**40+7
+    round-trips through persist -> load -> Table -> `ir_reduce(sum)` as
+    1099511627787, exact. The stale assertion was replaced, not dropped: the
+    range check that DOES protect int32 is pinned by the next test.
+    """
     a = kernel.alias
-    with pytest.raises(ValueError, match="int64"):
-        a["persist_table"]({"x": {"values": [1], "dtype": "int64"}}, str(tmp_path / "x.npz"))
+    big = 2 ** 40 + 7                      # fits int64, does NOT fit int32
+    path = str(tmp_path / "x.npz")
+    meta = a["persist_table"](
+        {"x": {"values": [1, big, 3], "dtype": "int64"}}, path)
+    assert meta["columns"] == [{"name": "x", "dtype": "int64", "n": 3}]
+    back = a["load_table"](path)
+    assert back["x"]["dtype"] == "int64"
+    for got, want in zip(back["x"]["values"], [1, big, 3]):
+        assert_int_exact(got, want, label="int64 round-trip")
+    jobs = [a["ir_series"]("x", np.asarray(back["x"]["values"], dtype=np.int64),
+                           "int64"),
+            a["ir_reduce"]("s", "x", "sum")]
+    graph = a["optimize"](a["compile"](jobs))
+    assert_int_exact(a["cpu_execute"](graph["nodes"])["s"], 1 + big + 3,
+                     label="int64 sum after round-trip")
+
+
+@pytest.mark.fast
+def test_persist_int32_out_of_range_rejected_not_wrapped(kernel, tmp_path):
+    """The narrowing invariant that IS enforced: an int32 column is
+    range-checked BEFORE the narrowing, and overflow raises rather than
+    wrapping silently (`nfs.py` persist_impl, invariant #1)."""
+    a = kernel.alias
+    with pytest.raises(OverflowError, match="narrowing overflow"):
+        a["persist_table"]({"x": {"values": [1, 2 ** 40], "dtype": "int32"}},
+                           str(tmp_path / "o.npz"))
 
 
 @pytest.mark.fast

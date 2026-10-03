@@ -383,10 +383,17 @@ def test_is_null_is_not_the_negation_of_a_predicate():
     assert column.validity is None
 
 
-# --- 15: both guards still refuse, and the sort advice now works too -------
+# --- 15: the group guard still fires; sort needs no guard at all ------------
 
 @pytest.mark.fast
-def test_both_null_key_guards_still_fire_with_their_messages():
+def test_group_guard_fires_and_sort_needs_no_guard():
+    """`group` refuses a NULL key (an ABSENT group, cpu.py:3325).
+
+    `sort` does NOT refuse, and needs no advice: `ir_sort` keeps the NULL row
+    and puts it LAST, in input order -- pandas' own `na_position="last"`.
+    The old refusal cited GATE_semantics.md §9, whose own rendered
+    `[1, 2, 3, 0]` is the NULL-LAST order; §9 was corrected on 2026-10-04.
+    """
     import numfast as nf
     frame = pd.DataFrame(
         {"k": pd.array(["a", None, "b", None, "c"], dtype="string"),
@@ -398,15 +405,15 @@ def test_both_null_key_guards_still_fire_with_their_messages():
     assert "key column 'k' has 2 NULL rows" in group_msg
     assert "silently dropped" in group_msg
     assert "Fix: filter those rows out before group()" in group_msg
-    with pytest.raises(ValueError) as sort_err:
-        t.query().sort("k").compile()
-    sort_msg = str(sort_err.value)
-    assert "key column 'k' has 2 NULL rows" in sort_msg
-    assert "NULL rows first" in sort_msg
-    # the sort guard's advice is executable too, and agrees with pandas
-    ordered = t.query().filter(_c("k").is_null().not_()) \
+    # sort keeps the NULL rows, last, in input order -- same as pandas
+    ordered = t.query().sort("k").compile().to_pandas()
+    assert ordered["k"].tolist() == frame.sort_values("k", kind="stable")["k"].tolist()
+    assert [pd.isna(v) for v in ordered["k"].tolist()] ==         [False, False, False, True, True]
+    assert ordered["rev"].tolist() == [1.0, 3.0, 5.0, 2.0, 4.0]
+    # and the guard's own advice is executable, still agreeing with pandas
+    filtered = t.query().filter(_c("k").is_null().not_()) \
         .sort("k").compile().to_pandas()
-    assert ordered["k"].tolist() == frame.dropna(subset=["k"]).sort_values(
+    assert filtered["k"].tolist() == frame.dropna(subset=["k"]).sort_values(
         "k")["k"].tolist() == ["a", "b", "c"]
 
 

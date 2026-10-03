@@ -6,7 +6,8 @@ The 07:60 vocabulary, implemented as a lazy chain over one IR node per
 column. Every op appends nodes to `jobs[]`; `compile()` makes exactly ONE
 planner call over that list and executes it on the CPU oracle.
 
-Four honest deviations, all recorded in DESIGN §2.2a / §2.2b / §3.3:
+Three honest deviations (1, 2, 4), one measured non-deviation (3) and one
+contract note (5), all recorded in DESIGN §2.2a / §2.2b / §3.3:
 
 1. `group()` is TWO graphs. `ir_groupby_multi(result='carry')` returns a
    ColumnCarry, which is not a column and cannot re-enter the DAG. So
@@ -21,11 +22,17 @@ Four honest deviations, all recorded in DESIGN §2.2a / §2.2b / §3.3:
    from the answer. The check reads validity OUTSIDE the graph
    (`Series.validity` / `dictionary_encode(...)['validity']`), so no FROZEN
    component changes.
-3. `sort()` REFUSES LOUDLY on a NULL in any sort key, for the same reason:
-   `ir_sort` reads a NULL key as 0, KEEPS the row (validity=False), and
-   ascending order therefore yields `[1, 2, 3, 0]` -- NULL rows first
-   (GATE_semantics.md §9). Shipping that order silently is worse than
-   refusing.
+3. `sort()` KEEPS a NULL key and puts the row LAST, in input order. This is
+   NOT a deviation -- it is the measured behaviour of `ir_sort`, and it is
+   what pandas `sort_values` does (`na_position="last"`, stable). The CPU
+   driver partitions the permutation explicitly (`_sort_perm`,
+   Drivers/CPU/_lib/cpu.py:1228-1229: `perm[:n_valid] = ...`,
+   `perm[n_valid:] = invalid positions`) and the GPU driver does the same
+   (`gpu.py:3149`: `concatenate([vpos[sub], ipos])`). GATE_semantics.md §9
+   inferred "NULL rows go FIRST" from the rendered `[1, 2, 3, 0]`, which is
+   its own evidence of the opposite; the §9 note was corrected on
+   2026-10-04 and the false refusal it produced was removed. Parity is pinned
+   by `test_sort_null_key_matches_the_pandas_oracle`.
 
 4. `_bind`'s memo is scoped to ONE row space. `filter`, `sort` and `limit`
    rebuild every column node into a different row space (new order or new
@@ -37,9 +44,9 @@ Four honest deviations, all recorded in DESIGN §2.2a / §2.2b / §3.3:
    rebind in a new row space misses the cache instead of hitting it. The
    memo still does its real job inside one row space -- see `_spawn`.
 
-5. `is_null()` is the guards' own reader, returned instead of refused.
-   Deviation 2 and 3 read validity OUTSIDE the graph (`material()`) in order
-   to raise. `is_null()` reuses that exact helper and turns the answer into an
+5. `is_null()` is the guard's own reader, returned instead of refused.
+   Deviation 2 reads validity OUTSIDE the graph (`material()`) in order to
+   raise. `is_null()` reuses that exact helper and turns the answer into an
    `ir_series(bool)` (`_bind_is_null`), so the §2.2b advice "filter those rows
    out before group()" is executable from the public surface. It is NOT
    `not_()`: `not_` is a 3VL negation of a predicate and is correct as it
@@ -335,7 +342,7 @@ class Chain:
         codes, validity = self.material(col)
         return plan.decode_text(codes, col.sidecar or [""], validity)
 
-    # -- the two loud guards --------------------------------------------
+    # -- the one loud guard ----------------------------------------------
     def _refuse_null_key(self, col):
         _, validity = self.material(col)
         n_null = plan.null_count(validity)
@@ -348,18 +355,6 @@ class Chain:
                 "ABSENT value, not a wrong one, and cannot be told apart "
                 "from the answer.",
                 "filter those rows out before group()")
-
-    def _refuse_null_sort_key(self, col):
-        _, validity = self.material(col)
-        n_null = plan.null_count(validity)
-        if n_null:
-            raise plan.fail(
-                "sort",
-                f"key column {col.name!r} has {n_null} NULL rows; ir_sort "
-                "reads a NULL key as 0 and KEEPS the row (validity=False), "
-                "so ascending order would return NULL rows first "
-                "(GATE_semantics.md §9).",
-                "filter those rows out (or fill them) before sort()")
 
     # -- the text-comparison and integer-division guards -------------------
     def _cmp_guard(self, cmp_op, left, right, op):
@@ -678,16 +673,16 @@ class Chain:
     def _bind_is_null(self, colname):
         """`c.is_null()` -> `ir_series(bool)`, True exactly on NULL rows.
 
-        THE SAME `material()` THE TWO NULL-KEY GUARDS ALREADY CALL, and that is
-        the whole justification for shipping the verb. `_refuse_null_key` and
-        `_refuse_null_sort_key` both do exactly
+        THE SAME `material()` THE NULL-KEY GUARD ALREADY CALLS, and that is
+        the whole justification for shipping the verb. `_refuse_null_key` does
+        exactly
 
             _, validity = self.material(col)
             n_null = plan.null_count(validity)
 
-        and both run in production on every `group()`/`sort()` build, so an
-        out-of-graph validity read is already how this facade answers "is this
-        row NULL" -- it was answering it in order to REFUSE. `is_null()` returns
+        and it runs in production on every `group()` build, so an out-of-graph
+        validity read is already how this facade answers "is this row NULL" --
+        it was answering it in order to REFUSE. `is_null()` returns
         that answer instead. A second materialisation helper would have destroyed
         the argument for shipping: it would be a new mechanism, not a
         composition of existing ones.
@@ -764,8 +759,6 @@ class Chain:
                 f"v0 sort takes one desc flag for all keys, got {desc!r}.",
                 "sort('k1', 'k2', desc=False)")
         self._branch()
-        for key in keys:
-            self._refuse_null_sort_key(self._col(key, "sort"))
         perm = self._next("perm")
         # descending MUST be a keyword: ir_sort(out, *keys, descending=) -- a
         # third positional is another KEY, not a flag (L5 -> GAP-7).

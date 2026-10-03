@@ -22,11 +22,21 @@ cargo build --release --target x86_64-pc-windows-gnu
 | slot | path (repo-relative to `numfast/`) | sha256 | bytes |
 |---|---|---|---|
 | primary (`_DLL_DEFAULT` in `src/Drivers/CPU/_lib/native_cpu.py`) | `numfast-native/target/x86_64-pc-windows-gnu/release/numfast_native.dll` | `3db09442b832f8e3540516e87d18713c504ffda1edccfae2d176072e05d3705c` | 1236992 |
-| packaged (wins via `ensure_native_env`) | `src/numfast/_native/numfast_native.dll` | `e539461f58ab9c1225accd5943260467ab0e3760f523e73560ba43d89280d812` (refreshed 2026-09-26 CORE-NEWPRIM: adds `nf_pair_insert_i64` + `pair_insert` module; previous kept as `.bak-20260926-pairinsert`) | 82 symbols |
-| previous packaged (kept) | `src/numfast/_native/numfast_native.dll.bak-20260921` | `614f323bc7fa2944…` (full: see file) | 1344725 |
+| packaged (wins via `ensure_native_env`) | `src/numfast/_native/numfast_native.dll` | `e539461f58ab9c1225accd5943260467ab0e3760f523e73560ba43d89280d812` (refreshed 2026-09-26 CORE-NEWPRIM: adds `nf_pair_insert_i64` + `pair_insert` module) | 82 symbols |
+| previous packaged | *(removed 2026-10-04)* | was `src/numfast/_native/numfast_native.dll.bak-20260921`, sha256 `614f323bc7fa2944…`, 1344725 bytes | 1344725 |
 
 Previous packaged copy (2026-09-17) predated `groupby/hash_grouped.rs`
-changes (2026-09-21) and was refreshed from this build; backup kept.
+changes (2026-09-21) and was refreshed from this build.
+
+**2026-10-04 — the eight `.bak-*` copies of the native DLL were deleted from the
+tree** (9.6 MB). Nothing loaded them: `ensure_native_env` resolves only the
+exact names `numfast_native.dll` / `numfast_native.so`, `pyproject.toml` ships
+`_native/*.dll` (which the `.bak-*` names do not match), and no code or test
+referenced any of them. Two of the eight were byte-identical
+(`.bak-pre-rowmin` and `.bak-pre-rowmin-agent2`, sha256 `5a0b…`). This table
+records the sha256 of the removed copies so the history stays checkable; the
+binaries themselves are recoverable from git history at any commit before
+`2026-10-04`.
 
 Resolution order (`src/numfast/_lib/native_env.py::ensure_native_env`):
 

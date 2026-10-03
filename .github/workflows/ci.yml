@@ -1,0 +1,121 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+#
+# WHAT THIS CI IS, STATED PLAINLY
+#
+# Job 1 `package-and-import`  -- GATING. Verified green on windows-latest
+#   (Python 3.14). Builds the wheel, installs it into a clean venv, and
+#   imports it. Proves the published artefact is importable at all.
+#
+# Job 2 `core-suite-no-builder` -- GATING. Verified green on windows-latest
+#   (Python 3.14). Runs the 194 tests that need nothing but this repository on
+#   PYTHONPATH. See the file list and WHY it is a subset, below.
+#
+# Job 3 `full-suite` -- NOT GATING (`continue-on-error: true`). Runs the whole
+#   suite. It cannot gate today for a reason that has nothing to do with this
+#   repository: most tests build their kernel through `from builder import
+#   MAIN`, and `builder` ships in a SEPARATE repository
+#   (github.com/numfast/app-builder). The commit this tree needs is `7ca4a37`,
+#   which is 11 commits PAST the published `main` (`65f6cfb`) and is therefore
+#   not fetchable by CI. Measured 2026-10-04: cloning published `main` and
+#   running the suite gives 450 errors, `ModuleNotFoundError: No module named
+#   '_lib'`. When app-builder is published at or past `7ca4a37`, delete the
+#   `continue-on-error: true` line and this job starts gating.
+#
+# WHY NO LINUX JOB
+# Only a Windows binary is committed: `src/numfast/_native/numfast_native.dll`.
+# There is no `.so` in the tree. Measured 2026-10-04 with the native library
+# disabled (`NUMFAST_NATIVE_DISABLE=1`): 10 failed, 627 passed -- the native
+# lanes (`ir_unique`, pair-insert, bitmask sweep, DLL packaging) are
+# load-bearing, not optional. A Linux job would be red on its first run, and a
+# CI file that fails is worse than no CI. Add Linux when a Linux build of the
+# native library is committed and its suite run has been observed green.
+#
+# WHY PYTHON 3.14 ONLY
+# `pyproject.toml` declares `requires-python = ">=3.11"`, but 3.14 is the only
+# version this suite has actually been observed on. Claiming 3.11-3.13 in CI
+# without having run them would be a claim nobody checked.
+
+name: ci
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  package-and-import:
+    name: package + import (windows, python 3.14)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Install build + runtime deps
+        run: python -m pip install --upgrade pip wheel build
+      - name: Build the wheel and sdist
+        run: python -m build
+      - name: Install the built wheel into a clean venv and import it
+        run: |
+          python -m venv .venv-wheel
+          .\.venv-wheel\Scripts\python.exe -m pip install --upgrade pip
+          .\.venv-wheel\Scripts\python.exe -m pip install dist\numfast-*.whl
+          .\.venv-wheel\Scripts\python.exe -c "import numfast, numpy; print('numfast', numfast.__version__, '| numpy', numpy.__version__)"
+      - name: Clean up
+        if: always()
+        run: Remove-Item -Recurse -Force .venv-wheel -ErrorAction SilentlyContinue
+
+  core-suite-no-builder:
+    name: core suite, no Builder required (windows, python 3.14)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Install test deps
+        run: python -m pip install --upgrade pip numpy pandas pyarrow pytest
+      - name: Run the Builder-free subset
+        # The native DLL is committed, so nothing has to be compiled here.
+        # Every file listed was measured green on a clean clone with ONLY
+        # `src` on PYTHONPATH (194 passed, 2 skipped, 2026-10-04). The other
+        # 47 test files request the `kernel` fixture, which does
+        # `from builder import MAIN` -- job 3 below.
+        run: |
+          pytest -q -p no:cacheprovider `
+            tests/fast/test_calibration_profile_memo.py `
+            tests/fast/test_consumer_is_null.py `
+            tests/fast/test_consumer_silent_regressions.py `
+            tests/fast/test_consumer_sort_null_parity.py `
+            tests/fast/test_consumer_surface.py `
+            tests/fast/test_ops_gpu_lookup.py `
+            tests/fast/test_ops_gpu_resident_accum.py `
+            tests/fast/test_ops_gpu_scan.py `
+            tests/fast/test_ops_lookup.py `
+            tests/fast/test_ops_lookup_api.py `
+            tests/fast/test_ops_panic_safety.py `
+            tests/fast/test_ops_segmented.py `
+            tests/fast/test_packaging_adapters.py `
+            tests/fast/test_rng_gate.py
+
+  full-suite:
+    name: full suite (needs unpublished app-builder -- NOT gating)
+    runs-on: windows-latest
+    # See the header. Remove this line once app-builder is published at or
+    # past 7ca4a37; until then this job reports, it does not gate.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Install test deps
+        run: python -m pip install --upgrade pip numpy pandas pyarrow pytest
+      - name: Fetch app-builder (currently too old to satisfy this tree)
+        run: git clone --depth 1 https://github.com/numfast/app-builder.git ../app-builder
+      - name: Run the whole fast suite
+        env:
+          PYTHONPATH: ${{ github.workspace }}\src;${{ github.workspace }}\..\app-builder
+        run: pytest tests/ -q -p no:cacheprovider

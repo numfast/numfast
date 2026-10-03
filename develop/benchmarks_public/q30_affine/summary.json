@@ -1,1 +1,49 @@
-{"comparison":{"AUTO_vs_B":"AUTO warm 5.02ms vs B warm 3.39ms (B hand-written equivalent; AUTO within 1.5x of hand-opt — honest)","A_vs_AUTO_warm":"UNCONFIRMED prototype-only (develop/OptimizerAffine reference, NOT reproduced by current code): 215.89ms vs 5.02ms = 43.02x; current code 181->181 EXACT (compile ~24ms exec ~208ms)","A_vs_duck":"A 215.89ms vs duck meas 35.52ms (A slower than duck without affine — honest baseline)","AUTO_vs_duck":"UNCONFIRMED prototype-only: AUTO 5.02ms vs duck 35.52ms = 7.1x (reference artifact only)"},"conclusion":"UNCONFIRMED prototype-only (develop/OptimizerAffine reference): 181->2 / 43.02x (215.89ms -> 5.02ms) NOT reproduced by current code. Current code: 181->181 EXACT via CSE+DCE (compile ~24ms exec ~208ms). Correctness EXACT retained, speedup NOT claimed.","correctness":{"AUTO_vs_B":"EXACT (AUTO_vs_B_match EXACT)","all_pairs":"A_vs_duck=0 AUTO_vs_duck=0 B_vs_duck=0 A_vs_B=0 AUTO_vs_B=0 A_vs_AUTO=0","graph":"Current: A 181 nodes -> AUTO 181 nodes (CSE+DCE only) EXACT; Prototype reference UNCONFIRMED: 181->2 via affine(+cse/dce); B 2 nodes hand-written (reference only); DSL_before 181 DSL_after 2 (reference only)"},"env":"Windows + Python 3.12 + DuckDB reference; hits_1m.parquet rows=999978","measured_vs_proof":"UNCONFIRMED prototype-only: prior cold+warm (warm=6) + duck best-of-3 from reference artifact. Current code gives 181->181 EXACT (compile ~24ms exec ~208ms). 181->2 NOT confirmed by current code.","method":{"cold_warm":{"A_cold_total_ms":211.22,"A_warm_med_total_ms":215.89,"AUTO_cold_total_ms":5.19,"AUTO_warm_med_total_ms":5.02,"B_warm_med_total_ms":3.39,"duck_best_of_3_ms":35.52,"duck_ref_ms":31.59,"warm":6},"ingest_split_ms":{"parquet_read":410.84,"to_numpy":2.82},"seed":42},"not_claimed":["181->2 / 43.02x speedup (UNCONFIRMED prototype-only develop/OptimizerAffine reference, NOT reproduced by current 181->181 code)","General 43x on all queries (Q30-specific affine collapse)","Zero-cost planning (rewrite ~1.7ms included in totals)","GPU involvement (CPU-only affine rewrite)"],"source_artifact":"C:/App/numfast/develop/bench_q30_auto_affine.json (+ bench_hll_q30.json, bench_q30_ab_fusion.json)","timing":{"throughput_rows_s":{"A":4656217.0,"AUTO":304792354.6,"B":301012326.3}},"workload":"Q30 affine collapse REFERENCE PROTOTYPE (UNCONFIRMED): SUM(v+k) k=0..89 over ~1M rows, 181->2 (reference only); Current code: 181->181 EXACT via CSE+DCE"}
+{
+ "provenance": "HISTORICAL / UNREPRODUCIBLE. Its three sources no longer exist (checked 2026-10-04). The 181->2 / 43.02x figure is a PROTOTYPE result from develop/OptimizerAffine and this file already records it as NOT reproduced by current code. Do not quote it as a NumFast result.",
+ "comparison": {
+  "AUTO_vs_B": "AUTO warm 5.02ms vs B warm 3.39ms (B hand-written equivalent; AUTO within 1.5x of hand-opt — honest)",
+  "A_vs_AUTO_warm": "UNCONFIRMED prototype-only (develop/OptimizerAffine reference, NOT reproduced by current code): 215.89ms vs 5.02ms = 43.02x; current code 181->181 EXACT (compile ~24ms exec ~208ms)",
+  "A_vs_duck": "A 215.89ms vs duck meas 35.52ms (A slower than duck without affine — honest baseline)",
+  "AUTO_vs_duck": "UNCONFIRMED prototype-only: AUTO 5.02ms vs duck 35.52ms = 7.1x (reference artifact only)"
+ },
+ "conclusion": "UNCONFIRMED prototype-only (develop/OptimizerAffine reference): 181->2 / 43.02x (215.89ms -> 5.02ms) NOT reproduced by current code. Current code: 181->181 EXACT via CSE+DCE (compile ~24ms exec ~208ms). Correctness EXACT retained, speedup NOT claimed.",
+ "correctness": {
+  "AUTO_vs_B": "EXACT (AUTO_vs_B_match EXACT)",
+  "all_pairs": "A_vs_duck=0 AUTO_vs_duck=0 B_vs_duck=0 A_vs_B=0 AUTO_vs_B=0 A_vs_AUTO=0",
+  "graph": "Current: A 181 nodes -> AUTO 181 nodes (CSE+DCE only) EXACT; Prototype reference UNCONFIRMED: 181->2 via affine(+cse/dce); B 2 nodes hand-written (reference only); DSL_before 181 DSL_after 2 (reference only)"
+ },
+ "env": "Windows + Python 3.12 + DuckDB reference; hits_1m.parquet rows=999978",
+ "measured_vs_proof": "UNCONFIRMED prototype-only: prior cold+warm (warm=6) + duck best-of-3 from reference artifact. Current code gives 181->181 EXACT (compile ~24ms exec ~208ms). 181->2 NOT confirmed by current code.",
+ "method": {
+  "cold_warm": {
+   "A_cold_total_ms": 211.22,
+   "A_warm_med_total_ms": 215.89,
+   "AUTO_cold_total_ms": 5.19,
+   "AUTO_warm_med_total_ms": 5.02,
+   "B_warm_med_total_ms": 3.39,
+   "duck_best_of_3_ms": 35.52,
+   "duck_ref_ms": 31.59,
+   "warm": 6
+  },
+  "ingest_split_ms": {
+   "parquet_read": 410.84,
+   "to_numpy": 2.82
+  },
+  "seed": 42
+ },
+ "not_claimed": [
+  "181->2 / 43.02x speedup (UNCONFIRMED prototype-only develop/OptimizerAffine reference, NOT reproduced by current 181->181 code)",
+  "General 43x on all queries (Q30-specific affine collapse)",
+  "Zero-cost planning (rewrite ~1.7ms included in totals)",
+  "GPU involvement (CPU-only affine rewrite)"
+ ],
+ "source_artifact": "C:/App/numfast/develop/bench_q30_auto_affine.json (+ bench_hll_q30.json, bench_q30_ab_fusion.json)",
+ "timing": {
+  "throughput_rows_s": {
+   "A": 4656217.0,
+   "AUTO": 304792354.6,
+   "B": 301012326.3
+  }
+ },
+ "workload": "Q30 affine collapse REFERENCE PROTOTYPE (UNCONFIRMED): SUM(v+k) k=0..89 over ~1M rows, 181->2 (reference only); Current code: 181->181 EXACT via CSE+DCE"
+}

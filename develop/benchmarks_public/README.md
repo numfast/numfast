@@ -1,9 +1,28 @@
 # NumFast — Public Benchmarks (packaging only)
 
-Beautiful, reproducible, honest. **No numbers were remeasured for this package.**
-Every figure below is a verbatim extract of an already-measured artifact
-(full JSONs live in dev-env `C:/App/numfast/develop/`, see each `suite.toml`).
-`run_all` only verifies the packaging (schema + pretty print), never mass compute.
+Honest, and **NOT reproducible** — that word was here before and it was false.
+
+**Status as of 2026-10-04: every source artefact these five summaries were
+extracted from has been deleted.** All nine named JSONs (`bench_h2o_hll.json`,
+`bench_join_distinct_hll.json`, `bench_stage6_gpu_proof.json`, the four under
+`develop/HLL/`, `bench_clickbench_hll.json` + its three siblings,
+`bench_q30_auto_affine.json` + two siblings) were checked and are absent. The
+benchmarks' input datasets are absent too: `C:/App/competitions/` does not
+exist on this machine, so neither `hits_1m.parquet` nor the H2O CSV is
+available.
+
+Consequences, stated plainly:
+
+* Each `summary.json` now carries a machine-readable `provenance` key saying
+  HISTORICAL / UNREPRODUCIBLE, and `run_all.py` REQUIRES that key and prints
+  it for all five suites before printing any number.
+* **Nothing in this directory is a current measurement.** Every figure is a
+  snapshot of one run on one box on one day, kept for the record.
+* For a figure that is current, sourced and inspectable, use
+  `../../BENCHMARKS.md` and `../../tests/heavy/bench_clickbench_43.json`.
+
+`run_all` only verifies the packaging (schema + provenance marker + pretty
+print), never mass compute.
 
 ## One command (Git Bash, from `C:/App/numfast/numfast`)
 
@@ -25,13 +44,15 @@ Original heavy measurements (reference only, NOT run by `run_all` — see `suite
 
 ## Suites
 
-| Suite | Workload | Verdict |
+All five rows below are HISTORICAL and UNREPRODUCIBLE (see above).
+
+| Suite | Workload | Verdict as recorded then — superseded where noted |
 |---|---|---|
 | `h2o` | H2O GROUPBY Q1-Q5 + Join @ 10M (GOLD, CPU-only) | Q1 exact parity; Q2 exact values but HLL slower; Q3-Q5/Join not claimed |
-| `clickbench` | ClickBench Q1-Q43 @ ~1M | 8/43 supported EXACT/EXACT+TOL; rest honest stubs |
+| `clickbench` | ClickBench Q1-Q43 @ ~1M | **SUPERSEDED.** 8/43 supported here; the current tree measures **34/43** in `tests/heavy/bench_clickbench_43.json`. Use that file. |
 | `hll_stage5` | 7 waves packet/float/join/window/text/multi/unified | all EXACT/DONE, small-N proof, zero-copy |
-| `gpu_proof` | same packet CPU vs GPU, N=1M | parity EXACT, **CPU wins** 2.84ms vs 5.76ms |
-| `q30_affine` | Q30 181→2 nodes | **43.02x faster EXACT** (215.89ms → 5.02ms) |
+| `gpu_proof` | same packet CPU vs GPU, N=1M | parity EXACT, **CPU wins** — no speedup was ever claimed |
+| `q30_affine` | Q30 181→2 nodes | **UNCONFIRMED PROTOTYPE.** 43.02x (215.89ms → 5.02ms) was measured in `develop/OptimizerAffine` and is **NOT reproduced by current code** (181→181 via CSE+DCE). Do not quote it as a NumFast result. |
 
 Machine-readable: `results/unified.jsonl` (written by `run_all.py`).
 Details + GitHub tables: `RESULTS.md`.

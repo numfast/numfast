@@ -1,1 +1,56 @@
-{"comparison":{"baseline_vs_optimized":"CPU (prod path) vs GPU (proof-only file): cpu_med 2.84ms vs gpu_total_med 5.76ms -> CPU wins 2.03x at N=1M. No tuning applied after result (honest).","honest":"no tuning if gpu slower; boundary = parity+residency+method"},"conclusion":"Boundary proven (parity+residency+method). CPU wins N=1M (2.84ms vs 5.76ms). No speedup claimed — claim is exactness + residency method.","correctness":{"edges":"12/12 EXACT (empty/single/neg/int32-min-max/n255/n256/n257/n1023/n1025/zeros_4096)","main":"EXACT main_cpu=56468897 main_gpu=56468897 diff=0","packet":"SAME object both backends, hash 82502e6d937d349c, deterministic, zero-copy, json-hash equal","regression":"stage5 waves all EXACT + Q30 181->2 intact"},"env":"Windows + wgpu-py (Vulkan/DX12); N=1M int32; 2 pipelines compiled once; seed 42","measured_vs_proof":"MEASURED: parity + wall timings (cold+warm med, reps=5, warm=2). PROOF-ONLY: gpu path is a proof file (not prod). Untouched: RoadGraph/Planner/prod/frozen ABI/HLL semantics.","method":{"cold_warm":{"cpu_cold_ms":2.61,"cpu_warm_med_ms":2.84,"gpu_cold_total_ms":694.33,"gpu_warm_med_total_ms":5.76,"reps":5,"warm":2},"seed":42},"not_claimed":["GPU speedup (opposite measured: CPU wins)","Large-N GPU win (not measured)","Production GPU path (proof-only file)","Kernel-only timing (total = wall H2D+exec+D2H+finalize)"],"source_artifact":"C:/App/numfast/develop/bench_stage6_gpu_proof.json","timing":{"cpu_end_to_end_ms":{"cold":2.61,"warm_med":2.84},"gpu_end_to_end_ms":{"cold_total":694.33,"d2h_med":2.04,"exec_med":1.12,"finalize_med":0.03,"h2d_med":2.53,"total_med":5.76},"memory_residency":{"d2h_bytes":15628,"h2d_bytes":4000000,"note":"m (N int32) never downloaded; only W partials cross","readbacks_per_run":1,"resident_bytes":4000000}},"workload":"Stage-6 GPU proof: ONE packet scan->map(add,K=7)->agg(sum), N=1M (single Q30-term shape; Q30 = 90x this)"}
+{
+ "provenance": "HISTORICAL / UNREPRODUCIBLE. Source bench_stage6_gpu_proof.json no longer exists (checked 2026-10-04). The summary's own verdict is that the CPU beat the GPU at N=1M, so no speedup was ever claimed.",
+ "comparison": {
+  "baseline_vs_optimized": "CPU (prod path) vs GPU (proof-only file): cpu_med 2.84ms vs gpu_total_med 5.76ms -> CPU wins 2.03x at N=1M. No tuning applied after result (honest).",
+  "honest": "no tuning if gpu slower; boundary = parity+residency+method"
+ },
+ "conclusion": "Boundary proven (parity+residency+method). CPU wins N=1M (2.84ms vs 5.76ms). No speedup claimed — claim is exactness + residency method.",
+ "correctness": {
+  "edges": "12/12 EXACT (empty/single/neg/int32-min-max/n255/n256/n257/n1023/n1025/zeros_4096)",
+  "main": "EXACT main_cpu=56468897 main_gpu=56468897 diff=0",
+  "packet": "SAME object both backends, hash 82502e6d937d349c, deterministic, zero-copy, json-hash equal",
+  "regression": "stage5 waves all EXACT + Q30 181->2 intact"
+ },
+ "env": "Windows + wgpu-py (Vulkan/DX12); N=1M int32; 2 pipelines compiled once; seed 42",
+ "measured_vs_proof": "MEASURED: parity + wall timings (cold+warm med, reps=5, warm=2). PROOF-ONLY: gpu path is a proof file (not prod). Untouched: RoadGraph/Planner/prod/frozen ABI/HLL semantics.",
+ "method": {
+  "cold_warm": {
+   "cpu_cold_ms": 2.61,
+   "cpu_warm_med_ms": 2.84,
+   "gpu_cold_total_ms": 694.33,
+   "gpu_warm_med_total_ms": 5.76,
+   "reps": 5,
+   "warm": 2
+  },
+  "seed": 42
+ },
+ "not_claimed": [
+  "GPU speedup (opposite measured: CPU wins)",
+  "Large-N GPU win (not measured)",
+  "Production GPU path (proof-only file)",
+  "Kernel-only timing (total = wall H2D+exec+D2H+finalize)"
+ ],
+ "source_artifact": "C:/App/numfast/develop/bench_stage6_gpu_proof.json",
+ "timing": {
+  "cpu_end_to_end_ms": {
+   "cold": 2.61,
+   "warm_med": 2.84
+  },
+  "gpu_end_to_end_ms": {
+   "cold_total": 694.33,
+   "d2h_med": 2.04,
+   "exec_med": 1.12,
+   "finalize_med": 0.03,
+   "h2d_med": 2.53,
+   "total_med": 5.76
+  },
+  "memory_residency": {
+   "d2h_bytes": 15628,
+   "h2d_bytes": 4000000,
+   "note": "m (N int32) never downloaded; only W partials cross",
+   "readbacks_per_run": 1,
+   "resident_bytes": 4000000
+  }
+ },
+ "workload": "Stage-6 GPU proof: ONE packet scan->map(add,K=7)->agg(sum), N=1M (single Q30-term shape; Q30 = 90x this)"
+}

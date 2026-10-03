@@ -15,8 +15,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 SUITES = ["h2o", "clickbench", "hll_stage5", "gpu_proof", "q30_affine"]
-REQUIRED = ["workload", "method", "correctness", "timing", "comparison",
-            "conclusion", "measured_vs_proof", "not_claimed", "source_artifact"]
+REQUIRED = ["provenance", "workload", "method", "correctness", "timing",
+            "comparison", "conclusion", "measured_vs_proof", "not_claimed",
+            "source_artifact"]
 
 
 def main():
@@ -38,10 +39,18 @@ def main():
     print("NumFast PUBLIC BENCHMARKS — verification index (packaging only)")
     print("=" * 64)
     for r in rows:
-        print(f"[{r['suite']:12s}] {r['conclusion']}")
+        print(f"[{r['suite']:12s}] {r['conclusion'][:110]}")
     print("-" * 64)
+    print("PROVENANCE OF EVERY SUITE ABOVE:")
+    for r in rows:
+        print(f"[{r['suite']:12s}] {r['provenance']}")
+    print("-" * 64)
+    print("Sources named by each suite (all verified absent on 2026-10-04):")
     for r in rows:
         print(f"[{r['suite']:12s}] src: {r['source_artifact'][:100]}")
+    print("-" * 64)
+    print("NOTHING in this index is a current measurement. Nothing was")
+    print("remeasured. No figure here is re-runnable from this repository.")
     out = ROOT / "results" / "unified.jsonl"
     out.parent.mkdir(parents=True, exist_ok=True)
     with open(out, "w") as f:
@@ -53,7 +62,9 @@ def main():
         for b in bad:
             print(f"  {b}")
         raise SystemExit(1)
-    print("ALL 5 SUITES OK — nothing remeasured, nothing claimed beyond sources.")
+    print("ALL 5 SUITES READ — schema OK, nothing remeasured, and every")
+    print("suite is marked HISTORICAL / UNREPRODUCIBLE above. For a current,")
+    print("re-runnable figure see ../../BENCHMARKS.md.")
 
 
 if __name__ == "__main__":
