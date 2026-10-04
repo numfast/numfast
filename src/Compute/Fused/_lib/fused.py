@@ -10,24 +10,39 @@ SPEC-DELTA-11 (v1 scope, honest boundary):
     boll_up, boll_lo, zscore, stoch_k), and i32 signal masks derived inside
     the same thread (above_sma, rsi_lt, rsi_gt, cond_and over earlier i32
     outputs). min_periods = window (full windows only, IR default).
+    CHAINING: NOT fused. A dep key naming another output is REFUSED by name
+    (see _REFUSED_DEPS), never ignored: cond_and is the one dependency that
+    holds, because it reads the SAME row the writing thread just wrote. A
+    windowed or lagged consumer would read other threads' rows with no
+    barrier in between -- measured stale, varying run to run. A param key no
+    op consumes is likewise REFUSED by name: dropping it silently is what used
+    to turn a declared dependency into a re-rooted body returning plausible
+    wrong values. Compose with two fused_run calls instead (one dispatch each,
+    bit-exact against each other).
   NOT FUSED in v1 (explicit error, never silent): groupby/groupby_multi
     (different key spaces, per-key atomic domains sized by M != N), sort
     (global order, multi-pass bitonic), join/lookup (hash tables, probe
     order), scalar reductions to M=1 (tree + host merge need a second
     dispatch shape), EMA/recursive filters (cross-thread sequential
-    dependency: y[i] needs y[i-1]), multi-input graphs (one input v1),
-    non-float32 input (cast first).
+    dependency: y[i] needs y[i-1]), cross-output chaining of f32 ops (see
+    CHAINING above), multi-input graphs (one input v1), non-float32 input
+    (cast first).
   Self-contained emitters: every output recomputes what it needs from the
-    input (no cross-output reads except cond_and over earlier i32 masks), so
-    fused[K outputs] vs separate[K x 1 output] run identical instruction
-    streams per output -> bit-exact by construction (test asserts it).
+    input (the one cross-output read is cond_and over earlier i32 masks, at
+    the same row), so fused[K outputs] vs separate[K x 1 output] run
+    identical instruction streams per output -> bit-exact by construction
+    (test asserts it).
   Uniform contract (DELTA-9 style): N/windows/lags ride pu (array<vec4<u32>,2>,
     pu[0].x=N, slots allocated at build, literal lane indices emitted -- no
     dynamic indexing, stride-16 uniform rule honored); float scalars ride pf
     (array<vec4<f32>,2>). Source depends only on op sequence + dtypes, never
     on values/shapes -> pipeline cached across N.
   Caps v1: N <= 65535*256 (one dispatch dim x), <= 7 int params, <= 8 float
-    params, float32 only. Beyond -> explicit error with fix.
+    params, float32 only. There is NO cap on the output count K (a chain
+    would not add a binding either -- cond_and reads an existing one), so K is
+    bounded only by the device's max_storage_buffers_per_shader_stage, which
+    fails at bind-group creation, not at compile time. Beyond the stated caps
+    -> explicit error with fix.
   No imports from other Extensions (flat assembly): own minimal wgpu
     DeviceContext (GPU._lib internals are not PUBLIC surface, depending on
     them would need touching the frozen GPU extension).
@@ -44,27 +59,54 @@ _PU_SLOTS = 8  # pu[0] = N, pu[1..7] = int params (windows/lags/ddof)
 _PF_SLOTS = 8  # float params (k-mult, levels, a/b, divisor)
 _NAN = "bitcast<f32>(0x7FC00000u)"
 
-# op -> (out_dtype, int_params, float_params, needs: window|lag|none|masks)
+# op -> (out_dtype, int_params, float_params, dep_params)
+#   int_params/float_params ride the pu/pf uniform slots (budget-checked).
+#   dep_params maps a param key -> required: True means the key must be given,
+#   and names an EARLIER output whose storage the body reads instead of x.
+#   Only cond_and declares one ({a, b} = required i32 mask operands, read at
+#   the SAME row by the same thread, so one dispatch orders it).
+#   Every key an op accepts is listed in exactly one of these three maps -- and
+#   compile_spec refuses any param key outside them, so none can be dropped on
+#   the floor. A dropped dep key is what used to re-root a body to x silently.
 _OPS = {
-    "sma": ("f32", ["w"], []),
-    "rsum": ("f32", ["w"], []),
-    "rmin": ("f32", ["w"], []),
-    "rmax": ("f32", ["w"], []),
-    "rstd": ("f32", ["w", "ddof"], []),
-    "mom": ("f32", ["lag"], []),
-    "roc": ("f32", ["lag"], []),
-    "returns": ("f32", [], []),
-    "rsi": ("f32", ["w"], []),
-    "boll_up": ("f32", ["w"], ["k"]),
-    "boll_lo": ("f32", ["w"], ["k"]),
-    "zscore": ("f32", ["w"], []),
-    "stoch_k": ("f32", ["w"], []),
-    "axpb": ("f32", [], ["a", "b"]),
-    "map_div": ("f32", [], ["v"]),
-    "above_sma": ("i32", ["w"], []),
-    "rsi_lt": ("i32", ["w"], ["level"]),
-    "rsi_gt": ("i32", ["w"], ["level"]),
-    "cond_and": ("i32", [], []),
+    "sma": ("f32", ["w"], [], {}),
+    "rsum": ("f32", ["w"], [], {}),
+    "rmin": ("f32", ["w"], [], {}),
+    "rmax": ("f32", ["w"], [], {}),
+    "rstd": ("f32", ["w", "ddof"], [], {}),
+    "mom": ("f32", ["lag"], [], {}),
+    "roc": ("f32", ["lag"], [], {}),
+    "returns": ("f32", [], [], {}),
+    "rsi": ("f32", ["w"], [], {}),
+    "boll_up": ("f32", ["w"], ["k"], {}),
+    "boll_lo": ("f32", ["w"], ["k"], {}),
+    "zscore": ("f32", ["w"], [], {}),
+    "stoch_k": ("f32", ["w"], [], {}),
+    "axpb": ("f32", [], ["a", "b"], {}),
+    "map_div": ("f32", [], ["v"], {}),
+    "above_sma": ("i32", ["w"], [], {}),
+    "rsi_lt": ("i32", ["w"], ["level"], {}),
+    "rsi_gt": ("i32", ["w"], ["level"], {}),
+    "cond_and": ("i32", [], [], {"a": True, "b": True}),
+}
+
+#: Ops cond_and may name: i32 masks (signals and other cond_and outputs).
+_MASK_OPS = ("above_sma", "rsi_lt", "rsi_gt", "cond_and")
+
+#: Dep keys that are understood but refused, with the measured reason. Named
+#: separately from the generic unknown-key message because the caller can act
+#: on this one: it is a structural limit of the one-dispatch shape, not a typo.
+_REFUSED_DEPS = {
+    "src": (
+        "a cross-output dependency would read ANOTHER ROW of the producer's "
+        "storage, and a fused dispatch runs one thread per row with no "
+        "barrier, so rows a neighbouring thread has not written yet are read "
+        "stale. Measured, seed 42, N=4096: sma(src=...) mismatches the "
+        "composition at the first 2 rows of a workgroup, on a varying subset "
+        "of workgroups 3/5/6/14/15 from run to run; map_div(src=...), which "
+        "reads only its own row, is bit-exact. A row-local dep is safe, a "
+        "windowed or lagged one is not, and no barrier inside one dispatch "
+        "can order across workgroups."),
 }
 
 _NO_FUSE_HINT = (
@@ -93,10 +135,12 @@ def _is_finite_float(v):
 def compile_spec(outputs):
     """Validate output specs -> compiled plan (pure, no GPU).
 
-    outputs: [{name, op, params?}]. cond_and params: {a, b} = earlier i32
-      output names. Returns {source, names, dtypes, pu_vals, pf_vals, n_int,
-      n_float} where pu_vals/pf_vals are full slot arrays (pu[0] filled at
-      run with N). Raises ValueError on any boundary violation.
+    outputs: [{name, op, params?}]. params keys are op-declared and anything
+      else is refused by name (see _REFUSED_DEPS): iparams/fparams ride the
+      uniform slots, and cond_and's deps {a, b} name earlier i32 masks.
+      Returns {source, names, dtypes, pu_vals, pf_vals, n_int, n_float} where
+      pu_vals/pf_vals are full slot arrays (pu[0] filled at run with N).
+      Raises ValueError on any boundary violation.
     """
     if not isinstance(outputs, list) or not outputs:
         raise _err("fused needs a non-empty [outputs] list.",
@@ -127,7 +171,26 @@ def compile_spec(outputs):
     for i, o in enumerate(outputs):
         op = o["op"]
         prm = dict(o.get("params") or {})
-        dt, iparams, fparams = _OPS[op]
+        dt, iparams, fparams, deps = _OPS[op]
+        # (a) Unconsumed keys REFUSE. This runs before anything reads a param:
+        # a key no list above names cannot affect codegen, and dropping it
+        # silently turns a declared dependency into a re-rooted body that
+        # returns plausible wrong values.
+        accepted = set(iparams) | set(fparams) | set(deps)
+        unknown = sorted(set(prm) - accepted)
+        if unknown:
+            blocked = [k for k in unknown if k in _REFUSED_DEPS]
+            if blocked:
+                raise _err(f"output '{names[i]}' (op '{op}'): "
+                           f"'{blocked[0]}' is refused -- "
+                           f"{_REFUSED_DEPS[blocked[0]]}",
+                           "compute the composite as two fused_run calls "
+                           "(producer, then consumer): one dispatch each, "
+                           "and bit-exact against each other")
+            raise _err(f"output '{names[i]}' (op '{op}'): unconsumed param "
+                       f"key(s) {unknown} -- '{op}' accepts only "
+                       f"{sorted(accepted)}.",
+                       "drop the key, or use a key the op consumes")
         res = {}
         for p in iparams:
             if p == "ddof":
@@ -168,20 +231,32 @@ def compile_spec(outputs):
             res[p] = pf_slot
             res[p + "_v"] = float(v)
             pf_slot += 1
-        if op == "cond_and":
-            for k, dk in (("a", "dep_a"), ("b", "dep_b")):
-                dep = prm.get(k)
+        if deps:
+            # Generic: every dep param of every op, resolved here. cond_and
+            # additionally requires i32 masks; the f32 ops require f32.
+            for dk, required in deps.items():
+                dep = prm.get(dk)
+                if dep is None and not required:
+                    continue
                 if dep not in champ or champ[dep] >= i:
-                    raise _err(f"cond_and '{names[i]}': '{k}' must name an "
-                               f"EARLIER i32 output, got {dep!r}.",
-                               "list signal masks before their cond_and")
+                    raise _err(f"{op} '{names[i]}': '{dk}' must name an "
+                               f"EARLIER output, got {dep!r}.",
+                               "list outputs in dependency order")
                 j = champ[dep]
-                if outputs[j]["op"] not in ("above_sma", "rsi_lt", "rsi_gt",
-                                            "cond_and"):
-                    raise _err(f"cond_and '{names[i]}': '{dep}' is "
-                               f"'{outputs[j]['op']}', not an i32 mask.",
-                               "pass above_sma/rsi_lt/rsi_gt/cond_and outputs")
-                res[dk] = j
+                dep_op = outputs[j]["op"]
+                dep_dt = _OPS[dep_op][0]
+                if op == "cond_and":
+                    if dep_dt != "i32" or dep_op not in _MASK_OPS:
+                        raise _err(f"cond_and '{names[i]}': '{dep}' is "
+                                   f"'{dep_op}', not an i32 mask.",
+                                   "pass above_sma/rsi_lt/rsi_gt/cond_and "
+                                   "outputs")
+                elif dep_dt != dt:
+                    raise _err(f"{op} '{names[i]}': '{dk}' must name an "
+                               f"earlier {dt} output, got '{dep}' "
+                               f"('{dep_op}', {dep_dt}).",
+                               "name an earlier f32 output")
+                res["dep_" + dk] = j
         plan.append({"name": names[i], "op": op, "dt": dt, "res": res,
                      "idx": i})
     pu_vals = [0] * _PU_SLOTS

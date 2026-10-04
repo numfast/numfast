@@ -45,9 +45,64 @@ def _fork_root():
 
 
 _FORK = _fork_root()
-_PROD_DLL_DEFAULT = str(
-    _FORK / "numfast-native" / "target" / "x86_64-pc-windows-gnu"
-    / "release" / "numfast_native.dll")
+
+#: Cargo target triple the checkout build tree sits under.
+_TARGET_TRIPLE = "x86_64-pc-windows-gnu"
+
+
+def _candidates(name):
+    """Every place `name` legitimately lives, best first.
+
+    A source checkout keeps the cargo build tree at
+    <fork>/numfast-native/target/<triple>/release/. A wheel ships ONLY the
+    built binary at <fork>/_native/ (setup.py:_vendor_native_binary copies
+    exactly what src/numfast/_native/ holds) and no build tree at all, so this
+    file's single fixed layout missed the library in the installed package.
+    All three layouts are probed and the probe list is reported on failure
+    rather than swallowed. native_i64.py:_candidates lists the same three in a
+    different order -- the precedence each file already had, so that neither
+    changes which binary a checkout loads.
+    """
+    return (str(_FORK / "numfast-native" / "target" / _TARGET_TRIPLE
+                / "release" / name),
+            str(_FORK / "src" / "numfast" / "_native" / name),
+            str(_FORK / "_native" / name))
+
+
+def _probe(name):
+    """(chosen, probed_paths). Never raises and never truncates: when nothing
+    is found it returns the FIRST candidate together with every path probed, so
+    the failure can name them."""
+    seen, paths = set(), []
+    for p in _candidates(name):
+        if p in seen:
+            continue
+        seen.add(p)
+        paths.append(p)
+        if _os.path.exists(p):
+            return p, paths
+    return paths[0], paths
+
+
+def _why_missing(path, name, probed):
+    """Named failure text listing the probed paths.
+
+    The list is added only when the DEFAULT was in play: with
+    NUMFAST_NATIVE_DLL set the caller already named the file, and listing the
+    defaults next to it would point at the wrong thing.
+    """
+    if not _os.path.exists(path) and probed:
+        return ("; %s not found. Probed in order: %s. Fix: build "
+                "numfast-native and copy the binary into src/numfast/_native/, "
+                "or set NUMFAST_NATIVE_DLL." % (name, "; ".join(probed)))
+    return ""
+
+
+_PROD_DLL_DEFAULT, _PROD_DLL_PROBED = _probe("numfast_native.dll")
+#: The M3 DLL is a checkout-only artefact: nothing in src/numfast/_native/ holds
+#: it, so no wheel carries it and this stays unresolved there by packaging, not
+#: by path. Kept a module constant; it is not what _lib() loads.
+_M3_DLL_DEFAULT, _M3_DLL_PROBED = _probe("numfast_native_join_m3.dll")
 
 
 def _resolve_default():
@@ -61,9 +116,6 @@ def _resolve_default():
 
 _DLL_DEFAULT = _PROD_DLL_DEFAULT
 _DLL_PATH = _resolve_default()
-_M3_DLL_DEFAULT = str(
-    _FORK / "numfast-native" / "target" / "x86_64-pc-windows-gnu"
-    / "release" / "numfast_native_join_m3.dll")
 _M3_DLL_PATH = _os.environ.get("NUMFAST_JOIN_M3_DLL", _M3_DLL_DEFAULT)
 
 _dll = None
@@ -95,7 +147,8 @@ def _lib():
         _why = "loaded:" + _DLL_PATH
     except (OSError, AttributeError) as e:
         _dll, _loaded_path = None, _DLL_PATH
-        _why = "unavailable:%s" % e
+        _why = "unavailable:%s%s" % (
+            e, _why_missing(_DLL_PATH, "numfast_native.dll", _PROD_DLL_PROBED))
         raise RuntimeError("join native backend %s" % _why) from e
     try:
         g = lib.nf_join_gather_i32

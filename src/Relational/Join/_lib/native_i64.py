@@ -49,23 +49,66 @@ def _fork_root():
 
 
 _FORK = _fork_root()
-_GNU_DEFAULT = str(
-    _FORK / "numfast-native" / "target" / "x86_64-pc-windows-gnu"
-    / "release" / "numfast_native.dll")
+
+#: Cargo target triple the checkout build tree sits under.
+_TARGET_TRIPLE = "x86_64-pc-windows-gnu"
+
+
+def _candidates(name):
+    """Every place `name` legitimately lives, best first.
+
+    A source checkout keeps the cargo build tree at
+    <fork>/numfast-native/target/<triple>/release/ AND a staged copy at
+    <fork>/src/numfast/_native/. A wheel ships ONLY the built binary at
+    <fork>/_native/ (setup.py:_vendor_native_binary copies exactly what
+    src/numfast/_native/ holds) and no build tree at all, so the previous
+    _FORK/"src"/"numfast"/"_native" probe -- the only other candidate --
+    resolved in a checkout and nowhere else.
+
+    The order is the STAGED copy first, then the build tree, because that is
+    the precedence this file already had and changing it would change which
+    binary a checkout loads. native.py:_candidates lists the build tree first
+    for the same reason (it only ever had that one).
+    """
+    return (str(_FORK / "src" / "numfast" / "_native" / name),
+            str(_FORK / "numfast-native" / "target" / _TARGET_TRIPLE
+                / "release" / name),
+            str(_FORK / "_native" / name))
+
+
+def _probe(name):
+    """(chosen, probed_paths). Never raises and never truncates: when nothing
+    is found it returns the FIRST candidate together with every path probed, so
+    the failure can name them."""
+    seen, paths = set(), []
+    for p in _candidates(name):
+        if p in seen:
+            continue
+        seen.add(p)
+        paths.append(p)
+        if _os.path.exists(p):
+            return p, paths
+    return paths[0], paths
+
+
+def _why_missing(path, name, probed):
+    """Named failure text listing the probed paths. The list is added only when
+    the DEFAULT was in play: with NUMFAST_NATIVE_DLL set the caller already
+    named the file."""
+    if not _os.path.exists(path) and probed:
+        return ("; %s not found. Probed in order: %s. Fix: build "
+                "numfast-native and copy the binary into src/numfast/_native/, "
+                "or set NUMFAST_NATIVE_DLL." % (name, "; ".join(probed)))
+    return ""
+
+
+_GNU_DEFAULT, _GNU_PROBED = _probe("numfast_native.dll")
 
 
 def _resolve_default():
-    """Production DLL path: canonical env first, packaged _native, gnu."""
-    env = _os.environ.get("NUMFAST_NATIVE_DLL")
-    if env:
-        return env
-    pkg = _FORK / "src" / "numfast" / "_native" / "numfast_native.dll"
-    if pkg.exists():
-        return str(pkg)
-    pkg_so = _FORK / "src" / "numfast" / "_native" / "numfast_native.so"
-    if pkg_so.exists():
-        return str(pkg_so)
-    return _GNU_DEFAULT
+    """Production DLL path: canonical env first, else whichever layout holds
+    the binary (checkout build tree, checkout staged copy, packaged _native/)."""
+    return _os.environ.get("NUMFAST_NATIVE_DLL") or _GNU_DEFAULT
 
 
 _DLL_PATH = _resolve_default()
@@ -97,7 +140,8 @@ def _lib():
         _why = "loaded:" + _DLL_PATH
     except (OSError, AttributeError) as e:
         _dll, _loaded_path = None, _DLL_PATH
-        _why = "unavailable:%s" % e
+        _why = "unavailable:%s%s" % (
+            e, _why_missing(_DLL_PATH, "numfast_native.dll", _GNU_PROBED))
         raise RuntimeError("join-i64 native backend %s" % _why) from e
     return _dll
 
