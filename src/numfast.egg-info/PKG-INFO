@@ -2,18 +2,26 @@ Metadata-Version: 2.4
 Name: numfast
 Version: 0.2.1
 Summary: NumFast: packaged GPU-numeric boundary (Series/Table + NumPy/Pandas/Arrow adapters)
-License: AGPL-3.0-only
+License-Expression: AGPL-3.0-only
 Requires-Python: >=3.11
 Description-Content-Type: text/markdown
+License-File: LICENSE
+License-File: NOTICE
 Requires-Dist: numpy>=1.24
 Provides-Extra: pandas
 Requires-Dist: pandas>=1.5; extra == "pandas"
 Provides-Extra: arrow
 Requires-Dist: pyarrow>=10; extra == "arrow"
+Provides-Extra: gpu
+Requires-Dist: wgpu>=0.31; extra == "gpu"
+Provides-Extra: mem
+Requires-Dist: psutil>=5.9; extra == "mem"
 Provides-Extra: test
 Requires-Dist: pandas>=1.5; extra == "test"
 Requires-Dist: pyarrow>=10; extra == "test"
 Requires-Dist: pytest; extra == "test"
+Requires-Dist: psutil>=5.9; extra == "test"
+Dynamic: license-file
 
 # Copyright (c) 2026 NumFast
 # SPDX-License-Identifier: AGPL-3.0-only

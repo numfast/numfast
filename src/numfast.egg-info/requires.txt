@@ -3,6 +3,12 @@ numpy>=1.24
 [arrow]
 pyarrow>=10
 
+[gpu]
+wgpu>=0.31
+
+[mem]
+psutil>=5.9
+
 [pandas]
 pandas>=1.5
 
@@ -10,3 +16,4 @@ pandas>=1.5
 pandas>=1.5
 pyarrow>=10
 pytest
+psutil>=5.9
