@@ -108,12 +108,19 @@ def _text_series(kernel, name, values, validity=None):
                      sidecar={"values": sidecar})
 
 
-def _kernel_series(kernel, col, values, validity):
-    """Buffer + column record -> numfast Series (public boundary type)."""
+def _kernel_series(kernel, col, values, validity, backend="cpu"):
+    """Buffer + column record -> numfast Series (public boundary type).
+
+    `backend` is the executor that produced `values` -- `compile()` reads
+    cpu_execute buffers -- and it is carried onto the Series so a result says
+    where it came from. `None` for the text path, whose values come from the
+    out-of-graph dictionary pre-pass rather than from any executor.
+    """
     import numfast as nf
     buf = np.ascontiguousarray(np.asarray(values))
     valid = plan.as_validity(validity)
     if col.dtype == "text":
+        backend = None
         if buf.dtype == object or buf.dtype.kind in "US":
             return _text_series(kernel, col.name, buf.tolist(), valid)
         sidecar = list(col.sidecar or []) or [""]
@@ -127,7 +134,8 @@ def _kernel_series(kernel, col, values, validity):
             f"column {col.name!r} came back as dtype {buf.dtype}, which has "
             "no logical mapping.",
             "use int32/int64/float32/float64/bool columns")
-    return nf.Series(kernel, col.name, buf, logical, validity=valid)
+    return nf.Series(kernel, col.name, buf, logical, validity=valid,
+                      backend=backend)
 
 
 def _source_col(kernel, name, series):
@@ -982,6 +990,91 @@ class Chain:
                 f"jobs={len(self._jobs)})")
 
 
+def _gpu_capability():
+    """gpu_capability() dict, or None when this kernel has no GPU driver.
+
+    NEVER raises. `capabilities()` answers the CPU question today on a kernel
+    that was built without Drivers/GPU, and adding a probe must not turn that
+    into an exception -- a capability call that starts raising where it did
+    not is a behaviour change dressed up as disclosure.
+
+    But it reports absence VISIBLY (`None`, surfaced as `gpu_ops: None` with
+    `gpu_note` naming the missing extension) rather than degrading to an empty
+    GPU op list, because "the GPU driver is not registered" and "the GPU
+    supports no operations" are different facts and only the first is true
+    on such a kernel.
+    """
+    try:
+        return plan.tool("gpu_capability")()
+    except Exception:
+        return None
+
+
+# What actually happens when a CPU-only operation is asked for on the GPU.
+# Not a policy statement: `evaluate(graph, 'gpu', n)` raises RuntimeError
+# naming `op:<name>`, because `select_backend` reports the op as a
+# `gpu_blockers` entry and Runtime refuses the ineligible backend. There is
+# no silent CPU fallback anywhere on this path.
+_ON_CPU_ONLY_UNDER_GPU = (
+    "asking for backend='gpu' on a graph that uses one of these raises "
+    "RuntimeError naming 'op:<name>' -- there is no silent CPU fallback")
+
+# What `backend='auto'` actually does. Stated precisely because the shorter
+# "auto defaults to the CPU" is true on this checkout but is NOT a contract:
+# planner.select_backend_dual_impl ends with
+# `backend = "gpu" if gpu < cpu else "cpu"` over MEASURED costs, so auto WILL
+# pick the GPU whenever a measured calibration says the GPU host cost is
+# strictly lower. What auto never does is invent a GPU choice from an
+# unmeasured or uncovered graph -- those resolve to the CPU with the reason
+# recorded (`calibrated routing has no measured cost for op:<name>`).
+_BACKEND_AUTO = (
+    "backend='auto' resolves to the CPU unless a measured calibration "
+    "reports a strictly lower GPU host cost; an unmeasured or uncovered "
+    "graph resolves to the CPU, never to a fabricated GPU choice")
+
+
+def _disclose(cpu, gpu):
+    """cpu_capability() plus the GPU split, in one dict.
+
+    The engine was ALREADY honest and still undiscoverable. `gpu_capability`
+    lists the ops that execute on the device; `select_backend` names every
+    other op as a `op:<name>` blocker; `evaluate(graph, 'gpu', n)` raises on a
+    blocker instead of falling back silently. Nothing in the GPU driver masks
+    a missing operation.
+
+    What was missing was the PUBLIC statement. A user of `nf.*` could not
+    learn which ops are on the GPU, which are CPU-only, or what asking for
+    the GPU on a CPU-only op would do -- and `repr(Series)` carried no backend
+    at all, so a result in hand did not say where it came from. Those four
+    facts are what this dict adds; every value is read from an existing
+    capability call, none of it is asserted here.
+    """
+    out = dict(cpu)
+    all_ops = sorted(cpu.get("ops") or ())
+    out["op_count"] = len(all_ops)
+    if gpu is None:
+        out["gpu_op_count"] = None
+        out["cpu_only_op_count"] = None
+        out["gpu_ops"] = None
+        out["cpu_only_ops"] = None
+        out["gpu_note"] = ("this kernel exposes no gpu_capability: the GPU "
+                           "driver extension is not registered. The counts "
+                           "above are CPU-only by construction.")
+        out["on_cpu_only_under_gpu_backend"] = None
+    else:
+        gpu_ops = sorted(gpu.get("ops") or ())
+        gpu_set = set(gpu_ops)
+        cpu_only = [op for op in all_ops if op not in gpu_set]
+        out["gpu_op_count"] = len(gpu_ops)
+        out["cpu_only_op_count"] = len(cpu_only)
+        out["gpu_ops"] = gpu_ops
+        out["cpu_only_ops"] = cpu_only
+        out["gpu_note"] = gpu.get("note")
+        out["on_cpu_only_under_gpu_backend"] = _ON_CPU_ONLY_UNDER_GPU
+    out["backend_auto"] = _BACKEND_AUTO
+    return out
+
+
 # --- App (one entry point) -------------------------------------------------
 
 class App:
@@ -995,8 +1088,43 @@ class App:
         return ref(name)
 
     def capabilities(self):
-        """cpu_capability(): ops / max_dispatch / chunkable_hints."""
-        return plan.tool("cpu_capability")()
+        """cpu_capability() PLUS the GPU split -- the honest backend picture.
+
+        Carries the unchanged cpu_capability keys (`ops`, `max_dispatch`,
+        `chunkable_hints`, `note`) and adds the disclosure the public surface
+        used to withhold:
+
+          op_count / gpu_op_count / cpu_only_op_count  -- the 15-of-33 split
+          gpu_ops        -- the operations that execute on the GPU
+          cpu_only_ops   -- the operations that execute on the CPU
+          gpu_note       -- the GPU driver's own per-op note, verbatim
+          on_cpu_only_under_gpu_backend -- what asking for the GPU on a
+                            CPU-only op does (raises, naming the op; no
+                            silent fallback)
+          backend_auto   -- what backend='auto' actually resolves to
+
+        `gpu_capabilities()` is the same GPU driver's facts on their own.
+        """
+        return _disclose(plan.tool("cpu_capability")(), _gpu_capability())
+
+    def gpu_capabilities(self):
+        """gpu_capability(): ops / max_dispatch / chunkable_hints / note.
+
+        The GPU driver's own capability record, unedited. `ops` is the set of
+        operations that execute on the device; it is the same list that
+        `capabilities()['gpu_ops']` reports, reachable on its own so the
+        question "does this op run on the GPU?" has a public answer.
+        """
+        gpu = _gpu_capability()
+        if gpu is None:
+            raise plan.fail(
+                "capabilities",
+                "this kernel exposes no gpu_capability: the GPU driver "
+                "extension is not registered.",
+                "capabilities()['gpu_ops'] is None on such a kernel; build "
+                "with Drivers/GPU to ask the question",
+            )
+        return gpu
 
     def open_stream(self, path, budget_frac=0.25, force_lazy=False):
         """Lazy budgeted block reader over an nfs-stream-v1 file (E6)."""
@@ -1021,7 +1149,8 @@ class App:
         return {name: table.column(name).schema for name in table.names}
 
     def __repr__(self):
-        return "App(c=..., capabilities=..., open_stream=..., query=...)"
+        return ("App(c=..., capabilities=..., gpu_capabilities=..., "
+                "open_stream=..., query=...)")
 
 
 def app():

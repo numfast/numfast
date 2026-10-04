@@ -26,10 +26,16 @@ def _materialize(buf):
 
 class Series:
     def __init__(self, kernel, name, values, logical, validity=None, schema=None,
-                 sidecar=None):
+                 sidecar=None, backend=None):
         alias = kernel.alias
         self._kernel = kernel
         self._name = str(name)
+        # WHICH BACKEND PRODUCED THIS COLUMN. None means no engine backend ran
+        # -- the column was ingested on the host (nf.from_numpy / from_pandas /
+        # from_arrow) -- and that is a fact, not a missing value: reporting
+        # 'cpu' there would claim a CPU execution that never happened, which
+        # is the same lie in the other direction.
+        self._backend = backend
         if logical == "text":
             # Dictionary TEXT: int32 codes + sorted-unique sidecar values.
             # Compute on codes would be meaningless; only order/filter flow.
@@ -102,13 +108,27 @@ class Series:
     def validity(self):
         return None if self._validity is None else self._validity.copy()
 
+    @property
+    def backend(self):
+        """'cpu' / 'gpu' -- the backend that produced this column.
+
+        None when no engine backend produced it (host ingest via
+        nf.from_numpy / from_pandas / from_arrow).
+        """
+        return self._backend
+
     def __len__(self):
         return int(self._values.shape[0])
 
     def __repr__(self):
         n = len(self)
         inv = "" if self._validity is None else f", invalid={int((~self._validity).sum())}"
-        return f"Series({self._name!r}, {self._logical}[{n}]{inv})"
+        # The backend is in the repr, not only in a property: a result held in
+        # a REPL has to say where it came from without a second call. Without
+        # it, `repr` reported shape and dtype -- everything about the data and
+        # nothing about which of the two backends produced it.
+        be = "host" if self._backend is None else self._backend
+        return f"Series({self._name!r}, {self._logical}[{n}][{be}]{inv})"
 
     # -- exit -----------------------------------------------------------
     def to_numpy(self):
@@ -179,7 +199,7 @@ class Series:
             if side is not None:
                 valid = np.ascontiguousarray(np.asarray(side, dtype=bool))
         return Series(self._kernel, out, values, logical, validity=valid,
-                      sidecar=sidecar)
+                      sidecar=sidecar, backend=info["actual"])
 
     def _elementwise(self, fn, other):
         if self._logical == "text":
@@ -302,7 +322,8 @@ class Series:
         return Series(self._kernel, name or self._name, bufs["h"],
                       self._logical,
                       validity=None if valid is None else np.ascontiguousarray(
-                          np.asarray(valid, dtype=bool)))
+                          np.asarray(valid, dtype=bool)),
+                      backend="cpu")
 
     def cumsum(self, name=None):
         """Inclusive prefix sum N->N (v1, CPU, cumsum only).
@@ -336,7 +357,8 @@ class Series:
         return Series(self._kernel, name or self._name, bufs["h"],
                       self._logical,
                       validity=None if valid is None else np.ascontiguousarray(
-                          np.asarray(valid, dtype=bool)))
+                          np.asarray(valid, dtype=bool)),
+                      backend="cpu")
 
     def rolling_mean(self, window, min_periods=None, name=None):
         """Rolling mean N->N (v1, CPU, composition only, no new IR).
@@ -388,7 +410,8 @@ class Series:
         return Series(self._kernel, name or self._name, out,
                       logical,
                       validity=None if valid is None else np.ascontiguousarray(
-                          np.asarray(valid, dtype=bool)))
+                          np.asarray(valid, dtype=bool)),
+                      backend="cpu")
 
     def returns(self, name=None):
         """Simple returns N->N (v1, CPU, composition only, no new IR).
@@ -435,7 +458,8 @@ class Series:
         return Series(self._kernel, name or self._name, out,
                       logical,
                       validity=None if valid is None else np.ascontiguousarray(
-                          np.asarray(valid, dtype=bool)))
+                          np.asarray(valid, dtype=bool)),
+                      backend="cpu")
 
     # -- reduce -> scalar ------------------------------------------------
     def reduce(self, op="sum"):

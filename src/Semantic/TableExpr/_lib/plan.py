@@ -58,6 +58,12 @@ TOOL_ALIAS = {
     "explain": "explain",
     "cpu_execute": "cpu_execute",
     "cpu_capability": "cpu_capability",
+    # The GPU driver's own capability facts. Present in kernel.alias next to
+    # cpu_capability; absent only in a kernel built without Drivers/GPU, which
+    # `App.capabilities()` reports VISIBLY as gpu_ops=None (no GPU driver)
+    # rather than as an empty GPU op list (the GPU does nothing) -- the two
+    # are different facts and only one of them is true.
+    "gpu_capability": "gpu_capability",
     "format_error": "format_error",
 }
 

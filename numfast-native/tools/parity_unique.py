@@ -26,7 +26,15 @@ import numpy as np
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 RES = os.path.join(ROOT, "results")
 os.makedirs(RES, exist_ok=True)
-WASM = os.path.join(ROOT, "tools", "numfast_native.wasm")
+import wasm_artifact
+
+# The CURRENT build, validated: 86 exports. This used to point at
+# tools/numfast_native.wasm, a TRACKED 56-function build 29 symbols
+# behind, and reported green while validating the wrong artefact.
+# wasm_artifact.resolve() aborts loudly rather than running against a
+# missing or stale .wasm -- no fallback, no skip.
+WASM = wasm_artifact.resolve()
+print(wasm_artifact.banner(WASM))
 MJS = os.path.join(ROOT, "tools", "wasm_unique.mjs")
 NODE = shutil.which("node") or r"C:\Program Files\nodejs\node.exe"
 TMP = os.path.join(RES, ".unique-tmp")

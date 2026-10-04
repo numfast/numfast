@@ -216,6 +216,34 @@ def app():
     return get_kernel().alias["tableexpr_app"]()
 
 
+def gpu_capabilities():
+    """The GPU backend's own capability facts -- the question, now askable.
+
+    This record existed in the kernel alias and was NOT reachable from
+    ``nf.*``, so a user of the public surface had no way to ask which
+    operations run on the GPU. ``ops`` is the set that executes on the
+    device. Everything outside it executes on the CPU, and
+    ``nf.app().capabilities()['cpu_only_ops']`` names each one.
+
+    NAMED ``gpu_capabilities``, not ``gpu_capability``, and the plural is
+    load-bearing rather than decorative: DESIGN §3 forbids a module-level
+    public name from colliding with an internal alias name (``compile`` is
+    the one documented exception), and ``kernel.alias['gpu_capability']`` is
+    internal. This mirrors ``capabilities()`` / ``App.gpu_capabilities()``
+    -- a curated public name over an internal record.
+
+    Honest scope, measured on this checkout: **15 of 33** operations execute
+    on the GPU; the remaining 18 are CPU-only. Requesting ``backend='gpu'``
+    for a graph that uses a CPU-only operation raises an error naming it --
+    there is no silent CPU fallback. ``backend='auto'`` resolves to the CPU
+    unless a measured calibration reports a strictly lower GPU host cost.
+
+    No speedup is claimed and none is implied: this says which operations run
+    on the device, not how much faster that is.
+    """
+    return app().gpu_capabilities()
+
+
 __all__ = [
     "__version__",
     "Series",
@@ -223,6 +251,7 @@ __all__ = [
     "get_kernel",
     "native_info",
     "app",
+    "gpu_capabilities",
     "from_numpy",
     "to_numpy",
     "from_pandas",

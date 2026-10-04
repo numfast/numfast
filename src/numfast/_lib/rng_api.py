@@ -38,9 +38,9 @@ def _check_domain(stream, offset):
     return int(stream), int(offset)
 
 
-def _series_from(kernel, name, arr, logical, validity=None):
+def _series_from(kernel, name, arr, logical, validity=None, backend=None):
     return Series(kernel, name, np.ascontiguousarray(arr), logical,
-                  validity=validity)
+                  validity=validity, backend=backend)
 
 
 def fill_i32(kernel, n, seed, stream=0, offset=0, lo=0, hi=100,
@@ -57,7 +57,8 @@ def fill_i32(kernel, n, seed, stream=0, offset=0, lo=0, hi=100,
             f"rng_fill_i32 routed to '{res['execution_info']['actual']}', "
             f"'{backend}' required."
         )
-    return _series_from(kernel, name, buf, "int32")
+    return _series_from(kernel, name, buf, "int32",
+                       backend=res["execution_info"]["actual"])
 
 
 def fill_f64(kernel, n, seed, stream=0, offset=0, lo=0.0, hi=1.0,
@@ -68,7 +69,8 @@ def fill_f64(kernel, n, seed, stream=0, offset=0, lo=0.0, hi=1.0,
     jobs = [a["ir_rng_fill_f64"]("r", n, seed, stream, offset, lo, hi)]
     graph = a["optimize"](a["compile"](jobs))
     res = a["evaluate"](graph, backend, max(0, int(n)))
-    return _series_from(kernel, name, res["result"], "float64")
+    return _series_from(kernel, name, res["result"], "float64",
+                       backend=res["execution_info"]["actual"])
 
 
 def sample(kernel, n, k, seed, stream=0, offset=0, name="sample",
@@ -79,7 +81,8 @@ def sample(kernel, n, k, seed, stream=0, offset=0, name="sample",
     jobs = [a["ir_rng_sample_no_replace"]("r", n, k, seed, stream, offset)]
     graph = a["optimize"](a["compile"](jobs))
     res = a["evaluate"](graph, backend, max(0, int(n)))
-    return _series_from(kernel, name, res["result"], "int32")
+    return _series_from(kernel, name, res["result"], "int32",
+                       backend=res["execution_info"]["actual"])
 
 
 def permutation(kernel, n, seed, stream=0, offset=0, name="perm",
@@ -90,7 +93,8 @@ def permutation(kernel, n, seed, stream=0, offset=0, name="perm",
     jobs = [a["ir_rng_permutation"]("r", n, seed, stream, offset)]
     graph = a["optimize"](a["compile"](jobs))
     res = a["evaluate"](graph, backend, max(0, int(n)))
-    return _series_from(kernel, name, res["result"], "int32")
+    return _series_from(kernel, name, res["result"], "int32",
+                       backend=res["execution_info"]["actual"])
 
 
 def compat(kernel, n, seed, kind="runif", lo=0.0, hi=1.0, m=None,
@@ -105,7 +109,8 @@ def compat(kernel, n, seed, kind="runif", lo=0.0, hi=1.0, m=None,
     graph = a["optimize"](a["compile"](jobs))
     res = a["evaluate"](graph, "cpu", max(0, int(n)))
     logical = "float64" if kind == "runif" else "int32"
-    return _series_from(kernel, name, res["result"], logical)
+    return _series_from(kernel, name, res["result"], logical,
+                       backend=res["execution_info"]["actual"])
 
 
 def map_round(kernel, series, ndigits=0, name=None):
@@ -122,7 +127,8 @@ def map_round(kernel, series, ndigits=0, name=None):
     valid = bufs.get("m#validity")
     return Series(kernel, name or series.name, bufs["m"], "float64",
                   validity=None if valid is None else np.ascontiguousarray(
-                      np.asarray(valid, dtype=bool)))
+                      np.asarray(valid, dtype=bool)),
+                  backend="cpu")
 
 
 def unique(kernel, series, name=None):
@@ -145,9 +151,9 @@ def unique(kernel, series, name=None):
     uniq = bufs["u"]
     logical = series.dtype if series.dtype in ("int32", "int64") else (
         "int32" if uniq.dtype == np.dtype(np.int32) else "int64")
-    return {"uniq": Series(kernel, tag, uniq, logical),
+    return {"uniq": Series(kernel, tag, uniq, logical, backend="cpu"),
             "inv": Series(kernel, (name + "#inv" if name else series.name + "#inv"),
-                          bufs["u#inv"], "int32"),
+                          bufs["u#inv"], "int32", backend="cpu"),
             "ng": int(bufs["u#ng"])}
 
 
@@ -260,6 +266,6 @@ def lookup(kernel, build, probe, name=None):
     tag = name or probe.name
     return {"positions": Series(kernel, tag,
                                 np.ascontiguousarray(pos.astype(np.int32)),
-                                "int32"),
-            "hit": Series(kernel, tag + "#hit", hit, "bool"),
+                                "int32", backend="cpu"),
+            "hit": Series(kernel, tag + "#hit", hit, "bool", backend="cpu"),
             "k": k}
