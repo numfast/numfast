@@ -1,0 +1,91 @@
+NumFast
+Copyright (c) 2026 NumFast
+
+This product is licensed under the GNU Affero General Public License v3.0 only.
+The full licence text is in the file LICENSE at the root of this repository, and
+is reproduced in every distributed wheel under
+`numfast-<version>.dist-info/licenses/`.
+
+--------------------------------------------------------------------------
+THIRD-PARTY LICENCES
+--------------------------------------------------------------------------
+
+NumFast links to, imports, or is distributed alongside the components listed
+below. Each remains under its own licence, granted by its own copyright
+holder. None of them is relicensed by the AGPL-3.0-only terms that cover
+NumFast, and none of them imposes a condition that conflicts with those terms
+(AGPL-3.0 section 1 "System Libraries" / "Standard Interfaces", section 7).
+
+Python runtime and optional dependencies
+---------------------------------------
+  Component   Version used   SPDX licence            Where to read the text
+  ---------   ------------   ---------------------   ----------------------
+  numpy       2.5.1          BSD-3-Clause AND        ships with the package:
+                            0BSD AND MIT AND        numpy-2.5.3.dist-info/
+                            Zlib AND CC0-1.0        licenses/LICENSE.txt
+                                                   https://github.com/numpy/numpy
+  pandas      3.0.3          BSD-3-Clause            ships with the package:
+                                                   pandas-3.0.3.dist-info/
+                                                   licenses/LICENSE
+                                                   https://github.com/pandas-dev/pandas
+  pyarrow     25.0.1         Apache-2.0              ships with the package:
+                                                   pyarrow-25.0.1.dist-info/
+                                                   licenses/LICENSE
+                                                   https://github.com/apache/arrow
+  wgpu        0.31.1         BSD-2-Clause            ships with the package:
+                            (wgpu-py)               wgpu-0.31.1.dist-info/
+                                                   licenses/LICENSE
+                                                   https://github.com/pygfx/wgpu-py
+                            Copyright (c) 2019-2023
+                            Almar Klein, Korijn van
+                            Golen
+  psutil      7.2.2          BSD-3-Clause            ships with the package:
+                                                   psutil-7.2.2.dist-info/LICENSE
+                                                   https://github.com/giampaolo/psutil
+
+  numpy       is a required dependency.
+  pandas      is optional (extra `pandas`).
+  pyarrow     is optional (extra `arrow`).
+  wgpu        is optional (extra `gpu`); required only to execute on the GPU
+              path. Without it the CPU path still runs and the GPU driver
+              module still imports; only GPU execution raises.
+  psutil      is optional; used only to read process RSS and available system
+              memory. Every call site is guarded and falls back when it is
+              absent.
+
+Build-time only, not distributed in the wheel
+---------------------------------------------
+  Component   Version used   SPDX licence            Where to read the text
+  ---------   ------------   ---------------------   ----------------------
+  pytest      9.1.1          MIT                     extra `test`, not shipped
+  setuptools  >=61           MIT                     PEP 517 build backend,
+                                                   not imported at run time
+  pip         26.2.1         MIT                     installer only
+
+Native code
+-----------
+  The Rust crate `numfast-native` (this repository, `numfast-native/`) has NO
+  third-party dependencies. `numfast-native/Cargo.lock` contains exactly one
+  package, `numfast-native`. There is therefore no Rust licence exposure to
+  attribute. The crate itself is AGPL-3.0-only, as declared in its
+  `Cargo.toml`.
+
+  The crate is loaded at run time through `ctypes` from
+  `numfast/_native/numfast_native.dll` (or `.so`). No Rust or C source from
+  any third party is vendored into this repository or into the wheel.
+
+--------------------------------------------------------------------------
+NO THIRD-PARTY SOURCE IS VENDORED
+--------------------------------------------------------------------------
+
+Every `.py`, `.rs` and `.wgsl` file in this repository carries a 2026 NumFast
+copyright line. No third-party source tree is bundled here.
+
+--------------------------------------------------------------------------
+A SEPARATE COMMERCIAL LICENCE
+--------------------------------------------------------------------------
+
+A proprietary commercial licence covering this same source is planned and is
+NOT YET FINALISED; no commercial terms are published in this repository. Until
+it is issued, the only grant available is the AGPL-3.0-only grant in LICENSE.
+See COMMERCIAL-LICENCE.md.
