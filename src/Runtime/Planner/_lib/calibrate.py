@@ -51,9 +51,14 @@ TRANSFER_H2D_FIT_MAX_BYTES = 100 << 20  # H2D superlinear at 1GB (measured):
 
 
 def _fork_root():
-    # .../src/Runtime/Planner/_lib/calibrate.py -> parents[4] == fork root.
+    # The fork root is the nearest ancestor holding full.toml. It sits at
+    # parents[4] in the checkout (src/Runtime/Planner/_lib/) but at parents[3]
+    # in the wheel, where this file is vendored to numfast/_ext/Planner/_lib/.
+    # A fixed index is right at one vendoring depth and wrong at the other, and
+    # there the miss is silent: load_profile() returns None and the Planner
+    # routes on stub costs. Walk the ancestors instead -- correct at any depth.
     here = Path(__file__).resolve()
-    for p in [here.parents[4], Path.cwd()]:
+    for p in (*here.parents, Path.cwd()):
         try:
             if (p / "full.toml").exists():
                 return p
