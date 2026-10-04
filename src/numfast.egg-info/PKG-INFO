@@ -25,25 +25,86 @@ Dynamic: license-file
 
 # Copyright (c) 2026 NumFast
 # SPDX-License-Identifier: AGPL-3.0-only
-# numfast wheel — packaging notes
+# numfast distribution — what ships, and what a user gets
 
-`pip install dist/numfast-*.whl` gives a self-contained `import numfast`:
+`pip install numfast` gives a self-contained `import numfast`:
 
 - Engine Extension sources are vendored into the wheel (`numfast/_ext/*`)
-  verbatim at build time by `setup.py`; the repo tree stays clean.
-- The Rust DLL ships as `numfast/_native/numfast_native.dll` and resolves
-  via package-relative path (`NUMFAST_NATIVE_DLL` env overrides,
-  `NUMFAST_NATIVE_DISABLE=1` forces the NumPy fallback).
+  verbatim at build time by `setup.py`; the repo tree stays clean. A
+  `[[extensions]]` entry in `full.toml` whose directory is missing is a **hard
+  build error** — silently skipping it is how the old `0.2.1` wheel shipped
+  18 of 29 Extensions.
 - The wheel builder (`src/numfast/_builder/`) is a fresh minimal
   implementation: no import from the dev-tree `app-builder-ponytail`,
   no hardcoded filesystem roots.
 - Optional deps: `pip install numfast[pandas]`, `numfast[arrow]`.
   Without pyarrow the CPU path keeps working (NumPy fallback).
 
-Boundary checks after install:
+## Two wheels, one version
+
+The Rust binary is Windows-only today. A wheel that carries a `.dll` and is
+tagged `py3-none-any` installs on Linux and macOS and then cannot load its own
+native path, so the release is **two wheels at the same version**:
+
+| Artefact | Tag | Carries the DLL | Who gets it |
+|---|---|---|---|
+| `numfast-0.2.1-py3-none-win_amd64.whl` | `py3-none-win_amd64` | yes | Windows x86-64: full engine, native path live |
+| `numfast-0.2.1-py3-none-any.whl` | `py3-none-any` | **no** | Linux, macOS: full engine, native path absent |
+| `numfast-0.2.1.tar.gz` | sdist | source only | anyone building from source |
+
+`Root-Is-Purelib` is `true` in both. Nothing here is a CPython extension
+module — the `.dll` is loaded through `ctypes` — so the implementation tag
+stays `py3` and neither wheel is pinned to one interpreter.
+
+**What a Linux/macOS user of `py3-none-any` gets:** the complete engine, all 29
+Extensions, the calibration profile, and the NumPy CPU path. The native path
+does not exist: `numfast/_native/` is absent, `native_info()` reports
+`{'disabled': False, 'dll': None, 'dll_exists': False}`, and every Rust-backed
+call falls back to NumPy. It is degraded, not broken, and the reason is
+visible in `native_info()` — not a `.dll` that fails to load at run time.
+
+The native path can be forced off explicitly with `NUMFAST_NATIVE_DISABLE=1`, and
+overridden with `NUMFAST_NATIVE_DLL` when a locally built binary exists.
+
+## Building
+
+```bash
+python -m build                      # sdist, then wheel from the sdist
+NUMFAST_WHEEL_NATIVE=0 python -m build   # the py3-none-any wheel
+```
+
+`python -m build` builds the wheel **from the sdist**, so an incomplete
+`MANIFEST.in` fails the build instead of producing a quietly broken artefact.
+
+The flavour follows the contents of `src/numfast/_native/`: a binary present
+gives the platform-tagged wheel, nothing present gives `py3-none-any`.
+`NUMFAST_WHEEL_NATIVE=0` / `=1` override it. The tag comes from the build host
+and is cross-checked against the binary's suffix, so a `.dll` cannot be packed
+into a wheel tagged for another platform.
+
+## Licence and Corresponding Source
+
+AGPL-3.0-only. `LICENSE` and `NOTICE` reach `dist-info/licenses/`; `METADATA`
+carries `License-Expression: AGPL-3.0-only`.
+
+The wheel conveys `numfast_native.dll` — object code — so AGPL-3.0 section 6
+requires the Corresponding Source to travel with it. It does:
+`numfast/_corresp_src/numfast-native/` carries the crate's 47 `.rs` files,
+`Cargo.toml`, `Cargo.lock`, the project-local `.cargo/config.toml`, the linker
+shim it names, and a build-time `SHA256SUMS`. The sdist carries the same source
+at its root. **The written-offer route is deliberately not used** — reasoning in
+`CORRESPONDING-SOURCE.md`.
+
+Version: one number for the whole project, owned by `pyproject.toml`
+`[project].version`. `numfast-native/Cargo.toml` and
+`numfast-native/ts/package.json` mirror it, and the JS build refuses to run when
+`package.json` disagrees.
+
+## Boundary checks after install
 
 ```bash
 python -I -c "import numfast as nf; s = nf.from_numpy([1,2,3]); print(nf.to_numpy(s * 2))"
 python -I -c "import numfast as nf; print(nf.native_info())"
-NUMFAST_NATIVE_DISABLE=1 python -I -c "import numfast as nf; print(nf.to_numpy(nf.from_numpy([1.5,2.5]).reduce('sum')))"
+python -I -c "import numfast as nf; print(nf.from_numpy([1.5,2.5]).reduce('sum'))"
+NUMFAST_NATIVE_DISABLE=1 python -I -c "import numfast as nf; print(nf.to_numpy(nf.from_numpy([1,2,3]) * 2))"
 ```

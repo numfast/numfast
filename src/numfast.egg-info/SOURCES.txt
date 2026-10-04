@@ -305,6 +305,7 @@ tests/fast/test_ops_text_encode.py
 tests/fast/test_ops_text_primitives.py
 tests/fast/test_packaging_adapters.py
 tests/fast/test_planner_auto_v1.py
+tests/fast/test_release_blockers.py
 tests/fast/test_rng_gate.py
 tests/fast/test_slice_sort_rolling.py
 tests/heavy/.gitkeep
