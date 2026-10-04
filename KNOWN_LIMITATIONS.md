@@ -106,11 +106,11 @@ reads the validity sidecar and is correct.
 **Consequence for you.** If a column can hold NULL, compare with
 `to_pandas()` or read `Series.validity` — never with `to_numpy()`.
 
-## 7. Arithmetic on a text column computes on dictionary codes — **PROVEN, and it is the worst entry here**
+## 7. Arithmetic on a text column computed on dictionary codes — **FIXED 2026-10-04; kept here because the before-state is the evidence**
 
-**MEASURED** 2026-10-04. Column `k` = `["b","a","c"]` (text), column `v` =
-`[1.0, 2.0, 3.0]`. **No guard fires on any of these**, and the answer is a
-correct-shaped wrong number:
+**MEASURED 2026-10-04, before the fix.** Column `k` = `["b","a","c"]` (text),
+column `v` = `[1.0, 2.0, 3.0]`. **No guard fired on any of these**, and the
+answer was a correct-shaped wrong number:
 
 | Op | Spelled | Result | What it actually did |
 |---|---|---|---|
@@ -121,19 +121,28 @@ correct-shaped wrong number:
 | `%` | `q.c('k') % q.c('v')` | `[0.0, 0.0, 2.0]` | dictionary codes mod values |
 | `**` | `q.c('k') ** q.c('v')` | raises | blocked by an unrelated driver guard ("array exponent"), **not** by a text guard |
 
-Five of the six arithmetic operators are unguarded on text; `pow` is blocked for
-a different reason and would need its own check. Note that `==`/`!=` **are**
+Five of the six arithmetic operators were unguarded on text; `pow` was blocked
+for a different reason and needed its own check. Six of six are now guarded —
+measured 6 of 6 on the `["b","a","c"] + [1,2,3]` fixture, the codes being
+`[1, 0, 2]` because the sidecar is sorted. Note that `==`/`!=` were already
 guarded against text misuse, and so are `<`/`<=`/`>`/`>=` (refused: ordering on
-text needs a collation the engine does not define). The arithmetic operators
-were simply missed.
+text needs a collation the engine does not define).
 
-**Consequence for you.** Do not do arithmetic on a text column. It returns
-plausible numbers, not an error. If you got here by accident, the tell is that
-the result contains only small integers.
+**FIXED 2026-10-04.** `Chain._refuse_text_bin`
+(`src/Semantic/TableExpr/_lib/chain.py`) refuses the whole `bin` family when
+either operand is a TEXT column, **before any node is emitted**, naming the
+column, the side it was on, and the cause: a text column is a
+`dictionary_encode` code vector in the DAG and those codes are **ranks, not
+values**. All six now raise `ValueError` in the engine's own error shape;
+`tests/fast/test_release_blockers.py::test_3_arithmetic_on_text_refuses_loudly`
+and `::test_3_text_column_against_a_numeric_column_refuses` pin it.
 
-**Not fixed here.** Fixing it means adding text guards to the arithmetic
-lowering path, which is production code outside the scope of the publication
-gate. Recorded, not fixed.
+**Consequence for you.** Arithmetic on a text column is no longer possible by
+accident. The honest route is to measure the text first: `q.c('k').str_len()`
+returns an int32 code-point **count**, and arithmetic on a count is defined —
+`q.c('k').str_len() + 1` means what it says and matches `df['k'].str.len() + 1`
+exactly. `ir_map` has no text mode: it is one numeric buffer plus a scalar, so
+there is no lowering that would have been correct.
 
 ## 8. `group` silently drops a key whose measure is entirely NULL — **PROVEN, and it is silent**
 

@@ -163,15 +163,59 @@ UNKNOWN** and carries a reproduction. The short version:
 | Absent | `join`, `replace` — no consumer-facing spelling |
 | Absent | `fill_null` — not chunkable over the current layout |
 | Refused | `group` on a NULL key — a NULL group is *absent*, not wrong, and cannot be told apart from an answer |
-| Silent | arithmetic on a **text** column computes on dictionary codes, with no guard (5 of 6 operators) |
+| Refused | arithmetic on a **text** column — it computed on dictionary codes (ranks, not values); all six operators now refuse, and `str_len()` is the honest route |
 | Silent | `group` drops a key whose measure is entirely NULL |
 | Mismatch | `to_numpy()` reads an integer NULL as `0`; use `to_pandas()` |
 | Driver | GPU sort needs a power-of-two valid-row count, and refuses `int64`/`float64` keys |
 
-Two of those — text arithmetic and the all-NULL measure — return
-correct-shaped wrong numbers with no exception. They are documented, not fixed;
-fixing them means changing the arithmetic and grouping paths, which is outside
-what this repository is currently allowed to change.
+One of those — the all-NULL measure — still returns a correct-shaped wrong
+answer with no exception. It is documented, not fixed; fixing it means changing
+the grouping path, which is outside what this repository is currently allowed to
+change.
+
+---
+
+## Known architectural limits
+
+Two facts about the architecture, stated as **measurements**, not as apologies.
+Source: **[`develop/audit_foundation/ORIGIN_PIPELINE_BENCH.md`](../develop/audit_foundation/ORIGIN_PIPELINE_BENCH.md)**
+— origin pipeline benchmark, engine `4fc9914`, RTX 2060 / Xeon E5-2698 v4,
+median of 31, cycles from `QueryThreadCycleTime`.
+
+### There are no cheap strided or windowed views
+
+A window of width *W* is **not a view**. The only window composition the
+expression language offers is *W* × `shift`, and each `shift` writes a
+**full-length buffer**: at *n* = 1 048 576, *W* = 64 that is **64 buffers,
+512 MiB**, followed by a second full materialisation of the (M, W) matrix
+(another 512 MiB) — **2.00× the memory of the answer numpy gives for one
+512 MiB copy.** numpy's `sliding_window_view` is a **view**: 64 680 cycles at
+*n* = 1 048 576, *W* = 64, flat in both *n* and *W* — ~0.06 cycles/row, **zero
+bytes written**. The gap is not the kernels; the kernels are within **1.76×** of
+numpy on the same pipeline. **MATERIALISATION is 69.6 %–89 % of what the user
+pays.**
+
+### There is no resident GPU execution
+
+`gpu_execute` is a **batch execute with per-node readback**: an 8-node graph
+returned **9 host buffers** for a 0.2 MiB input — **11× byte amplification,
+zero residency**. The resident primitives (`r_upload`, `r_alloc`, `r_gather`,
+`r_download`) exist and are not what `gpu_execute` uses. Through the consumer
+surface the GPU is unreachable at all: `Chain.compile()` is hardwired to
+`cpu_execute` and `Chain.explain()` prints `backend=n/a`.
+
+The one regime where the GPU reaches parity is **regime B**: the index built
+**once**, kept resident, and **never shuffled** — 0.915× prep/consume at
+*n* = 1 048 576, and **1.0×–1.5×** elsewhere. Add the per-epoch shuffle every
+training loop actually does and the same index costs **13.2×** prep/consume;
+build it per batch (regime A) and it is **158–168×**. The index buffer is also
+**64× the data it indexes** — at *W* = 64, 4 B per window element, exactly as
+large as the f32 window it produces — and the first epoch pays **319 ms** before
+a single row is consumed.
+
+So: **the GPU is at parity in a resident-index regime and loses once a shuffle
+is required.** Both limits are properties of the buffer layout and the executor
+boundary, not of the compute kernels.
 
 ---
 
