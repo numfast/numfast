@@ -152,21 +152,31 @@ repository — an origin-pipeline benchmark, engine `4fc9914`, RTX 2060 over Vul
 **That document is not in this repository and is not published here.** The
 numbers are reproduced below because they describe a path that still exists.
 
-> **Provenance correction, verified 2026-10-05 at `597d2ec`.** The audit states it
+> **Provenance correction, verified 2026-10-05 at `879fb0b`.** The audit states it
 > verified `git diff --name-only 4fc9914..1a3caa4 -- src/` returns 0 files, so
 > that "every number below was measured against a byte-identical Python engine".
 > That check was true when written and is **false now**:
-> `git diff --name-only 4fc9914..597d2ec -- src/` returns **13 files** — eight
-> engine sources (`Compute/Fused/_lib/fused.py`,
-> `Drivers/CPU/_lib/native_cpu.py`, `Relational/Join/_lib/native{,_i64}.py`,
-> `Runtime/Planner/_lib/calibrate.py`, `Semantic/TableExpr/_lib/{chain,expr,plan}.py`)
-> and five generated packaging-metadata files under `src/numfast.egg-info/`.
-> Those changes are fork-root path resolution and facade node lowering; none of
-> them touch the window-composition or GPU-execution path these two limits
-> describe, so the measurements below remain the best available account of that
-> path. But they were taken against `4fc9914`, not against this tree, and this
-> file should not imply otherwise. The audit record itself is unchanged and is
-> reported, not rewritten.
+> `git diff --name-only 4fc9914..879fb0b -- src/` returns **17 files**, of which
+> twelve exist in both commits:
+>
+> * eight engine sources — `Compute/Fused/_lib/fused.py`,
+>   `Drivers/CPU/_lib/native_cpu.py`, `Relational/Join/_lib/native{,_i64}.py`,
+>   `Runtime/Planner/_lib/calibrate.py`,
+>   `Semantic/TableExpr/_lib/{chain,expr,plan}.py`. Those changes are fork-root
+>   path resolution and facade node lowering.
+> * four changed in documentation only by this repository's publication pass —
+>   `Relational/README.md` and
+>   `Relational/Segmented/_lib/{adjacency,cost,segmented}.py`. Their executable
+>   ASTs are identical before and after, verified by parsing both revisions.
+>
+> The other five are `src/numfast.egg-info/*`: generated packaging metadata that
+> existed at `4fc9914` and is no longer tracked.
+>
+> None of the eight executable changes touch the window-composition or
+> GPU-execution path these two limits describe, so the measurements below remain
+> the best available account of that path. But they were taken against
+> `4fc9914`, not against this tree, and this file should not imply otherwise. The
+> audit record itself is unchanged and is reported, not rewritten.
 
 ### There are no cheap strided or windowed views
 

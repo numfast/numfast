@@ -346,16 +346,25 @@ they are reproduced with their provenance correction in
 **Provenance correction, stated because it matters.** That audit recorded that it
 had verified `git diff --name-only 4fc9914..1a3caa4 -- src/` returns zero files,
 so that every number was measured against a byte-identical Python engine. That
-check was true when written and is **false now**: at `597d2ec`,
-`git diff --name-only 4fc9914..597d2ec -- src/` returns **13 files** — eight
-engine sources (`Compute/Fused/_lib/fused.py`, `Drivers/CPU/_lib/native_cpu.py`,
-`Relational/Join/_lib/native{,_i64}.py`, `Runtime/Planner/_lib/calibrate.py`,
-`Semantic/TableExpr/_lib/{chain,expr,plan}.py`) and five generated packaging
-metadata files under `src/numfast.egg-info/`. None of them touch the
-window-composition or GPU-execution path these two limits describe, so the
-measurements remain the best available account of that path — but they were taken
-against `4fc9914`, not against this tree. The audit record itself is unchanged and
-is reported, not rewritten.
+check was true when written and is **false now**: at `879fb0b`,
+`git diff --name-only 4fc9914..879fb0b -- src/` returns **17 files**. Twelve of
+them exist in both commits:
+
+* eight engine sources — `Compute/Fused/_lib/fused.py`,
+  `Drivers/CPU/_lib/native_cpu.py`, `Relational/Join/_lib/native{,_i64}.py`,
+  `Runtime/Planner/_lib/calibrate.py`, `Semantic/TableExpr/_lib/{chain,expr,plan}.py`;
+* four changed **only in documentation** by this repository's publication pass —
+  `Relational/README.md` and `Relational/Segmented/_lib/{adjacency,cost,segmented}.py`,
+  whose executable ASTs are byte-identical before and after.
+
+The remaining five are `src/numfast.egg-info/*`, which existed at `4fc9914`,
+are generated packaging metadata, and are no longer tracked.
+
+None of the eight executable changes touch the window-composition or
+GPU-execution path these two limits describe, so the measurements remain the best
+available account of that path — but they were taken against `4fc9914`, not
+against this tree. The audit record itself is unchanged and is reported, not
+rewritten.
 
 ---
 
