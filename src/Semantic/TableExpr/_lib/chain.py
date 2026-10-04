@@ -70,6 +70,21 @@ from _lib.expr import Expr, _CMP_TO_NODE, column_name, expr_key, ref
 
 _NUMERIC_LOGICAL = ("int32", "int64", "float32", "float64", "bool")
 
+# A scalar operand ir_map / ir_compare can actually carry. `bool` is a
+# subclass of `int`, so it is deliberately IN: pandas defines `True + 1`, and
+# refusing it would be a refusal of something the oracle answers.
+_NUMERIC_SCALARS = (bool, int, float)
+
+# The two MAP_FN entries whose operands commute. `sub`, `truediv`, `floor_div`,
+# `mod` and `pow` answer a DIFFERENT question if the two are swapped, so a
+# scalar on the LEFT of one of those has no lowering at all.
+_COMMUTATIVE_BIN = ("add", "mul")
+
+# Every comparison has an exact mirror, so a scalar on the LEFT of a `cmp` is
+# normalised by flipping rather than refused: `2 < c('v')` IS `c('v') > 2`.
+_CMP_MIRROR = {"lt": "gt", "gt": "lt", "le": "ge", "ge": "le",
+               "eq": "eq", "ne": "ne"}
+
 
 class Col:
     """One column of the chain: DAG node, or host values, or both."""
@@ -181,7 +196,7 @@ class Chain:
     """Lazy query chain over one IR node per column."""
 
     def __init__(self, kernel, cols, nrows, jobs=None, pending=None, seq=0,
-                 bufs=None, memo=None, space=0):
+                 bufs=None, memo=None, space=0, emitted=None):
         self._kernel = kernel
         self._cols = dict(cols)
         self._order = list(self._cols)
@@ -195,6 +210,10 @@ class Chain:
         # count. It is part of the memo key, so the cache is valid inside one
         # row space and unreachable in the next one.
         self._space = int(space)
+        # node identity -> node name, for every node this chain has emitted.
+        # NOT the row-space epoch's job: this is about the Planner's CSE, which
+        # sees IR nodes and not expressions. See `_emit`.
+        self._emitted = dict(emitted or {})
 
     # -- construction ---------------------------------------------------
     @classmethod
@@ -216,7 +235,38 @@ class Chain:
         return f"{tag}_{self._seq}"
 
     def _emit(self, op, out, *args, **kw):
-        self._jobs.append(plan.node(op, out, *args, **kw))
+        """Append one node to jobs[] and return the name that survived.
+
+        RETURNS THE EFFECTIVE `out`, which is not always the one passed in: the
+        Planner's CSE merges nodes with equal (kernel_id, inputs, params) and
+        REWRITES the duplicate's `out` to the earlier node's name, so a graph
+        with two such nodes has no buffer under the second name and `compile()`
+        raises (`_buffer`). Every caller must use the returned name.
+
+        This is NOT the row-space epoch's job, and it is a DIFFERENT root cause
+        from it. The epoch (deviation 4) stops the EXPRESSION MEMO from handing
+        back a node bound in a different row space; this stops the facade from
+        emitting two IR nodes that are the same node. The memo cannot do it: it
+        keys on expression structure, which is strictly finer than node
+        identity, and returning one node for one expression is exactly what
+        makes two chain columns SHARE a node -- at which point `filter`, `sort`
+        and `limit`, which each emit one node per column, emit the shared node
+        twice. `ir_text_*` walks into the same room from the other side: it
+        carries its decoded `values` as a param and takes no input node, so two
+        text columns with equal values build identical nodes.
+
+        Reusing an identical node is value-preserving by the Planner's own
+        definition of identity, and it needs no new node, no new op and no
+        FROZEN change. `plan.node_identity` carries the argument, including
+        which direction it is allowed to be wrong in.
+        """
+        job = plan.node(op, out, *args, **kw)
+        ident = plan.node_identity(job)
+        prior = self._emitted.get(ident)
+        if prior is not None:
+            return prior
+        self._jobs.append(job)
+        self._emitted[ident] = out
         self._bufs = None
         return out
 
@@ -233,7 +283,8 @@ class Chain:
         """
         return Chain(self._kernel, cols, self._n if nrows is None else nrows,
                      self._jobs, pending, self._seq, self._bufs, self._memo,
-                     self._space + 1 if new_space else self._space)
+                     self._space + 1 if new_space else self._space,
+                     self._emitted)
 
     def _col(self, name, op="query"):
         col = self._cols.get(name)
@@ -307,9 +358,9 @@ class Chain:
         codes = np.ascontiguousarray(np.asarray(enc["codes"], dtype=np.int32))
         enc_valid = plan.as_validity(enc["validity"])
         if enc_valid is None:
-            self._emit("series", out, codes, "int32")
+            out = self._emit("series", out, codes, "int32")
         else:
-            self._emit("series", out, codes, "int32", enc_valid)
+            out = self._emit("series", out, codes, "int32", enc_valid)
         col.node = out
         col.sidecar = list(enc["values"])
         col.values = None
@@ -325,9 +376,9 @@ class Chain:
         out = self._next(f"s_{col.name}")
         values = np.ascontiguousarray(np.asarray(col.values))
         if col.validity is None:
-            self._emit("series", out, values, col.dtype)
+            out = self._emit("series", out, values, col.dtype)
         else:
-            self._emit("series", out, values, col.dtype, col.validity)
+            out = self._emit("series", out, values, col.dtype, col.validity)
         col.node = out
         return out
 
@@ -497,6 +548,164 @@ class Chain:
             "honest INTEGER-division spelling: floor_div is in the driver's op "
             "list (cpu.py:3116) but not in v0.")
 
+    # -- the const / scalar-operand normalisation --------------------------
+    @staticmethod
+    def _const_operand(value):
+        """`expr.const(v)` -> v. Anything else is returned unchanged.
+
+        `expr.const` is the facade's own representation of a scalar constant
+        and it is NOT a DAG node -- it was never one. `_bind_new` used to send
+        every Expr down the node path, so `c('v') - const(1.0)` reached
+        `ir_map(out, node, 'sub', Expr(const 1.0))`: through the facade's own
+        Expr class the node bind refused first with a message about PREDICATES
+        (naming the wrong cause), and through any other Expr class the object
+        went straight into the C driver, which answered
+        `TypeError: int() argument must be a string, a bytes-like object or a
+        real number, not 'Expr'`. Either way the constant did not lower.
+        """
+        if isinstance(value, Expr) and value.kind == "const":
+            return value.arg
+        return value
+
+    @staticmethod
+    def _is_literal(value):
+        """True when the operand is a scalar LITERAL, not an expression."""
+        return not isinstance(value, Expr)
+
+    def _refuse_non_numeric(self, value, node_op, side, op, colname):
+        """A scalar operand that is not a number.
+
+        `ir_map` decides between "a scalar value" and "a second input buffer"
+        with `isinstance(value, str)` (src/Semantic/IR/_lib/nodes.py:79), so a
+        str operand is read as a buffer NAME to look up and the driver answers
+        `KeyError: 'a'` -- an exception that names the literal and nothing
+        else. `None` and a list reach it as an array/None and come back a numpy
+        TypeError or a broadcast ValueError. pandas says the whole thing in one
+        line: `str` + `int` is not defined. Same shape as `_cmp_guard`, which
+        already owns the same trap on `ir_compare`.
+        """
+        which = f" on column {colname!r}" if colname else ""
+        raise plan.fail(
+            op,
+            f"{node_op} with the {side} operand {value!r}{which} is refused: "
+            "ir_map / ir_compare carry a NUMBER in their scalar operand, and a "
+            "non-numeric one does not stop at the facade. A str is read by "
+            "ir_map as the name of a second input buffer "
+            "(src/Semantic/IR/_lib/nodes.py:79) and reaches the driver as a "
+            "buffer lookup keyed by the literal itself; None and a list reach "
+            "it as an array and come back a numpy TypeError or a broadcast "
+            "ValueError. pandas refuses here too: there is no defined result.",
+            "arithmetic and comparison take a number: "
+            "q.c('price') > 0, q.c('price') * 2")
+
+    def _refuse_text_bin(self, left, right, node_op, op):
+        """The WHOLE `bin` family on a TEXT column -- six operators, one cause.
+
+        `_codes_node` turns a TEXT column into `dictionary_encode` codes, and
+        those codes are RANKS, not values. Measured on `['b','a','c']`: the
+        sidecar is `['a','b','c']` and the codes are `[1, 0, 2]`, so
+        `c('p') + 1` answered `[2, 1, 3]`, `* 2` answered `[2, 0, 4]`, and
+        `/ 2`, `% 2`, `** 2` each answered a third set of plausible wrong
+        numbers -- six operators, zero guards, no exception. `ir_map` has no
+        text mode: it is one numeric buffer plus a scalar.
+
+        `cumsum`, `shift`, `group` and `reduce` already refuse a text column
+        for exactly this reason (the scan guard above, and the group/reduce
+        type guards). `bin` was the one that did not.
+
+        Refused BEFORE any node is emitted, so jobs[] is untouched.
+        """
+        for side, operand in (("left", left), ("right", right)):
+            if self._dtype_of(operand, op) != "text":
+                continue
+            colname = operand.name if isinstance(operand, Expr) else operand
+            raise plan.fail(
+                op,
+                f"{node_op} on TEXT column {colname!r} (the {side} operand) is "
+                "refused: a text column is a dictionary_encode CODE vector in "
+                "the DAG, and those codes are RANKS, not values. Measured on "
+                "['b','a','c']: the sidecar is ['a','b','c'] and the codes are "
+                "[1, 0, 2], so arithmetic on them returns plausible wrong "
+                "numbers with no error, where pandas raises TypeError. "
+                "ir_map has no text mode -- it is one numeric buffer plus a "
+                "scalar.",
+                "measure the text first: q.c('p').str_len() is an int32 "
+                "code-point count, and arithmetic on THAT is defined -- "
+                "q.c('p').str_len() + 1 means what it says")
+
+    def _bin_operands(self, fn, left, right, op):
+        """`bin` operands -> (buffer Expr on the left, node-or-scalar right).
+
+        `ir_map(out, inp, fn, value)` has ONE slot for the buffer and ONE for
+        the scalar, in that order, so where the scalar sits is part of the
+        question:
+
+        * scalar on the RIGHT: already representable, nothing to do;
+        * scalar on the LEFT: representable only where the two commute. `add`
+          and `mul` do, so they are swapped -- `1 + c('v')` is `c('v') + 1`,
+          the same numbers. `sub`, `truediv`, `mod` and `pow` do NOT (`10 - 2`
+          is 8, `2 - 10` is -8), so those refuse and say why, rather than
+          silently answering the other question.
+        """
+        if self._is_literal(left):
+            if isinstance(left, str) or not isinstance(left, _NUMERIC_SCALARS):
+                self._refuse_non_numeric(left, plan.MAP_FN[fn], "left", op, None)
+            if fn not in _COMMUTATIVE_BIN:
+                raise plan.fail(
+                    op,
+                    f"{fn} with the scalar {left!r} on the LEFT has no "
+                    f"lowering: ir_map(out, inp, {plan.MAP_FN[fn]!r}, value) "
+                    "takes one buffer and one scalar in that order, and only "
+                    "add and mul commute -- for the rest, swapping the "
+                    "operands answers a DIFFERENT question (10 - 2 is 8 and "
+                    "2 - 10 is -8; 10 % 2 is 0 and 2 % 10 is 2).",
+                    f"put the column on the left, where the primitive is "
+                    f"defined: q.c('v') - 2")
+            if self._is_literal(right):
+                raise plan.fail(
+                    op,
+                    f"{fn} between two literals ({left!r} and {right!r}) has "
+                    "no column to compute over, and evaluating it in Python "
+                    "would make a derived column's dtype depend on which "
+                    "expression happened to consume it.",
+                    "derive from a column: q.c('v') + 2")
+            left, right = right, left
+        if self._is_literal(right) and (
+                isinstance(right, str)
+                or not isinstance(right, _NUMERIC_SCALARS)):
+            colname = left.name if isinstance(left, Expr) else repr(left)
+            self._refuse_non_numeric(right, plan.MAP_FN[fn], "right", op, colname)
+        return left, right
+
+    def _cmp_operands(self, cmp_op, left, right, op):
+        """`cmp` operands -> (buffer Expr on the left, node-or-scalar right).
+
+        A scalar on the LEFT is mirrored rather than refused: every comparison
+        has an exact mirror (`2 < c('v')` IS `c('v') > 2`), so the operand
+        order is normalised and the existing right-hand path owns the rest. A
+        str on the right is NOT touched here -- `_cmp_guard` owns it, because
+        text `==` a string scalar is the one lowering that does exist.
+        """
+        if self._is_literal(left):
+            if isinstance(left, str) or not isinstance(left, _NUMERIC_SCALARS):
+                self._refuse_non_numeric(left, _CMP_TO_NODE[cmp_op], "left", op,
+                                         None)
+            if self._is_literal(right):
+                raise plan.fail(
+                    op,
+                    f"{_CMP_TO_NODE[cmp_op]} between two literals ({left!r} "
+                    f"and {right!r}) has no column to compare, and evaluating "
+                    "it in Python would make a predicate depend on which "
+                    "expression happened to consume it.",
+                    "compare a column: q.c('price') > 0")
+            cmp_op, left, right = _CMP_MIRROR[cmp_op], right, left
+        if self._is_literal(right) and not isinstance(right, str) and (
+                not isinstance(right, _NUMERIC_SCALARS)):
+            colname = left.name if isinstance(left, Expr) else repr(left)
+            self._refuse_non_numeric(right, _CMP_TO_NODE[cmp_op], "right", op,
+                                     colname)
+        return cmp_op, left, right
+
     # -- expression binding ---------------------------------------------
     def _bind(self, expr, op="filter"):
         """Expr -> (node name, declared logical dtype or None).
@@ -526,18 +735,25 @@ class Chain:
                     "compare a column: q.c('price') > 0")
             if expr.kind == "bin":
                 fn, left, right = expr.arg
+                left, right = (self._const_operand(left),
+                               self._const_operand(right))
+                left, right = self._bin_operands(fn, left, right, op)
+                # BEFORE any bind: the guards must not even emit the left
+                # operand's own node, so a refusal leaves jobs[] untouched.
+                self._refuse_text_bin(left, right, plan.MAP_FN[fn], op)
                 if fn == "truediv":
-                    # BEFORE any bind: the guard must not even emit the left
-                    # operand's own node, so a refusal leaves jobs[] untouched.
                     self._refuse_int_div(left, op)
                 lnode, _ = self._bind(left, op)
                 target = (self._bind(right, op)[0]
                           if isinstance(right, Expr) else right)
-                out = self._next("m")
-                self._emit("map", out, lnode, plan.MAP_FN[fn], target)
+                out = self._emit("map", self._next("m"), lnode,
+                                 plan.MAP_FN[fn], target)
                 return out, None
             if expr.kind == "cmp":
                 cmp_op, left, right = expr.arg
+                left, right = (self._const_operand(left),
+                               self._const_operand(right))
+                cmp_op, left, right = self._cmp_operands(cmp_op, left, right, op)
                 lowered = self._cmp_guard(cmp_op, left, right, op)
                 if lowered is not None:
                     # text == / != a string scalar: lowered through the LUT,
@@ -546,18 +762,18 @@ class Chain:
                 lnode, _ = self._bind(left, op)
                 target = (self._bind(right, op)[0]
                           if isinstance(right, Expr) else right)
-                out = self._next("cmp")
-                self._emit("compare", out, lnode, target, _CMP_TO_NODE[cmp_op])
+                out = self._emit("compare", self._next("cmp"), lnode, target,
+                                 _CMP_TO_NODE[cmp_op])
                 return out, "bool"
             if expr.kind == "logic":
                 logic_op, a, b = expr.arg
                 anode, _ = self._bind(a, op)
-                out = self._next("mk")
                 if logic_op == "not":
-                    self._emit("mask", out, anode, None, "not")
+                    out = self._emit("mask", self._next("mk"), anode, None,
+                                     "not")
                 else:
-                    self._emit("mask", out, anode, self._bind(b, op)[0],
-                               logic_op)
+                    out = self._emit("mask", self._next("mk"), anode,
+                                     self._bind(b, op)[0], logic_op)
                 return out, "bool"
             if expr.kind == "isin":
                 return self._bind_isin(expr.name, expr.arg), "bool"
@@ -573,9 +789,9 @@ class Chain:
                         f"{col.dtype!r}.",
                         "use q.c('name') arithmetic instead")
                 out = self._next("t")
-                self._emit(plan.TEXT_OP_NODE[text_op], out,
-                           self._text_values(col),
-                           *(() if arg is None else (arg,)))
+                out = self._emit(plan.TEXT_OP_NODE[text_op], out,
+                                 self._text_values(col),
+                                 *(() if arg is None else (arg,)))
                 return out, ("int32" if text_op == "str_len" else "bool")
             if expr.kind == "scan":
                 scan_op, arg = expr.arg[0], expr.arg[1]
@@ -612,10 +828,8 @@ class Chain:
                         f".filter(q.c('y') > 3)")
                 out = self._next("sc")
                 if scan_op == "cumsum":
-                    self._emit("cumsum", out, snode)
-                else:
-                    self._emit("shift", out, snode, arg)
-                return out, sdtype
+                    return self._emit("cumsum", out, snode), sdtype
+                return self._emit("shift", out, snode, arg), sdtype
             raise plan.fail(op, f"unsupported expression {expr!r}.",
                             "use filter(q.c('x') > 0)")
         if isinstance(expr, str):
@@ -737,8 +951,12 @@ class Chain:
                           f"{dtype!r}.", "filter(q.c('price') > 0)")
         cols = {}
         for name, col in self._cols.items():
-            out = self._next(f"f_{name}")
-            self._emit("filter", out, self._need(col), node)
+            # the SAME `_emit` every other node goes through, so two columns
+            # that share a DAG node (the expression memo's whole job) cannot
+            # emit two identical `ir_filter` nodes for the Planner's CSE to
+            # merge -- see `_emit`.
+            out = self._emit("filter", self._next(f"f_{name}"),
+                             self._need(col), node)
             cols[name] = Col(name, col.dtype, out, sidecar=col.sidecar)
         return self._spawn(cols, new_space=True)
 
@@ -775,8 +993,8 @@ class Chain:
                    descending=bool(desc))
         cols = {}
         for name, col in self._cols.items():
-            out = self._next(f"srt_{name}")
-            self._emit("gather", out, self._need(col), perm)
+            out = self._emit("gather", self._next(f"srt_{name}"),
+                             self._need(col), perm)
             cols[name] = Col(name, col.dtype, out, sidecar=col.sidecar)
         return self._spawn(cols, new_space=True)
 
@@ -784,8 +1002,8 @@ class Chain:
         self._branch()
         cols = {}
         for name, col in self._cols.items():
-            out = self._next(f"lim_{name}")
-            self._emit("slice", out, self._need(col), n, offset)
+            out = self._emit("slice", self._next(f"lim_{name}"),
+                             self._need(col), n, offset)
             cols[name] = Col(name, col.dtype, out, sidecar=col.sidecar)
         return self._spawn(cols, new_space=True)
 
@@ -850,16 +1068,15 @@ class Chain:
                 for v in cols_order:
                     carry_cols[v] = values[cols_order.index(v)]
                 ops_arg = {v: tuple(gb_ops[v]) for v in cols_order}
-            gnode = self._next("G")
-            self._emit("groupby_multi", gnode, values, knode, ops_arg,
-                       result="carry")
+            gnode = self._emit("groupby_multi", self._next("G"), values, knode,
+                              ops_arg, result="carry")
             carry = self._buffers()[gnode + "#carry"]
 
         distinct = {}
         for col_name in nuniq:
-            dnode = self._next("nd")
-            self._emit("count_distinct", dnode,
-                       self._need(self._col(col_name, "group")), knode)
+            dnode = self._emit(
+                "count_distinct", self._next("nd"),
+                self._need(self._col(col_name, "group")), knode)
             distinct[col_name] = self._buffers()[dnode]
 
         return self._grouped(kcol, specs, carry, carry_cols, distinct)
@@ -935,7 +1152,6 @@ class Chain:
                 "reduce", f"reduce over TEXT column {target.name!r} has no "
                           "meaning.", "str_len(...) first, then reduce('sum')")
         self._branch()
-        out = self._next("red")
         # skipna=True is the ONE NULL semantics of the v0 aggregates, shared
         # with `group`: NULL values are skipped, as in pandas' default.
         # Measured on the pre-fix tree, without it `reduce('count')` returned
@@ -948,7 +1164,8 @@ class Chain:
         # carries the flag (`nodes.py:210 ir_reduce(..., skipna=False)`,
         # read at `Drivers/CPU/_lib/cpu.py:3849`); the facade was not passing
         # it.
-        self._emit("reduce", out, self._need(target), op, skipna=True)
+        out = self._emit("reduce", self._next("red"), self._need(target), op,
+                         skipna=True)
         value = np.asarray(self._buffers()[out]).reshape(-1)
         return value[0].item() if value.size else None
 

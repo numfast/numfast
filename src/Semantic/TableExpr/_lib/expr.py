@@ -229,6 +229,29 @@ class Expr:
     def __pow__(self, other):
         return self.pow(other)
 
+    def __rpow__(self, other):
+        """REFUSES LOUDLY -- `2 ** c('v')` has no lowering.
+
+        `Expr.__radd__` / `__rsub__` / `__rmul__` / `__rtruediv__` / `__rmod__`
+        exist because a scalar on the LEFT of those builds an `Expr`, and
+        `Chain._bin_operands` then either commutes it (add, mul) or refuses it
+        by name (sub, truediv, mod). `pow` has no such form: `ir_map` is
+        documented scalar-exponent-only (src/Semantic/IR/_lib/nodes.py:72,
+        spec 01) and an ARRAY exponent is rejected at execute, so there is
+        nothing for the facade to build.
+
+        Without this, `2 ** c('v')` raised Python's own
+        `TypeError: unsupported operand type(s) for ** or pow(): 'int' and
+        'Expr'`, which names the user's column as if the column were the
+        problem. This names the limit.
+        """
+        raise ValueError(
+            f"{other!r} ** q.c(...) has no lowering in v0: ir_map('pow') is "
+            "SCALAR-exponent-only (src/Semantic/IR/_lib/nodes.py:72, spec 01) "
+            "and an array exponent is rejected at execute, so a column cannot "
+            "be the exponent. Fix: put the column on the base -- "
+            "q.c('v') ** 2. See DESIGN_consumer_api_v0.md.")
+
     def __eq__(self, other):
         return self.eq(other)
 

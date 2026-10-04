@@ -33,6 +33,7 @@ _cumsum_ok = None  # memoized cumsum entry points (same optional-ABI discipline)
 
 def _probe():
     global _lib, _why, _probe_env, _select_ok, _shift_ok, _map_ok, _cumsum_ok
+    global _rng_ok
     key = (os.environ.get("NUMFAST_NATIVE_DISABLE"),
            os.environ.get("NUMFAST_NATIVE_DLL", _DLL_DEFAULT))
     if key == _probe_env and _why != "unprobed":
@@ -42,6 +43,12 @@ def _probe():
     _shift_ok = None  # DLL identity changed -> re-probe shift entry points
     _map_ok = None  # DLL identity changed -> re-probe map entry points
     _cumsum_ok = None  # DLL identity changed -> re-probe cumsum entry points
+    # argtypes are set on the CDLL OBJECT, so a new CDLL has none. Without
+    # this reset `_rng_ok` stays True and `_req_rng()` hands out the fresh
+    # un-argtyped lib: every RNG call then raises ctypes.ArgumentError
+    # ("int too long to convert"), which the driver's `except RuntimeError`
+    # does not catch. One line, argument-type plumbing, no semantics.
+    _rng_ok = None  # DLL identity changed -> re-probe RNG entry points
     if os.environ.get("NUMFAST_NATIVE_DISABLE") == "1":
         _lib, _why = None, "disabled-by-env"
         return

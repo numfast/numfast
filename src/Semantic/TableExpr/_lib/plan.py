@@ -144,6 +144,68 @@ def node(op, *args, **kw):
     return _resolve("node", op, NODE_ALIAS)(*args, **kw)
 
 
+# --- node identity (the facade's share of the Planner's CSE key) ------------
+
+# Scalars compare by value; a short scalar SEQUENCE compares by value (that is
+# the window in which the Planner's own cheap fingerprint compares one by
+# value); anything else -- arrays, columns, long sequences -- compares by
+# object identity. `_SEQ_VALUE_MAX` is the Planner's, mirrored deliberately and
+# documented as such in `node_identity`; if the Planner ever changes the rule,
+# the direction that fails is the SAFE one (see `node_identity`).
+_SEQ_VALUE_MAX = 64
+
+
+def _identity(v):
+    """Structural identity of ONE param value (see `node_identity`)."""
+    if v is None or isinstance(v, (bool, int, float, str)):
+        return ("s", v)
+    if isinstance(v, dict):
+        return ("d", tuple((k, _identity(v[k])) for k in sorted(v)))
+    if isinstance(v, (list, tuple)):
+        if len(v) <= _SEQ_VALUE_MAX and all(
+                x is None or isinstance(x, (bool, int, float, str))
+                for x in v):
+            return ("seq", tuple(v))
+        return ("ref", id(v))
+    return ("ref", id(v))
+
+
+def node_identity(job):
+    """`job` -> a hashable identity for "these two nodes compute the same thing".
+
+    WHY THE FACADE NEEDS THIS. The Planner's CSE merges nodes with equal
+    (kernel_id, inputs, params-fingerprint) and REWRITES the duplicate's `out`
+    name. A facade that emits two such nodes therefore gets a graph whose second
+    node has no buffer of its own, and `Chain._buffer` raises. The facade's
+    expression memo cannot prevent that: it keys on EXPRESSION structure, which
+    is strictly finer than node identity, and it is designed to return ONE node
+    for one expression -- so two columns end up SHARING a node, and every op
+    that emits one node per column (filter / sort / limit) emits the shared node
+    twice. `ir_text_*` is the other door into the same room: it carries its
+    decoded `values` as a param and takes no input node, so two different text
+    columns with equal values build byte-identical nodes.
+
+    WHY IT IS SAFE. This key is COARSER-or-equal to the Planner's fingerprint on
+    every input, which is the only direction that can be wrong safely:
+
+      * scalars: both compare by value -- equal;
+      * short scalar sequences: both compare by value -- equal;
+      * arrays / columns / long sequences: the Planner compares `id(v)`, this
+        compares `id(v)` -- equal;
+      * anything else: the Planner falls back to `id(v)` for objects it cannot
+        serialise, this compares `id(v)` -- this is COARSER at worst, and it can
+        only be coarser for the SAME object, so the nodes really are identical.
+
+    A node the Planner would have merged and this key calls distinct is a
+    failure, and it degrades to today's behaviour: both nodes are emitted, the
+    Planner merges, `Chain._buffer` raises and names the rewritten node. It
+    never produces a wrong VALUE, because a reused node has, by the Planner's
+    own definition, identical inputs and params.
+    """
+    return (job["op"], tuple(job["inputs"]),
+            tuple((k, _identity(job["params"][k])) for k in sorted(job["params"])))
+
+
 def prepass(name):
     """Resolve one out-of-DAG pre-pass helper (dictionary / LUT / stream).
 
