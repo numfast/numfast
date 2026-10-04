@@ -29,7 +29,26 @@ from pathlib import Path as _Path
 
 import numpy as _np
 
-_FORK = _Path(__file__).resolve().parents[4]
+
+def _fork_root():
+    # Same layout defect as Runtime/Planner/_lib/calibrate.py:_fork_root: a
+    # fixed parents[4] is the repo root in the checkout and site-packages in the
+    # wheel, where this file is vendored to numfast/_ext/Join/_lib/ (one level
+    # shallower). The fork root is the nearest ancestor holding full.toml --
+    # parents[4] in the checkout, parents[3] in the wheel, where numfast/
+    # full.toml is installed alongside the Extensions. Walk the ancestors: a
+    # fixed index is right at one vendoring depth and wrong at the other.
+    here = _Path(__file__).resolve()
+    for p in (*here.parents, _Path.cwd()):
+        try:
+            if (p / "full.toml").exists():
+                return p
+        except OSError:
+            continue
+    return here.parents[4]
+
+
+_FORK = _fork_root()
 _GNU_DEFAULT = str(
     _FORK / "numfast-native" / "target" / "x86_64-pc-windows-gnu"
     / "release" / "numfast_native.dll")

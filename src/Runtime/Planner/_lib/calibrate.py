@@ -67,6 +67,36 @@ def _fork_root():
     return here.parents[4]
 
 
+# The GPU driver module this bench loads by file path is the same Extension in
+# both vendoring layouts, at two different places under the fork root:
+# src/Drivers/GPU/_lib/gpu.py in the checkout, and _ext/GPU/_lib/gpu.py in the
+# wheel, where setup.py copies every [[extensions]] directory into
+# numfast/_ext/. Both are spelled out and probed -- _fork_root()/"src"/...
+# resolves only in the checkout, so a miss here used to reach exec_module as an
+# opaque FileNotFoundError naming a path that was never valid in a wheel.
+_GPU_MODULE_RELPATHS = (
+    ("src", "Drivers", "GPU", "_lib", "gpu.py"),   # checkout
+    ("_ext", "GPU", "_lib", "gpu.py"),              # wheel (setup.py)
+)
+
+
+def _gpu_module_path():
+    """Absolute path of Drivers/GPU/_lib/gpu.py at either vendoring depth."""
+    tried = []
+    for root in (_fork_root(), Path.cwd()):
+        for rel in _GPU_MODULE_RELPATHS:
+            cand = root.joinpath(*rel)
+            tried.append(cand)
+            if cand.is_file():
+                return cand
+    raise FileNotFoundError(
+        "calibrate: the GPU driver module gpu.py is not present at any known "
+        "vendoring depth, so the H2D/D2H sweep cannot run. Probed: "
+        + "; ".join(str(t) for t in tried)
+        + ". Ship the GPU Extension (full.toml [[extensions]]) or build from a "
+        "tree that has it.")
+
+
 def profile_path(name=PROFILE_NAME):
     d = os.environ.get("NUMFAST_CALIBRATION_DIR")
     if d:
@@ -757,7 +787,7 @@ def _measure_transfer(data, stages, reps, warmup):
     import gc
     import importlib.util as _ilu
     import numpy as _np
-    gpu_py = _fork_root() / "src" / "Drivers" / "GPU" / "_lib" / "gpu.py"
+    gpu_py = _gpu_module_path()
     spec = _ilu.spec_from_file_location("nfcal_transfer_gpu", str(gpu_py))
     G = _ilu.module_from_spec(spec)
     spec.loader.exec_module(G)
