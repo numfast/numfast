@@ -12,6 +12,14 @@ __pycache__/
 /dist/
 /dist_rc/
 numfast-native/target/
+# Generated packaging metadata. setuptools rewrites this directory on every
+# `python -m build` / `pip install .`, including `SOURCES.txt`, whose content
+# depends on the machine (.gitignore excludes *.pdb, so a clone that has no
+# .pdb on disk produces a SOURCES.txt without it -- tracking the file made
+# every documented build command leave the tree dirty). Untracked 2026-10-05;
+# nothing reads it: MANIFEST.in `prune src/numfast.egg-info` already keeps it
+# out of the sdist.
+src/numfast.egg-info/
 
 # Native artifacts
 *.nfs

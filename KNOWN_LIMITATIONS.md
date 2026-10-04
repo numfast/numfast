@@ -234,4 +234,6 @@ or `derive` a replacement column with `isin` / `str_eq`.
   `pd.testing.assert_frame_equal(..., check_dtype=False)` when comparing.
 * **CI runs a subset, not the whole suite.** See `.github/workflows/ci.yml`: most
   tests need `builder` from a separate repository whose published `main` is
-  behind what this tree needs. The gating job covers 223 of the 651 tests.
+  behind what this tree needs. The gating job covers 223 of the 745 collected
+  tests (both counts re-measured on a clean clone at `e415fd1`, 2026-10-05; the
+  223 was last re-measured as 194 at commit `39e27c3`).

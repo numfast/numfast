@@ -17,7 +17,8 @@ is not a short table.
 * **[Known limitations](#known-limitations)** — what does not work, tagged by
   how sure we are. Read it before you rely on anything.
 * **[Benchmarks](#benchmarks)** — every number, with its command and its date.
-* **[Licence](#licence)** — not yet settled; see the pointer.
+* **[Licence](#licence)** — AGPL-3.0-only. `LICENSE` and `NOTICE` are in the tree
+  and reach the built artefacts.
 
 ---
 
@@ -178,9 +179,24 @@ change.
 ## Known architectural limits
 
 Two facts about the architecture, stated as **measurements**, not as apologies.
-Source: **[`develop/audit_foundation/ORIGIN_PIPELINE_BENCH.md`](../develop/audit_foundation/ORIGIN_PIPELINE_BENCH.md)**
-— origin pipeline benchmark, engine `4fc9914`, RTX 2060 / Xeon E5-2698 v4,
-median of 31, cycles from `QueryThreadCycleTime`.
+Source: `develop/audit_foundation/ORIGIN_PIPELINE_BENCH.md` in the NumFast
+dev-env repository — origin pipeline benchmark, engine `4fc9914`, RTX 2060 /
+Xeon E5-2698 v4, median of 31, cycles from `QueryThreadCycleTime`.
+
+> **Provenance correction, 2026-10-05.** That audit states it verified
+> `git diff --name-only 4fc9914..1a3caa4 -- src/` returns 0 files, so that
+> "every number below was measured against a byte-identical Python engine". That
+> check was true when written and is **false now**: at `e415fd1`,
+> `git diff --name-only 4fc9914..e415fd1 -- src/` returns **11 files**, of which
+> 8 are engine sources (`Compute/Fused/_lib/fused.py`,
+> `Drivers/CPU/_lib/native_cpu.py`, `Relational/Join/_lib/native{,_i64}.py`,
+> `Runtime/Planner/_lib/calibrate.py`, `Semantic/TableExpr/_lib/{chain,expr,plan}.py`).
+> Those changes are fork-root path resolution and facade node lowering; none of
+> them touch the window-composition or GPU-execution path these two limits
+> describe, so the measurements below are still the best available account of
+> that path. But they were taken against `4fc9914`, not against this tree, and
+> this file should not imply otherwise. The audit record itself is unchanged and
+> is reported, not rewritten.
 
 ### There are no cheap strided or windowed views
 
@@ -252,10 +268,10 @@ python -m pytest tests/ -q              # fast suite only; heavy needs -m heavy
 ```
 
 Last clean-clone run — `git clone` of this repository into an empty directory,
-2026-10-04, commit `39e27c3`:
+2026-10-05, commit `e415fd1` (Windows, Python 3.14.6):
 
 ```
-682 passed, 5 skipped, 0 failed in 162.43s (0:02:42)
+740 passed, 5 skipped, 0 failed in 171.49s (0:02:51)
 ```
 
 The 5 skips, and why each one skips on a fresh clone:
@@ -279,8 +295,9 @@ is named here rather than hidden behind a green line.
    build their kernel through `from builder import MAIN`, and `builder` lives in
    a separate repository whose published `main` is 11 commits behind what this
    tree needs, so a job that fetched it would fail. That job is present,
-   non-gating, and says so in its own step name. 223 of 682 is the gating
-   coverage; the rest is exercised by developers with a Builder checkout.
+   non-gating, and says so in its own step name. 223 of the 745 collected tests
+   is the gating coverage — both numbers measured on a clean clone at `e415fd1`
+   on 2026-10-05; the rest is exercised by developers with a Builder checkout.
 3. **the whole suite** — non-gating for the reason above.
 
 There is **no Linux CI job**: only a Windows `.dll` is committed, and with the
@@ -292,11 +309,24 @@ that fails is worse than no CI.
 
 ## Licence
 
-**Not yet decided.** A licence proposal is being produced separately; this
-repository currently carries `AGPL-3.0-only` SPDX headers and
-`license = { text = "AGPL-3.0-only" }` in `pyproject.toml`, and **no licence
-file is present in the tree**. Treat the licensing as unsettled until a
-`LICENSE` file appears at the repository root.
+**AGPL-3.0-only.** The verbatim licence text is `LICENSE` (35 184 bytes) at the
+repository root; `NOTICE` records the third-party attributions; and
+`COMMERCIAL-LICENCE.md` describes the commercial alternative. Every source file
+carries an `AGPL-3.0-only` SPDX header, and `pyproject.toml` declares
+`license = "AGPL-3.0-only"` with `license-files = ["LICENSE", "NOTICE"]`.
+
+Both files reach the built artefacts, verified on the 0.2.1 release candidate:
+`LICENSE` and `NOTICE` land in `numfast-0.2.1.dist-info/licenses/` in **both**
+wheel flavours, byte-identical to the tree; `METADATA` carries
+`License-Expression: AGPL-3.0-only` and a `License-File:` line for each; and both
+are present in the sdist, byte-identical.
+
+Because the wheel conveys `numfast_native.dll` — object code — AGPL-3.0 §6 is
+satisfied by shipping the Corresponding Source with it: the wheel carries all
+**47** `.rs` files plus `Cargo.toml`, `Cargo.lock`, `.cargo/config.toml` and the
+two link shims under `numfast/_corresp_src/numfast-native/`, every one
+byte-identical to the tree, with a `SHA256SUMS` over exactly those bytes. See
+[CORRESPONDING-SOURCE.md](CORRESPONDING-SOURCE.md).
 
 ---
 

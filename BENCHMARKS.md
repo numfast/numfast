@@ -24,12 +24,24 @@ exist. That check is what produced the verdicts below.
 | | |
 |---|---|
 | Artefact | `tests/heavy/bench_clickbench_43.json` |
-| Command | `export PYTHONPATH="C:/App/numfast/numfast/src;C:/App/numfast/app-builder" && python tests/heavy/bench_clickbench_43.py` |
+| Command | `python tests/heavy/bench_clickbench_43.py` — see the caveat below; the script resolves its own imports |
 | Script | `tests/heavy/bench_clickbench_43.py` — **committed** |
 | Input | `C:/App/competitions/ClickBench/data/hits_1m.parquet`, rows = 999978 |
 | Input present on the audit machine | **NO** — `C:/App/competitions/` does not exist here |
 | Method | one timed run per query; `stages_ms.compile` + `stages_ms.execute` vs a DuckDB reference; seed 42; no RNG (fixed data) |
 | Verdict | **REPRODUCIBLE IN PRINCIPLE, NOT RE-RUN HERE.** The command and the input path are both named; the input was absent, so these are the numbers as recorded, not as re-measured. |
+
+**The command does not honour `PYTHONPATH`.** `bench_clickbench_43.py:22-25`
+hardcodes `APP_DIR = "C:/App/numfast/numfast"` and then does
+`sys.path.insert(0, "C:/App/numfast/numfast/src")` and
+`sys.path.insert(0, "C:/App/numfast/app-builder")`. Those inserts land ahead of
+anything the caller exported, so from a clean clone the script imports the
+developer's own `C:/App/numfast/numfast/src` rather than the tree it was invoked
+from — it will run, and it will measure a different engine than the one you are
+reading this file in. An earlier revision of this file documented the command as
+`export PYTHONPATH=... && python tests/heavy/bench_clickbench_43.py`, which
+suggests the environment variable is what selects the engine. It is not.
+Recorded, not fixed: correcting the script is outside this file's write scope.
 
 ### Support table — read this, it is the honest one
 

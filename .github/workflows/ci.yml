@@ -8,7 +8,7 @@
 #   imports it. Proves the published artefact is importable at all.
 #
 # Job 2 `core-suite-no-builder` -- GATING. Verified green on windows-latest
-#   (Python 3.14). Runs the 194 tests that need nothing but this repository on
+#   (Python 3.14). Runs the 223 tests that need nothing but this repository on
 #   PYTHONPATH. See the file list and WHY it is a subset, below.
 #
 # Job 3 `full-suite` -- NOT GATING (`continue-on-error: true`). Runs the whole
@@ -80,7 +80,7 @@ jobs:
       - name: Run the Builder-free subset
         # The native DLL is committed, so nothing has to be compiled here.
         # Every file listed was measured green on a clean clone with ONLY
-        # `src` on PYTHONPATH (194 passed, 2 skipped, 2026-10-04). The other
+        # `src` on PYTHONPATH (223 passed, 2 skipped, 2026-10-05). The other
         # 47 test files request the `kernel` fixture, which does
         # `from builder import MAIN` -- job 3 below.
         run: |
