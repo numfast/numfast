@@ -1,15 +1,22 @@
 # Copyright (c) 2026 NumFast
 # SPDX-License-Identifier: AGPL-3.0-only
 [build-system]
-requires = ["setuptools>=61"]
+# >=77: PEP 639 licence metadata (license / license-files as a PEP 621 string
+# + list), which is what puts LICENSE and NOTICE into
+# numfast-<v>.dist-info/licenses/ and License-Expression into METADATA.
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "numfast"
+# Single source of truth for the whole project version. numfast-native/Cargo.toml
+# and numfast-native/ts/package.json mirror this value; the JS build refuses to
+# run if package.json disagrees (ts/build.mjs:engineVersion).
 version = "0.2.1"
 description = "NumFast: packaged GPU-numeric boundary (Series/Table + NumPy/Pandas/Arrow adapters)"
 readme = "README.packaging.md"
-license = { text = "AGPL-3.0-only" }
+license = "AGPL-3.0-only"
+license-files = ["LICENSE", "NOTICE"]
 requires-python = ">=3.11"
 dependencies = ["numpy>=1.24"]
 
@@ -21,11 +28,13 @@ mem = ["psutil>=5.9"]
 test = ["pandas>=1.5", "pyarrow>=10", "pytest", "psutil>=5.9"]
 
 [tool.setuptools]
-license-files = ["LICENSE", "NOTICE"]
+# Data files are copied by an explicit, flavour-aware step in setup.py, not by
+# the sdist file list. Left at its pyproject default (true), include-package-data
+# would pull every file MANIFEST.in matches back into the wheel -- including
+# src/numfast/_native/numfast_native.dll -- and reintroduce a Windows binary in
+# a py3-none-any wheel. MANIFEST.in is the sdist's rule; setup.py is the wheel's.
+include-package-data = false
 
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["numfast*"]
-
-[tool.setuptools.package-data]
-numfast = ["_native/*.dll", "_native/*.so", "full.toml"]

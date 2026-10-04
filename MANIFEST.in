@@ -1,0 +1,63 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+#
+# The sdist IS the Corresponding Source vehicle (AGPL-3.0 section 6): the wheel
+# conveys numfast_native.dll, so the sdist must carry the source of both halves
+# of the work. `python -m build` builds the wheel *from* this sdist, so an
+# incomplete MANIFEST.in fails the build instead of producing a quietly broken
+# artefact.
+
+include LICENSE
+include NOTICE
+include README.md
+include README.packaging.md
+include KNOWN_LIMITATIONS.md
+include COMMERCIAL-LICENCE.md
+include CORRESPONDING-SOURCE.md
+include pyproject.toml
+include setup.py
+include full.toml
+
+# Runtime data the engine reads from the fork root. In the wheel the fork root
+# is numfast/ itself, so these must land as numfast/<name> or the Planner
+# silently reports "no calibration profile" and cost routing falls back to
+# defaults. See src/Runtime/Planner/_lib/calibrate.py:_fork_root.
+include calibration.toml
+include calibration_dataset.json
+
+# The Python engine: src/numfast (the package) plus every Extension directory
+# full.toml names, at the paths full.toml names them, because setup.py copies
+# them verbatim into numfast/_ext/<DirName>/ at build time.
+graft src
+
+# Tests, conformance profile and examples: part of the work, and the test tree
+# reads ../specs-rebuilt/conformance-profile.toml relative to itself.
+graft tests
+graft specs-rebuilt
+graft examples
+graft docs
+
+# The Rust crate. graft src/ gives Cargo.toml/Cargo.lock plus the .cargo config
+# and the linker shim in one go; the explicit includes are here so that dropping
+# any single line is a visible diff rather than a silent omission.
+graft numfast-native/src
+include numfast-native/Cargo.toml
+include numfast-native/Cargo.lock
+include numfast-native/.cargo/config.toml
+include numfast-native/tools/nf-link.bat
+include numfast-native/tools/nf-link.py
+include numfast-native/tools/gen.py
+
+# Build outputs and generated material: reproducible from what is above, and
+# carrying them is how a stale artefact gets shipped.
+prune src/numfast.egg-info
+prune numfast-native/target
+prune numfast-native/vectors
+prune numfast-native/results
+prune numfast-native/ts/node_modules
+prune numfast-native/ts/dist
+prune numfast-native/ts/artifacts
+
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude .DS_Store

@@ -1,6 +1,9 @@
 [package]
 name = "numfast-native"
-version = "0.1.0"
+# Mirrors pyproject.toml [project].version, which owns the project version.
+# 0.1.0 was stale from when this crate was the only artefact; a crate whose
+# version cannot be traced to the engine's cannot be matched to a release.
+version = "0.2.1"
 edition = "2021"
 description = "Feasibility: one dense fused group-by primitive (buffers in/out) for Python(ctypes) + WASM + Node"
 license = "AGPL-3.0-only"
