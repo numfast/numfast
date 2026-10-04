@@ -33,3 +33,36 @@ pytest tests/            # только fast (default)
 pytest -m heavy tests/   # только heavy (явно)
 pytest tests/ -m "fast"  # то же, что default
 ```
+
+## Два режима: checkout и установленный пакет
+
+Один и тот же набор тестов работает в двух режимах, и `conftest.py` выбирает
+режим сам — по тому, откуда резолвится `numfast`.
+
+**Checkout** (режим разработчика): `numfast` резолвится в `src/` этого репозитория,
+`builder` — настоящий, из app-builder. Собирается всё, ничего не пропускается.
+
+```bash
+export PYTHONPATH="C:/App/numfast/numfast/src;C:/App/numfast/app-builder"
+pytest tests/
+```
+
+**Установленный пакет** (то, что уходит в релиз): `numfast` резолвится в
+site-packages, движка-дерева нет. Kernel берётся из `numfast.get_kernel()` —
+установленный пакет сам находит свой корень по `numfast/full.toml`, поэтому
+`APP_DIR`/`FORK` не входные данные. Нужны `tests/` и `specs-rebuilt/`
+(их кладёт в sdist `MANIFEST.in`), но **не** `src/`, `full.toml` и
+`numfast-native/`:
+
+```bash
+python -m venv .venv-wheel
+.\.venv-wheel\Scripts\python.exe -m pip install dist_rc\numfast-0.2.1-py3-none-win_amd64.whl[pandas,test]
+# распаковать sdist (или скопировать tests/ + specs-rebuilt/) ВНЕ дерева репозитория
+.\.venv-wheel\Scripts\python.exe -m pytest <that-dir>/tests -q
+```
+
+Модули, которым всё равно нужен исходник движка, в этом режиме не собираются, и
+`conftest.py` печатает в конце прогона имя каждого и причину (список — в
+`conftest.py:SOURCE_ONLY`). Молча пропускать их нельзя: именно на них держатся
+text-guard-ы по исходникам движка, и без дерева их нечем проверять.
+
