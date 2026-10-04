@@ -2,14 +2,15 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 """P2 adjacency_slice: thin wrapper over Rust canonical (native-first).
 
-Вход: indptr[V+1] u32 монотонные + indices[E] u32 + query[k] u32.
-Выход: begins[k] + ends[k] (u32); flat собирается существующим
-gather-путём (native gather при u32, иначе take/concatenate).
+Input: indptr[V+1] u32 monotonic + indices[E] u32 + query[k] u32.
+Output: begins[k] + ends[k] (u32); flat is assembled by the existing
+gather path (native gather for u32, otherwise take/concatenate).
 UINT32_MAX reserved INF/INVALID -> ValueError. V/E/k=0 safe.
 
-Канон: Rust adjacency_slice/gather. Python — только совместимость:
-вызов native при наличии, иначе bit-exact fallback. Коэрсия первой
-(reserved-проверка до k==0 early return — паритет с Rust).
+Canonical: the Rust adjacency_slice/gather. Python exists only for
+compatibility: call the native path when present, otherwise a bit-exact fallback.
+Coercion happens first (the reserved check precedes the k==0 early return --
+parity with Rust).
 """
 
 import importlib.util
@@ -107,9 +108,9 @@ def adjacency_slice(indptr, indices, query):
 def adjacency_flat(indices, begins, ends):
     """Assemble flat neighbour ids using existing gather semantics (take).
 
-    Native gather при u32-индексах, иначе take/concatenate. Guards
-    begins/ends (shape, begins<=ends, ends<=E) — паритет с Rust
-    (ValueError на тех же входах).
+    Native gather for u32 indices, otherwise take/concatenate. Guards
+    begins/ends (shape, begins<=ends, ends<=E) -- parity with Rust
+    (ValueError on the same inputs).
     """
     ix = np.asarray(indices)
     b = np.asarray(begins).astype(np.int64)

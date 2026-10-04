@@ -143,7 +143,69 @@ Also removed: the word "reproducible" from that README's opening line.
 
 ---
 
-## 4. Claims that are NOT made anywhere in this repository
+## 4. Origin-pipeline architectural limits — **MEASURED, against engine `4fc9914`**
+
+Two facts about the architecture that are measurements, not opinions. Source:
+`develop/audit_foundation/ORIGIN_PIPELINE_BENCH.md` in the NumFast dev-env
+repository — an origin-pipeline benchmark, engine `4fc9914`, RTX 2060 over Vulkan
+/ Xeon E5-2698 v4, median of 31 runs, cycles read from `QueryThreadCycleTime`.
+**That document is not in this repository and is not published here.** The
+numbers are reproduced below because they describe a path that still exists.
+
+> **Provenance correction, verified 2026-10-05 at `597d2ec`.** The audit states it
+> verified `git diff --name-only 4fc9914..1a3caa4 -- src/` returns 0 files, so
+> that "every number below was measured against a byte-identical Python engine".
+> That check was true when written and is **false now**:
+> `git diff --name-only 4fc9914..597d2ec -- src/` returns **13 files** — eight
+> engine sources (`Compute/Fused/_lib/fused.py`,
+> `Drivers/CPU/_lib/native_cpu.py`, `Relational/Join/_lib/native{,_i64}.py`,
+> `Runtime/Planner/_lib/calibrate.py`, `Semantic/TableExpr/_lib/{chain,expr,plan}.py`)
+> and five generated packaging-metadata files under `src/numfast.egg-info/`.
+> Those changes are fork-root path resolution and facade node lowering; none of
+> them touch the window-composition or GPU-execution path these two limits
+> describe, so the measurements below remain the best available account of that
+> path. But they were taken against `4fc9914`, not against this tree, and this
+> file should not imply otherwise. The audit record itself is unchanged and is
+> reported, not rewritten.
+
+### There are no cheap strided or windowed views
+
+A window of width *W* is **not a view**. The only window composition the
+expression language offers is *W* × `shift`, and each `shift` writes a
+**full-length buffer**: at *n* = 1 048 576, *W* = 64 that is **64 buffers,
+512 MiB**, followed by a second full materialisation of the (M, W) matrix
+(another 512 MiB) — **2.00× the memory of the answer numpy gives for one
+512 MiB copy.** numpy's `sliding_window_view` is a **view**: 64 680 cycles at
+*n* = 1 048 576, *W* = 64, flat in both *n* and *W* — ~0.06 cycles/row, **zero
+bytes written**. The gap is not the kernels; the kernels are within **1.76×** of
+numpy on the same pipeline. **MATERIALISATION is 69.6 %–89 % of what the user
+pays.**
+
+### There is no resident GPU execution
+
+`gpu_execute` is a **batch execute with per-node readback**: an 8-node graph
+returned **9 host buffers** for a 0.2 MiB input — **11× byte amplification,
+zero residency**. The resident primitives (`r_upload`, `r_alloc`, `r_gather`,
+`r_download`) exist and are not what `gpu_execute` uses. Through the consumer
+surface the GPU is unreachable at all: `Chain.compile()` runs the CPU path and
+`Chain.explain()` prints `backend=n/a` — both re-measured at `597d2ec`.
+
+The one regime where the GPU reaches parity is **regime B**: the index built
+**once**, kept resident, and **never shuffled** — 0.915× prep/consume at
+*n* = 1 048 576, and **1.0×–1.5×** elsewhere. Add the per-epoch shuffle every
+training loop actually does and the same index costs **13.2×** prep/consume;
+build it per batch (regime A) and it is **158–168×**. The index buffer is also
+**64× the data it indexes** — at *W* = 64, 4 B per window element, exactly as
+large as the f32 window it produces — and the first epoch pays **319 ms** before
+a single row is consumed.
+
+So: **the GPU is at parity in a resident-index regime and loses once a shuffle is
+required.** Both limits are properties of the buffer layout and the executor
+boundary, not of the compute kernels.
+
+---
+
+## 5. Claims that are NOT made anywhere in this repository
 
 * Full 43/43 ClickBench support.
 * Any GPU speedup. The recorded GPU measurements are slower than CPU at the

@@ -2,20 +2,20 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 """P1 segmented_reduce: thin wrapper over Rust canonical (native-first).
 
-Вход: values[n] (int32 / float32) + bounds[M+1] (u32 монотонные).
-Выход: out[M]. ops: sum | count | min | max (mean НЕ op -> ValueError).
-count -> uint32; sum f32 -> float32 IEEE-propagate (NaN через add);
-sum i32 -> int32 saturating (host-аккумулятор int64, clamp);
-min/max пустого сегмента -> ValueError; n=0 -> M=0;
-лимит n<=4194240 на dispatch (иначе ValueError, chunkable снаружи).
-Вариант B (ключи) — через существующий Sort-путь, не здесь.
+Input: values[n] (int32 / float32) + bounds[M+1] (u32 monotonic).
+Output: out[M]. ops: sum | count | min | max (mean is NOT an op -> ValueError).
+count -> uint32; sum f32 -> float32, IEEE propagation (NaN through add);
+sum i32 -> int32 saturating (host accumulator int64, then clamp);
+min/max on an empty segment -> ValueError; n=0 -> M=0;
+per-dispatch limit n<=4194240 (otherwise ValueError; chunking is the caller's job).
+Variant B (keys) goes through the existing Sort path, not through here.
 
-Канон: Rust sequential lanes (strided order). Python — только
-совместимость: вызов native при наличии, иначе bit-exact fallback
-(sequential python-циклы; reduceat только как последний ресорт,
-т.к. reduceat pairwise расходится с sequential до ~1ulp на длинных
-сегментах). Trailing-empty bounds ([0,5,5]) — pad values одним zero
-lane для sum-проб (иначе reduceat IndexError).
+Canonical: the Rust sequential lanes (strided order). Python exists only for
+compatibility: call the native path when present, otherwise a bit-exact fallback
+(sequential Python loops; reduceat only as a last resort, because reduceat's
+pairwise summation diverges from the sequential order by up to ~1 ulp on long
+segments). Trailing-empty bounds ([0,5,5]) -- pad values with one zero lane for
+the sum probe (otherwise reduceat raises IndexError).
 """
 
 import importlib.util

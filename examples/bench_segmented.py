@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
 # Copyright (c) 2026 NumFast
 # SPDX-License-Identifier: AGPL-3.0-only
-"""Microbench P1/P2 (НОВЫЙ файл, существующие бенчмарки не тронуты).
+"""Microbench P1/P2 (a NEW file; the existing benchmarks are untouched).
 
-OLD: naive python-loop / groupby Sort->Scan->Reduce цепочка.
-NEW: прямой segmented_reduce / adjacency_slice.
-Метрики: correctness max_diff сначала, TIME_RATIO, throughput, memory,
+OLD: the naive python-loop / groupby Sort->Scan->Reduce chain.
+NEW: direct segmented_reduce / adjacency_slice.
+Metrics: correctness max_diff first, then TIME_RATIO, throughput, memory, and a
 stage breakdown. Fixed seed 42.
+
+KNOWN FAILURE, measured 2026-10-05 at 597d2ec: this script ends on
+`assert fdiff == 0.0`, and the f32 lane prints `max_diff 0.03515625`. The int32
+lane matches the naive chain exactly (`max_diff 0.0`). The run aborts on that
+assertion, so nothing after it is produced. Recorded rather than fixed: the fix
+is either the f32 tolerance or the segmented f32 accumulation, and neither is a
+documentation change. See ../examples/README.md.
 """
 import sys
 import time

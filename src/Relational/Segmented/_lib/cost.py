@@ -2,18 +2,19 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 """P3 cost candidate: thin wrapper over Rust generic costing core (native-first).
 
-НЕ ПОДКЛЮЧЕНО к существующим путям (этот шаг только кладёт рядом):
-Segmented.py / adjacency.py / native_cpu.py не вызывают этот модуль.
+NOT WIRED into any existing path (this step only places it alongside):
+Segmented.py / adjacency.py / native_cpu.py do not call this module.
 
-Граница (строго): общий вычислительный механизм без RoadGraph-семантики:
-distance_mm u32 (traffic-independent); travel_time_ms resolve (u64 middle,
+The boundary (strictly): a general compute mechanism with no RoadGraph semantics.
+distance_mm u32 (traffic-independent); travel_time_ms resolution (u64 intermediate,
 INF guard, speed==0 -> INF); traffic_k u16 (K_SCALE=1000); CostTable/interning
-(vec -> cost_id dedup); directed rows отдельно (без схлопывания); parallel
-rows без MIN. Строки профилей только здесь (Python-адаптер); в Rust целые коды.
+(vec -> cost_id dedup); directed rows kept separate (not collapsed); parallel
+rows carry no MIN. Profile strings live only here (the Python adapter); the Rust
+side sees integer codes only.
 
-Канон: Rust cost_travel_batch / cost_intern_rows. Python — только
-совместимость: вызов native при наличии, иначе bit-exact fallback
-(целая арифметика, тот же INF/ Kwart guard).
+Canonical: the Rust cost_travel_batch / cost_intern_rows. Python exists only for
+compatibility: call the native path when it is present, otherwise a bit-exact
+fallback (integer arithmetic, the same INF / K-quart guard).
 """
 
 import ctypes

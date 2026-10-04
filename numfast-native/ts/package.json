@@ -1,7 +1,7 @@
 {
   "name": "@numfast/kernels",
   "version": "0.2.1",
-  "description": "NumFast compute kernels compiled to WebAssembly: 85 functions, one memory, no imports. Portable kernel library, not a compute core.",
+  "description": "NumFast compute kernels compiled to WebAssembly: 86 functions, one memory, no imports. Portable kernel library, not a compute core.",
   "license": "AGPL-3.0-only",
   "type": "module",
   "engines": {

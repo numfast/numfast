@@ -58,7 +58,7 @@ silently on int64 above 2**53 (DESIGN §3.3).
 
 `or_` is NOT here either and must not be added: `ir_mask(..., 'or')` AND-s the
 two operands' validity sides, so `ir_filter` silently drops every row either
-side was UNKNOWN on (DESIGN §2.2a п. 8). `Expr.or_` refuses loudly -- the
+side was UNKNOWN on (DESIGN §2.2a point 8). `Expr.or_` refuses loudly -- the
 `logic` branch below only ever sees `and` / `not`.
 """
 

@@ -28,13 +28,14 @@ max_ulp = 2
 max_dict_entries = 1048576  # 2^20
 
 [compat]
-# CONTRACT exception — фиксация существующего поведения как есть (код/API/поведение не меняются).
-# Ядерного portable_core.toml нет; ближайший эквивалент — данный файл.
-# Чужая граница roadgraph/specs/portable_core.toml нормой ядра не является.
-# См. specs/core/00 + 06 (silent fallback запрещён), 10 (методология),
+# CONTRACT exception -- a record of existing behaviour as it is. No code, API or
+# behaviour changes here. There is no core portable_core.toml; this file is the
+# nearest equivalent. A boundary owned by another project
+# (roadgraph/specs/portable_core.toml) is not a core norm.
+# See specs/core/00 + 06 (a silent fallback is forbidden), 10 (methodology),
 # README.packaging.md + src/Drivers/CPU/_lib/native_cpu.py + src/numfast/_lib/native_env.py.
-native = "canonical по умолчанию (DLL via NUMFAST_NATIVE_DLL или package-relative _native/)"
-disable_flag = "NUMFAST_NATIVE_DISABLE=1 включает bit-exact Python/NumPy fallback"
-fallback_kind = "явный контракт совместимости для сред без DLL, НЕ silent fallback (silent запрещён как раньше)"
-gate_proof = "2M-row max_diff 0, errors 12/12 — разовое gate-доказательство с seed, не benchmark"
-perf_rule = "perf-выводы только из microbench seed 42 (см. 10); parity-прогоны большого объёма — не benchmarks"
+native = "canonical by default (DLL via NUMFAST_NATIVE_DLL or package-relative _native/)"
+disable_flag = "NUMFAST_NATIVE_DISABLE=1 selects the bit-exact Python/NumPy fallback"
+fallback_kind = "an explicit compatibility contract for hosts without a DLL, NOT a silent fallback (silent stays forbidden)"
+gate_proof = "2M-row max_diff 0, errors 12/12 -- a one-off gated proof with a fixed seed, not a benchmark"
+perf_rule = "performance conclusions come only from seed-42 microbenchmarks (see 10); large-volume parity runs are not benchmarks"
