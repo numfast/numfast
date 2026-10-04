@@ -64,7 +64,9 @@ export const ABI: Readonly<Record<string, AbiEntry>> = {
     wasm: ["indptr", "np", "indices", "weights", "e", "source", "dist", "pred"],
     returns: "i32",
     codes: { [RC_NULL_OR_ABORT]: PTR_NULL, [RC_BAD_RANGE]: "source out of range, or indptr not monotonic" },
-    note: "nf_sssp_csr plus a per-edge predicate byte; pred[i]==0 skips edge i.",
+    note: "nf_sssp_csr plus a PREDECESSOR OUTPUT: pred[0..V] is i32 and is " +
+      "overwritten (-1 = source or unreachable, else the parent vertex). " +
+      "There is no per-edge predicate on this symbol; the wrapper allocates it.",
   },
   nf_sssp_batch: {
     symbol: "nf_sssp_batch",

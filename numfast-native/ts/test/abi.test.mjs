@@ -6,9 +6,17 @@
 // Every figure this package publishes is asserted here from the bytes of the
 // .wasm, so none of them can rot into a claim:
 //
-//   86 exports = 85 functions + 1 memory, 0 imports   (W2)
-//   20 of 85 exports cross the i64 boundary          (the BigInt rule)
-//   17 of 85 are wrapped, 68 are named and unwrapped (the coverage claim)
+//   87 exports = 86 functions + 1 memory, 0 imports   (W2)
+//   21 of 86 exports cross the i64 boundary          (the BigInt rule)
+//   17 of 86 are wrapped, 69 are named and unwrapped (the coverage claim)
+//
+// The EXPECTED side of each of those comes from `abi/census.json`, which was
+// generated from the Rust source rather than from a .wasm. That is deliberate:
+// a number typed into this file is a number that only its author can keep
+// right, and when `nf_pair_insert_i64` was added to `src/lib.rs` the typed 85
+// stayed 85 -- so `build.mjs` refused every clean clone. Deriving the
+// expectation is what stops that class of failure; asserting it here is what
+// stops the prose from drifting off it.
 //
 // The per-symbol ABI table in abi.ts is the other half: it is the mapping
 // acceptance criterion W4 said did not exist, and each entry's arity and return
@@ -20,7 +28,7 @@
 import assert from "node:assert/strict";
 import { test, before } from "node:test";
 
-import { artefact } from "./artifact.mjs";
+import { artefact, EXPECTED_FUNC_COUNT, EXPECTED_EXPORT_COUNT, expectedI64Exports } from "./artifact.mjs";
 
 let K;
 let info;
@@ -34,17 +42,21 @@ before(async () => {
   ({ ABI, RC_TABLE } = await import("../dist/abi.js"));
 });
 
-test("the export surface is 85 functions, 1 memory, 0 imports", () => {
-  assert.equal(info.exportCount, 86);
-  assert.equal(info.funcCount, 85);
+test("the export surface is the one the source declares, plus 1 memory", () => {
+  // The expected numbers come from abi/census.json, which is generated from
+  // the `#[no_mangle]` bodies -- not from this .wasm, so the assertion and the
+  // expectation cannot both be wrong in the same way.
+  assert.equal(info.exportCount, EXPECTED_EXPORT_COUNT);
+  assert.equal(info.funcCount, EXPECTED_FUNC_COUNT);
   assert.equal(info.importCount, 0,
     "the module imports nothing; that is what makes it portable, and it is now false");
   assert.deepEqual(info.memoryExports, ["memory"]);
 });
 
-test("20 of 85 exports cross the i64 boundary, and they are named", () => {
-  assert.equal(info.i64Count, 20);
-  assert.equal(info.i64Exports.length, 20);
+test("the i64 boundary is the one the source declares, and it is named", () => {
+  const want = expectedI64Exports();
+  assert.equal(info.i64Count, want.length);
+  assert.deepEqual([...info.i64Exports], [...want]);
   assert.ok(info.i64Exports.includes("nf_cost_intern"),
     "the one wrapped i64 kernel must be on the list");
   assert.ok(!info.i64Exports.includes("nf_map_i32"),
@@ -53,7 +65,12 @@ test("20 of 85 exports cross the i64 boundary, and they are named", () => {
 
 test("the covered count is stated, and the rest is named", async () => {
   const { WRAPPED, TOTAL_EXPORTS } = K;
-  assert.equal(TOTAL_EXPORTS, 85);
+  // TOTAL_EXPORTS is a literal in kernels.ts (it is read at module load, so it
+  // cannot come from a file), and this is where it is pinned to the source.
+  assert.equal(TOTAL_EXPORTS, EXPECTED_FUNC_COUNT,
+    "kernels.ts TOTAL_EXPORTS no longer matches the source; it is the number the " +
+    "package description and the README quote, and loadKernels() refuses an " +
+    "artefact that disagrees with it");
   assert.equal(WRAPPED.length, 17);
   assert.equal(new Set(WRAPPED).size, WRAPPED.length, "WRAPPED has a duplicate");
 
@@ -62,7 +79,8 @@ test("the covered count is stated, and the rest is named", async () => {
     assert.ok(exported.has(s), `${s} is wrapped but not exported by this build`);
   }
   const unwrapped = info.funcExports.filter((f) => !WRAPPED.includes(f));
-  assert.equal(unwrapped.length, 85 - 17, "the unwrapped count does not add up");
+  assert.equal(unwrapped.length, EXPECTED_FUNC_COUNT - WRAPPED.length,
+    "the unwrapped count does not add up");
   // Every unwrapped kernel must be REACHABLE by name, so "not wrapped" is a
   // stated scope rather than a hole in the module.
   const { callRaw } = K;

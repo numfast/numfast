@@ -13,7 +13,8 @@
 //     garbage" and a view would let a caller read that garbage as a result.
 //
 // COVERAGE IS A CONSTANT, NOT A README PARAGRAPH. `WRAPPED` and
-// `TOTAL_EXPORTS` are exported, so `WRAPPED.length` is checkable from a test.
+// `TOTAL_EXPORTS` are exported, so `WRAPPED.length` is checkable from a test,
+// and `TOTAL_EXPORTS` is asserted against the source-derived export set.
 
 import type { Bridge, WasmExports } from "./bridge.js";
 import {
@@ -40,14 +41,16 @@ export const WRAPPED = Object.freeze([
 
 export type WrappedSymbol = (typeof WRAPPED)[number];
 
-/** Function exports in the .wasm this package is built against. Asserted
- *  against the artefact by test/abi.test.mjs: if a kernel is added the test
- *  fails here rather than this number quietly going stale. */
-export const TOTAL_EXPORTS = 85;
+/** Function exports in the .wasm this package is built against. Read at module
+ *  load, so it cannot come from a file -- but it is pinned to the source by
+ *  test/abi.test.mjs, which compares it against the derived export set in
+ *  `abi-surface.mjs`. Keep the two together: `loadKernels()` refuses an
+ *  artefact that disagrees with this number. */
+export const TOTAL_EXPORTS = 86;
 
 /** Call one kernel by name, unvalidated: no length checking, no BigInt
  *  coercion, only the shared return-code table and trap conversion. Present
- *  so the 68 unwrapped kernels are REACHABLE -- with the symbol named at the
+ *  so the 69 unwrapped kernels are REACHABLE -- with the symbol named at the
  *  call site -- instead of hidden, and so widening coverage is one line. */
 export function callRaw(
   bridge: Bridge,
@@ -92,27 +95,42 @@ export function ssspCsr(
   return bridge.u32(pOut, v).slice();
 }
 
-/** CSR + per-edge predicate byte (`pred[i] === 0` skips edge i), one source. */
+/** CSR + weights, one source -> distances AND the predecessor tree.
+ *
+ *  `pred` is an OUTPUT of V i32 lanes, NOT an input. The engine body
+ *  (`nf_sssp_csr_pred`, numfast-native/src/lib.rs) takes `pred: *mut i32`,
+ *  borrows it for `np - 1` lanes and FILLS it with the INF sentinel before the
+ *  search; `sssp.rs` sets `pred[source] = -1` and `pred[v] = u` on each relax.
+ *  There is no per-edge predicate on this symbol.
+ *
+ *  The previous revision of this wrapper documented and passed a `Uint8Array`
+ *  of E predicate bytes, which met a 4*V-byte write with no trap, no guard hit
+ *  and rc = 0. `pred[i]` is the parent of `i` on the relaxed shortest-path tree;
+ *  it is -1 for the source and for anything unreachable.
+ *
+ *  The buffer is allocated HERE, at the right size and type, because the
+ *  engine owns no memory: a caller cannot pass one, so it cannot be short. */
 export function ssspCsrPred(
   bridge: Bridge,
-  indptr: Uint32Array, indices: Uint32Array, weights: Uint32Array,
-  source: number, pred: Uint8Array,
-): Uint32Array {
+  indptr: Uint32Array, indices: Uint32Array, weights: Uint32Array, source: number,
+): { dist: Uint32Array; pred: Int32Array } {
   const sym = "nf_sssp_csr_pred";
-  checkLengths(sym, indptr.length, indices.length, weights.length, pred.length);
+  checkLengths(sym, indptr.length, indices.length, weights.length);
   const np = indptr.length, v = np - 1;
   if (source < 0 || source >= v) {
     throw new NumFastArgumentError(sym, `source ${source} outside 0..${v - 1}`);
   }
   bridge.reset();
-  const pInd = bridge.put(indptr), pIx = bridge.put(indices);
-  const pW = bridge.put(weights), pP = bridge.put(pred);
-  const pOut = bridge.alloc(v * 4, 8);
-  bridge.ensure(pOut + v * 4);
+  const pInd = bridge.put(indptr), pIx = bridge.put(indices), pW = bridge.put(weights);
+  const pDist = bridge.alloc(v * 4, 8);
+  // pred is V lanes of i32, so 4*V bytes -- allocated after dist, and both
+  // grown into before the call, so neither can be written past its own end.
+  const pPred = bridge.alloc(v * 4, 8);
+  bridge.ensure(pPred + v * 4);
   callGuarded<number>(sym, bridge.ex.nf_sssp_csr_pred,
-    pInd, np, pIx, pW, indices.length, source, pOut, pP);
+    pInd, np, pIx, pW, indices.length, source, pDist, pPred);
   bridge.assertGuard();
-  return bridge.u32(pOut, v).slice();
+  return { dist: bridge.u32(pDist, v).slice(), pred: bridge.i32(pPred, v).slice() };
 }
 
 /** sources[k] -> out[k*np] row-major. The wasm build forces `nthreads = 1`;
@@ -159,7 +177,7 @@ export function costTravelBatch(
  *
  *  `ng` is a COUNT, not a status code -- but it crosses an i64 parameter, so
  *  it arrives as a `bigint`. This is the only wrapped kernel on the BigInt
- *  side; 20 of the 85 exports do, and 19 of them are unwrapped here. */
+ *  side; 21 of the 86 exports do, and 20 of them are unwrapped here. */
 export function costIntern(
   bridge: Bridge, vecs: Uint32Array, n: number, width: number,
 ): { ng: number; ids: Uint32Array; uniq: Uint32Array } {

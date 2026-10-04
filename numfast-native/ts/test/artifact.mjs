@@ -12,7 +12,8 @@
 //
 // WHAT IT REFUSES, LOUDLY:
 //   * no .wasm, or no BUILD.json   -- `npm run build` has not been run
-//   * an export count that has moved -- a kernel was added or removed
+//   * an export set that does not match the source -- a kernel was added or
+//     removed, checked BY NAME against abi/census.json
 //   * a sha256 that does not match BUILD.json -- a different build is on disk
 //
 // It never falls back to another .wasm and never skips. There is no code path
@@ -25,6 +26,9 @@ import { fileURLToPath } from "node:url";
 
 import { loadBridge } from "../dist/bridge.js";
 import { describe as describeWasm } from "../wasm-info.mjs";
+import {
+  expectedFuncExports, expectedI64Exports, surfaceDriftReport, signatureDrift,
+} from "../abi-surface.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const TS = join(HERE, "..");
@@ -32,10 +36,13 @@ const DIST = join(TS, "dist");
 const WASM = join(DIST, "numfast_native.wasm");
 const BUILD_JSON = join(DIST, "BUILD.json");
 
-/** 86 = 85 Func + 1 Memory. Measured on this build; the README and the
- *  package description both quote it, so it is checked here. */
-export const EXPECTED_EXPORT_COUNT = 86;
-export const EXPECTED_FUNC_COUNT = 85;
+/** What the SOURCE declares, derived from abi/census.json rather than typed in.
+ *  These are exported because abi.test.mjs asserts the documented numbers
+ *  against them -- the assertion and the expectation now come from the same
+ *  place, so neither can be right while the other is wrong. */
+export const EXPECTED_FUNC_COUNT = expectedFuncExports().length;
+export const EXPECTED_EXPORT_COUNT = EXPECTED_FUNC_COUNT + 1; // + the memory
+export { expectedFuncExports, expectedI64Exports };
 
 function abort(msg) {
   throw new Error(
@@ -68,12 +75,20 @@ export function artefact() {
       `  Something replaced the artefact after the build. Rebuild.`);
   }
   const info = describeWasm(bytes);
-  if (info.exportCount !== EXPECTED_EXPORT_COUNT || info.funcCount !== EXPECTED_FUNC_COUNT) {
-    abort(`the artefact exports ${info.exportCount} (${info.funcCount} functions); ` +
-      `${EXPECTED_EXPORT_COUNT} (${EXPECTED_FUNC_COUNT}) is what this suite is written against. ` +
-      `If a kernel was legitimately added, move the constants in build.mjs, kernels.ts ` +
-      `and the README together -- do not delete this check. That check is the only reason ` +
-      `a 56-function build survived in git unnoticed.`);
+  // Names, not a count. `EXPECTED_FUNC_COUNT` was 85 while the source declared
+  // 86, and because the .wasm is a gitignored build product that was not a
+  // stale-artefact complaint -- it was a clean clone that could not build.
+  const drift = surfaceDriftReport(info);
+  if (drift) {
+    abort(`the artefact does not match the source.\n  ${drift}` +
+      `  If the source really is ahead of abi/census.json, regenerate the census --\n` +
+      `  do not relax this check. That check is the only reason a 56-function build\n` +
+      `  survived in git unnoticed.`);
+  }
+  const sigDrift = signatureDrift(info);
+  if (sigDrift.length > 0) {
+    abort(`${sigDrift.length} export(s) have a different FuncType than the source declares:\n  ` +
+      sigDrift.join("\n  "));
   }
   return { bytes, build, info };
 }

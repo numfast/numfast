@@ -92,6 +92,74 @@ test("an out-of-range source is refused before the kernel sees it", () => {
     (e) => e instanceof NumFastArgumentError && /source 9 outside/.test(e.message));
 });
 
+// --- nf_sssp_csr_pred ------------------------------------------------------
+// This symbol shipped an OUTPUT as an INPUT, so its error contract has to be
+// stated too: there is no caller-supplied pred buffer to be the wrong size,
+// which is the only reason the whole failure mode is gone.
+
+test("ssspCsrPred takes no caller-supplied pred buffer", () => {
+  // bridge + indptr + indices + weights + source. If this becomes 6, a
+  // caller-owned pred argument is back -- and the argument's ROLE is exactly
+  // what was misread: the engine writes 4*V bytes to it and cannot check that
+  // the buffer is that long.
+  assert.equal(K.ssspCsrPred.length, 5);
+});
+
+test("ssspCsrPred refuses a negative length before the kernel runs", () => {
+  const negative = { length: -1 };
+  assert.throws(
+    () => K.ssspCsrPred(bridge, negative, new Uint32Array(3), new Uint32Array(3), 0),
+    (e) => e instanceof NumFastArgumentError && /negative length/.test(e.message));
+});
+
+test("ssspCsrPred refuses an out-of-range source before the kernel sees it", () => {
+  const indptr = new Uint32Array([0, 1, 2]);
+  assert.throws(
+    () => K.ssspCsrPred(bridge, indptr, new Uint32Array([1]), new Uint32Array([5]), 9),
+    (e) => e instanceof NumFastArgumentError && /source 9 outside/.test(e.message));
+});
+
+test("a short pred at the raw ABI is a SILENT out-of-bounds write, so the "
+  + "wrapper allocates it", async () => {
+  // Why prevention, stated by measurement rather than by assertion. On a
+  // THROWAWAY bridge -- this corrupts memory on purpose -- hand the kernel a
+  // 3-byte pred where it writes 12, with the dist output immediately after,
+  // which is the layout the shipped wrapper produced.
+  //
+  // rc is 0: no return code, no trap, no guard hit. The fill precedes the
+  // search, so it erases the `dist[source] = 0` the search tests against; the
+  // first heap pop then compares against INF, the loop exits without relaxing
+  // anything, and dist reads back all-INF. The caller is told the call worked.
+  const { loadBridge } = await import("../dist/bridge.js");
+  const { wasmBytes } = await import("../dist/index.js");
+  const victim = await loadBridge(wasmBytes());
+  victim.reset();
+  const pInd = victim.put(new Uint32Array([0, 1, 3, 3]));
+  const pIx = victim.put(new Uint32Array([1, 2, 2]));
+  const pW = victim.put(new Uint32Array([2, 5, 9]));
+  // pred must sit IMMEDIATELY below dist -- no padding, that is the whole
+  // point -- while dist must be 4-aligned or the u32 readback is illegal.
+  // base+1 .. base+4 satisfies both.
+  const pBase = victim.alloc(4, 4);
+  const pPred = pBase + 1;
+  const pDist = pBase + 4;
+  victim.ensure(pDist + 12);
+  assert.equal(pDist, pPred + 3,
+    "this reproduction needs pred to sit immediately below dist");
+
+  const rc = K.callRaw(victim, "nf_sssp_csr_pred", pInd, 4, pIx, pW, 3, 0, pDist, pPred);
+  assert.equal(rc, 0, `the engine reported a failure (${rc}); the point of this ` +
+    `test is that it reports SUCCESS on an out-of-bounds write`);
+  assert.deepEqual([...victim.u32(pDist, 3)], [0xffffffff, 0xffffffff, 0xffffffff],
+    "dist did not come back all-INF; the 12-byte fill did not land on it, so " +
+    "this reproduction is measuring something else");
+
+  // The wrapper has no way to be the caller above, which is the whole fix.
+  const ok = K.ssspCsrPred(bridge, new Uint32Array([0, 1, 3, 3]),
+    new Uint32Array([1, 2, 2]), new Uint32Array([2, 5, 9]), 0);
+  assert.deepEqual([...ok.dist], [0, 2, 7]);
+});
+
 // --- the BigInt boundary ----------------------------------------------------
 
 test("an i64 value must be a BigInt; a Number is refused, not truncated", () => {

@@ -41,7 +41,10 @@ const FIXTURES = JSON.parse(readFileSync(join(HERE, "fixtures", "parity.json"), 
 const OP_NAME = ["add", "sub", "mul", "div", "pow", "floorDiv", "mod"];
 const TOL = FIXTURES.tolerance;
 
-/** Wrapped but with no Python reference built yet. Stated, not hidden. */
+/** Wrapped but with no Python reference built yet. Stated, not hidden.
+ *  `nf_sssp_csr_pred` additionally carries a JS-reference test below: it has
+ *  no Python fixture, but it is no longer untested, because it shipped an
+ *  OUTPUT as an INPUT for a whole release and nothing noticed. */
 const NOT_FIXTURED = [
   "nf_sssp_csr", "nf_sssp_csr_pred", "nf_sssp_batch", "nf_cost_travel_batch",
   "nf_cost_intern", "nf_rowwise_kway_time_argmin_gather",
@@ -269,4 +272,106 @@ test("every wrapped kernel not in the fixtures is on the stated list", () => {
     "a kernel is wrapped but has neither a parity fixture nor a name on the " +
     "not-fixtured list. One of those two is a lie; make whichever true.");
   assert.equal(notFixtured.length, 8);
+});
+
+// --- nf_sssp_csr_pred: an OUTPUT that shipped as an INPUT --------------------
+//
+// The defect this pins, in the engine's own terms: `nf_sssp_csr_pred` takes
+// `pred: *mut i32`, borrows it for `np - 1` lanes and FILLS it with the INF
+// sentinel before the search. The wrapper used to document and pass a
+// `Uint8Array` of E predicate bytes instead. On V=3, E=3 that is a 12-byte
+// fill into a 3-byte buffer: rc = 0, no trap, no guard hit, and the fill
+// landed on the `dist` output allocated right after it. Because the fill
+// precedes the search, it also erased `dist[source] = 0`, so the very first
+// heap pop compared against INF and the search ended without relaxing
+// anything -- dist came back all-INF and the call reported success.
+//
+// No fixture covered this symbol, so nothing failed. The reference below is
+// Dijkstra written here, independently of the engine's Rust, and `dist` is
+// additionally checked against `ssspCsr` -- a separately wrapped symbol that
+// runs the same search without the pred output -- so the assertion does not
+// reduce to "the wrapper agrees with itself".
+
+/** O(V^2) Dijkstra over a CSR graph: { dist, pred }. */
+function dijkstraRef(indptr, indices, weights, source) {
+  const v = indptr.length - 1;
+  const dist = new Uint32Array(v).fill(K.Q_INF);
+  const pred = new Int32Array(v).fill(-1);
+  // A settled vertex keeps its distance, so without a visited set the scan
+  // re-picks it forever and the loop never terminates.
+  const done = new Uint8Array(v);
+  dist[source] = 0;
+  for (;;) {
+    let u = -1, best = K.Q_INF;
+    for (let i = 0; i < v; i++) if (!done[i] && dist[i] < best) { best = dist[i]; u = i; }
+    if (u < 0) break;
+    done[u] = 1;
+    for (let e = indptr[u], end = indptr[u + 1]; e < end; e++) {
+      const w = indices[e], nd = best + weights[e];
+      if (nd < dist[w]) { dist[w] = nd; pred[w] = u; }
+    }
+  }
+  return { dist, pred };
+}
+
+const SSSP_CASES = [
+  // The reported reproduction: V=3, E=3, a 3-byte pred.
+  { name: "V3E3", indptr: [0, 1, 3, 3], indices: [1, 2, 2], weights: [2, 5, 9], source: 0 },
+  // An unreachable vertex: pins Q_INF in dist and -1 in pred.
+  {
+    name: "V4E4-unreachable", indptr: [0, 1, 3, 3, 4], indices: [1, 2, 2, 3],
+    weights: [2, 5, 9, 1], source: 0,
+  },
+  // A source that is not 0, and a row that points back at an earlier vertex.
+  {
+    name: "V5E8-source-2", indptr: [0, 2, 4, 6, 7, 8], indices: [1, 2, 2, 3, 3, 0, 4, 0],
+    weights: [4, 1, 2, 5, 1, 3, 2, 9], source: 2,
+  },
+];
+
+test("nf_sssp_csr_pred: dist and pred match an independent Dijkstra", () => {
+  for (const c of SSSP_CASES) {
+    const indptr = new Uint32Array(c.indptr);
+    const indices = new Uint32Array(c.indices);
+    const weights = new Uint32Array(c.weights);
+    const got = K.ssspCsrPred(bridge, indptr, indices, weights, c.source);
+    const want = dijkstraRef(indptr, indices, weights, c.source);
+    assert.deepEqual([...got.dist], [...want.dist], `${c.name}: dist != reference Dijkstra`);
+    assert.deepEqual([...got.pred], [...want.pred], `${c.name}: pred != reference Dijkstra`);
+    // The same graph through the symbol that has no pred output at all.
+    assert.deepEqual([...got.dist], [...K.ssspCsr(bridge, indptr, indices, weights, c.source)],
+      `${c.name}: dist != nf_sssp_csr on the same graph`);
+  }
+});
+
+test("nf_sssp_csr_pred: pred is V Int32 lanes and a tree over the reachable set", () => {
+  for (const c of SSSP_CASES) {
+    const indptr = new Uint32Array(c.indptr);
+    const v = indptr.length - 1;
+    const got = K.ssspCsrPred(bridge, indptr, new Uint32Array(c.indices),
+      new Uint32Array(c.weights), c.source);
+    assert.equal(got.pred.length, v, `${c.name}: pred has ${got.pred.length} lanes, expected V=${v}`);
+    assert.ok(got.pred instanceof Int32Array,
+      `${c.name}: pred must be Int32Array; the engine borrows *mut i32, not u8`);
+    for (let i = 0; i < v; i++) {
+      if (i === c.source || got.dist[i] === K.Q_INF) {
+        assert.equal(got.pred[i], -1, `${c.name}: pred[${i}] must be -1`);
+      } else {
+        const p = got.pred[i];
+        assert.ok(p >= 0 && p < v, `${c.name}: pred[${i}] = ${p} is not a vertex id`);
+        assert.ok(got.dist[p] < got.dist[i],
+          `${c.name}: pred[${i}] = ${p} is not strictly closer to the source`);
+      }
+    }
+  }
+});
+
+test("the reported reproduction now answers correctly", () => {
+  // V=3, E=3 -- exactly the shape the shipped wrapper drove, with the 3-byte
+  // pred it used to pass. The shipped artefact answered rc = 0 with
+  // dist = [4294967295, 4294967295, 4294967295] against an expected [0, 2, 7].
+  const got = K.ssspCsrPred(bridge, new Uint32Array([0, 1, 3, 3]),
+    new Uint32Array([1, 2, 2]), new Uint32Array([2, 5, 9]), 0);
+  assert.deepEqual([...got.dist], [0, 2, 7]);
+  assert.deepEqual([...got.pred], [-1, 0, 1]);
 });

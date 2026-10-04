@@ -3,7 +3,7 @@
 //
 // @numfast/kernels -- NumFast's compute kernels as WebAssembly.
 //
-// WHAT THIS IS: 17 typed wrappers over an 85-function, 1-memory, 0-import
+// WHAT THIS IS: 17 typed wrappers over an 86-function, 1-memory, 0-import
 // WebAssembly module, plus the error contract and the memory layout rules
 // needed to call it without getting silently wrong answers.
 //
@@ -15,11 +15,11 @@
 //
 // The scope lives in exported constants, not only in prose:
 //
-//   WRAPPED.length            17 of 85
-//   TOTAL_EXPORTS             85
+//   WRAPPED.length            17 of 86
+//   TOTAL_EXPORTS             86
 //   BUILD.sha256 / .bytes     which .wasm these bytes came from
 //
-// `callRaw` reaches the other 68 kernels by name. They are unwrapped on
+// `callRaw` reaches the other 69 kernels by name. They are unwrapped on
 // purpose: their pointer-vs-length argument order is not recorded anywhere in
 // the repository, so a wrapper written from the signature alone would be a
 // guess. They are named, not hidden.
@@ -60,7 +60,7 @@ export interface BuildInfo {
   readonly exportCount: number;
   readonly funcCount: number;
   readonly importCount: number;
-  /** 20 on the current build: exports whose FuncType touches i64, so a
+  /** 21 on the current build: exports whose FuncType touches i64, so a
    *  JavaScript `Number` is rejected rather than truncated. */
   readonly i64Count: number;
   readonly i64Exports: readonly string[];

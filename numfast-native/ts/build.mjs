@@ -8,10 +8,11 @@
 //   * WHICH ARTEFACT? `dist/BUILD.json` carries the sha256, the byte count,
 //     the export/import counts and the i64 export list of the .wasm that was
 //     copied. A parity failure is then attributable to one build.
-//   * IS IT THE RIGHT SURFACE? The export count is checked against the
-//     constant the package and the README quote. A kernel added without a
-//     rebuild of the wrapper table is a build failure, not a silent change
-//     to a published number.
+//   * IS IT THE RIGHT SURFACE? Every export name is checked against
+//     `abi/census.json`, which is generated from the Rust source, and every
+//     signature against the FuncType recorded there. A kernel added without a
+//     rebuild of the wrapper table fails the build by NAME; nothing has to be
+//     re-typed for the build to know the surface moved.
 //   * IS THE DOCUMENTED ABI TABLE TRUE? Every `wasm:` field in abi.ts is
 //     checked against the bytes of this .wasm. The table can no longer drift
 //     away from the artefact without failing the build.
@@ -29,6 +30,9 @@ import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe } from "./wasm-info.mjs";
+import {
+  expectedFuncExports, expectedI64Exports, surfaceDriftReport, signatureDrift,
+} from "./abi-surface.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const NATIVE = join(HERE, "..");
@@ -58,10 +62,6 @@ function engineVersion() {
   return v;
 }
 
-/** The 85 the README, the package and kernels.ts all state. */
-const EXPECTED_FUNCS = 85;
-const EXPECTED_I64 = 20;
-
 function fail(msg) {
   process.stderr.write(`BUILD FAILED: ${msg}\n`);
   process.exit(1);
@@ -79,19 +79,37 @@ if (!existsSync(WASM_SRC)) {
 const wasm = readFileSync(WASM_SRC);
 const info = describe(wasm);
 
-if (info.funcCount !== EXPECTED_FUNCS) {
-  fail(`the artefact exports ${info.funcCount} functions, this package is built against ` +
-    `${EXPECTED_FUNCS}. Either a kernel was added or removed, or this is a stale build. ` +
-    `If the change is intended, update EXPECTED_FUNCS in build.mjs, TOTAL_EXPORTS in ` +
-    `kernels.ts and the README together -- do not delete the check.`);
+// IS IT THE RIGHT SURFACE? Not by a hand-typed count -- by NAME, against the
+// source-derived census in abi/census.json. A count cannot say which kernel is
+// missing, and a count is what let a clean clone fail: EXPECTED_FUNCS stayed 85
+// after nf_pair_insert_i64 was added, and the .wasm is gitignored, so every
+// clone rebuilt 86 and the guard demanded 85.
+const drift = surfaceDriftReport(info);
+if (drift) {
+  fail(`the artefact does not match the source.\n  ${drift}`);
+}
+// Signatures too: the census carries the FuncType the compiler emitted for
+// each source body, so a wrapper built against a moved argument is caught here
+// rather than by a caller.
+const sigDrift = signatureDrift(info);
+if (sigDrift.length > 0) {
+  fail(`${sigDrift.length} export(s) have a different FuncType than the source declares:\n  ` +
+    sigDrift.join("\n  "));
 }
 if (info.importCount !== 0) {
   fail(`the artefact imports ${info.importCount} symbol(s); the "no imports" claim in the ` +
     `README and package description is what makes this module portable, and it is now false.`);
 }
-if (info.i64Count !== EXPECTED_I64) {
-  fail(`the artefact has ${info.i64Count} i64 exports, the docs say ${EXPECTED_I64}. ` +
-    `Update the docs and the BigInt section of the README together.`);
+const wantI64 = expectedI64Exports();
+const driftI64 = [
+  ...wantI64.filter((s) => !info.i64Exports.includes(s)),
+  ...info.i64Exports.filter((s) => !wantI64.includes(s)),
+];
+if (driftI64.length > 0) {
+  fail(`the i64 boundary moved: ${wantI64.length} exports declare i64 in the source, ` +
+    `this artefact has ${info.i64Count}. Not matching: ${driftI64.join(", ")}.\n` +
+    `  The BigInt rule in the README is derived from this set; if the set is right, ` +
+    `update the numbers the README quotes and move on.`);
 }
 
 // --- cross-check the documented ABI table against the bytes -----------------
