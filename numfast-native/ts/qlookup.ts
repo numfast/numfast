@@ -3,10 +3,22 @@
 // Q-lookup bench: quantized pair artifacts (dist u32 + speed u32 + k u16)
 // through nf_cost_travel_batch. Seed 42. JSON last line.
 // Usage: node ts/qlookup.ts --gen [n] | node ts/qlookup.ts [n]
+//
+// The .bin artefacts are NOT tracked in git any more: this file regenerates
+// them with --gen and the browser demo generates its own input in-page. Ten
+// megabytes of committed binary that one function reproduces is not a
+// dependency, it is history.
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+// The high-level wrapper lives in kernels.ts (the shipped package surface).
+// This driver imports it from dist/, not from the .ts source: kernels.ts uses
+// NodeNext `./x.js` specifiers, which `tsc` resolves and Node's type stripping
+// does not. So running this file means running it against the BUILT package,
+// which is also the honest thing for a benchmark to measure.
+//   cd numfast-native/ts && npm run build && node qlookup.ts [n]
 import { loadBridge } from "./bridge.ts";
+import { costTravelBatch } from "./dist/kernels.js";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)));
 const ART = join(ROOT, "artifacts");
@@ -60,7 +72,7 @@ const d = dist.subarray(0, n), s = speed.subarray(0, n), kv = kk.subarray(0, n);
 
 // Parity on 10k head sample
 const bridge = await loadBridge(wasm);
-const got = bridge.costTravel(d.subarray(0, 10_000), s.subarray(0, 10_000), kv.subarray(0, 10_000));
+const got = costTravelBatch(bridge, d.subarray(0, 10_000), s.subarray(0, 10_000), kv.subarray(0, 10_000));
 const want = ref(d.subarray(0, 10_000), s.subarray(0, 10_000), kv.subarray(0, 10_000));
 let bad = 0;
 for (let i = 0; i < 10_000; i++) if (got[i] !== want[i]) bad++;
@@ -85,6 +97,9 @@ times.sort((a, b) => a - b);
 const med = times[5];
 console.log(JSON.stringify({
   pass: true, n, parityBad: 0, medianMs: +med.toFixed(3),
-  lookupPerS: Math.round(n / (med / 1000)), nativePerS: 171_000,
+  lookupPerS: Math.round(n / (med / 1000)),
+  // No native comparison: the old `nativePerS: 171_000` here was a hardcoded
+  // number with nothing measured behind it, and this box is shared, so any
+  // ratio printed next to it would be a claim nobody checked.
   wasm: "target/wasm32-unknown-unknown/release/numfast_native.wasm",
 }));

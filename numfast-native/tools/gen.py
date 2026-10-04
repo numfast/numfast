@@ -27,7 +27,15 @@ for name, (n, g) in CASES.items():
     vp = os.path.join(OUT, "values_%s.f64" % name)
     keys.tofile(kp)
     vals.tofile(vp)
-    meta[name] = {"n": n, "g": g, "keys": kp, "values": vp}
+    meta[name] = {"n": n, "g": g,
+                  # Paths are stored RELATIVE to the vectors directory. An
+                  # absolute path here bakes one machine's directory layout into
+                  # a generated file: a meta.json produced on another checkout
+                  # made parity_sorted.py die with a FileNotFoundError naming a
+                  # tree that does not exist here, which reads exactly like a
+                  # parity failure and is not one. Readers resolve against their
+                  # own VEC; see parity_sorted.py.
+                  "keys": os.path.basename(kp), "values": os.path.basename(vp)}
     print("%s: n=%d g=%d keys=%dB values=%dB" % (name, n, g, keys.nbytes, vals.nbytes))
 
 with open(os.path.join(OUT, "meta.json"), "w") as f:

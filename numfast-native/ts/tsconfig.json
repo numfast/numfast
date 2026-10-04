@@ -1,0 +1,26 @@
+{
+  "//": "Build only the package sources. qlookup.ts is a bench driver that runs",
+  "//2": "under Node's native type stripping (it imports ./bridge.ts by its",
+  "//3": "real name); it is deliberately outside this program.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"],
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "rootDir": ".",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "exactOptionalPropertyTypes": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["bridge.ts", "errors.ts", "abi.ts", "kernels.ts", "index.ts", "webassembly.d.ts"],
+  "exclude": ["dist", "node_modules", "qlookup.ts", "test"]
+}

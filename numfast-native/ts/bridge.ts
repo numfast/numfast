@@ -1,16 +1,38 @@
 // Copyright (c) 2026 NumFast
 // SPDX-License-Identifier: AGPL-3.0-only
-// TS-bridge over the raw cdylib ABI of numfast-native (no wasm-bindgen).
+// TS bridge over the raw cdylib ABI of numfast-native (no wasm-bindgen).
 // ESM-only, zero-copy TypedArray views (subarray, never slice).
 // Runs in Node >=22.18 (native type-stripping) and browsers (via tsc build).
 // Decision: raw ABI — wasm-bindgen rejected (zero deps, usize->i32 ABI stable).
+//
+// BUFFER PLACEMENT — a measured defect this file now avoids.
+//
+// The previous revision started caller buffers at 0x101000, on the reasoning
+// that the wasm shadow stack top is 0x100000 (it is: the module's single
+// mutable i32 global initialises to 0x100000). That reasoning is wrong.
+// Measured on the current artefact, 2026-10-04, by diffing linear memory
+// before and after instantiation:
+//
+//   the module's own initialised data occupies [0x100000, 0x103203)
+//   -- 8764 non-zero bytes, and NOTHING below 0x100000.
+//
+// The float constants that `powf` reads live inside that region. A caller
+// buffer that overlaps it silently overwrites them and `powf` returns
+// plausible, wrong numbers with rc=0: at a 0x101000 base, any input longer
+// than 8632 bytes did it, while the same input at a 0x20000 base was correct.
+// Native (ctypes) was correct at every size. That is the whole of the
+// reported "`map pow` diverges at n=100000" defect, and it is a caller-side
+// placement bug, not a kernel bug and not a WASM/native numerical difference.
+//
+// So the base is no longer a constant: it is probed from the instantiated
+// memory and placed above whatever this build put there.
 
-export const STACK_TOP = 0x100000;
 export const GUARD = 0x1000;
 export const CANARY = 0x9e3779b9;
-export const BASE = STACK_TOP + GUARD;
 const PAGE = 65536;
 const INF = 0xffffffff;
+/** Room between the top of the module's data and the first caller buffer. */
+const DATA_MARGIN = 0x1000;
 
 const alignUp = (off: number, a: number): number => (off + a - 1) & ~(a - 1);
 
@@ -24,6 +46,16 @@ export type WasmExports = WebAssembly.Exports & {
   nf_rowwise_kway_time_argmin_gather: (tPtrs: number, dPtrs: number, k: number, n: number, tBest: number, dBest: number, mBest: number) => number;
   nf_adjacency_slice: (indptr: number, np: number, indices: number, e: number, query: number, k: number, begins: number, ends: number) => number;
   nf_adjacency_gather: (indices: number, e: number, begins: number, ends: number, k: number, out: number, total: number) => number;
+  // elementwise map -- see series/map.rs for the op codes
+  nf_map_i32: (a: number, b: number, n: number, op: number, out: number) => number;
+  nf_map_scalar_i32: (a: number, n: number, s: number, op: number, out: number) => number;
+  nf_map_fscalar_i32: (a: number, n: number, s: number, op: number, out: number) => number;
+  nf_map_f32: (a: number, b: number, n: number, op: number, out: number) => number;
+  nf_map_f32_divpow: (a: number, b: number, n: number, op: number, out: number) => number;
+  nf_map_scalar_f32: (a: number, n: number, s: number, op: number, out: number) => number;
+  nf_map_scalar_f32_divpow: (a: number, n: number, s: number, op: number, out: number) => number;
+  nf_map_f64: (a: number, b: number, n: number, op: number, out: number) => number;
+  nf_map_scalar_f64: (a: number, n: number, s: number, op: number, out: number) => number;
 };
 
 export async function loadBridge(wasmBytes: ArrayBuffer | Uint8Array): Promise<Bridge> {
@@ -32,30 +64,34 @@ export async function loadBridge(wasmBytes: ArrayBuffer | Uint8Array): Promise<B
   return new Bridge(instance.exports as WasmExports);
 }
 
-function checkRc(rc: number, op: string): void {
-  if (rc !== 0) throw new Error(`${op}: rc=${rc}`);
-}
-
 export class Bridge {
   readonly ex: WasmExports;
+  /** First byte a caller buffer may occupy. Above the module's own data. */
+  readonly base: number;
+  /** End of the module's own initialised data, measured not assumed. */
+  readonly staticDataEnd: number;
   private cur: number;
 
   constructor(ex: WasmExports) {
     this.ex = ex;
-    this.cur = BASE;
+    this.staticDataEnd = probeStaticDataEnd(ex.memory);
+    this.base = alignUp(this.staticDataEnd + DATA_MARGIN, PAGE);
+    this.cur = this.base;
     this.fillGuard();
   }
 
   get mem(): WebAssembly.Memory { return this.ex.memory; }
   get u8(): Uint8Array { return new Uint8Array(this.mem.buffer); }
+  /** The guard page immediately below the first caller buffer. */
+  get guardBase(): number { return this.base - GUARD; }
 
   private fillGuard(): void {
     this.ensure(this.cur);
-    new Uint32Array(this.mem.buffer, STACK_TOP, GUARD / 4).fill(CANARY);
+    new Uint32Array(this.mem.buffer, this.guardBase, GUARD / 4).fill(CANARY);
   }
 
   assertGuard(): void {
-    const g = new Uint32Array(this.mem.buffer, STACK_TOP, GUARD / 4);
+    const g = new Uint32Array(this.mem.buffer, this.guardBase, GUARD / 4);
     for (let i = 0; i < g.length; i++) {
       if (g[i] !== CANARY) throw new Error("bridge: wasm stack drifted into buffers");
     }
@@ -69,120 +105,63 @@ export class Bridge {
 
   alloc(bytes: number, align = 8): number {
     const off = alignUp(this.cur, align);
+    if (off < this.staticDataEnd) {
+      // Unreachable by construction; stated rather than assumed.
+      throw new Error(`bridge: allocation at ${off} would overlap module data ending at ${this.staticDataEnd}`);
+    }
     this.cur = off + bytes;
     return off;
   }
 
-  reset(): void { this.cur = BASE; }
+  reset(): void { this.cur = this.base; }
 
   // Zero-copy views (subarray) — invalidated by grow; re-fetch via u8 after ensure.
   u32(off: number, n: number): Uint32Array { return new Uint32Array(this.mem.buffer, off, n); }
   i32(off: number, n: number): Int32Array { return new Int32Array(this.mem.buffer, off, n); }
   u16(off: number, n: number): Uint16Array { return new Uint16Array(this.mem.buffer, off, n); }
   f32(off: number, n: number): Float32Array { return new Float32Array(this.mem.buffer, off, n); }
+  f64(off: number, n: number): Float64Array { return new Float64Array(this.mem.buffer, off, n); }
   u8v(off: number, n: number): Uint8Array { return new Uint8Array(this.mem.buffer, off, n); }
 
-  put<T extends Uint32Array | Int32Array | Uint16Array | Float32Array | Uint8Array>(v: T): number {
+  put<T extends Uint32Array | Int32Array | Uint16Array | Float32Array | Float64Array | Uint8Array>(v: T): number {
     const off = this.alloc(v.byteLength, 8);
-    const u = this.ensure(this.cur);
-    u.set(new Uint8Array(v.buffer, v.byteOffset, v.byteLength), off);
+    this.ensure(this.cur);
+    this.u8.set(new Uint8Array(v.buffer as ArrayBuffer, v.byteOffset, v.byteLength), off);
     return off;
   }
 
-  // ---- sssp: CSR + weights + source -> dist (u32, INF=unreachable) ----
-  ssspCsr(indptr: Uint32Array, indices: Uint32Array, weights: Uint32Array, source: number): Uint32Array {
-    const v = indptr.length - 1;
-    this.reset();
-    const pInd = this.put(indptr), pIx = this.put(indices), pW = this.put(weights);
-    const pDist = this.alloc(v * 4, 8);
-    this.ensure(this.cur);
-    checkRc(this.ex.nf_sssp_csr(pInd, indptr.length, pIx, pW, indices.length, source, pDist), "ssspCsr");
-    this.assertGuard();
-    return this.u32(pDist, v).slice();
-  }
-
-  // ---- batch: sources[K] -> out[K*V] row-major (wasm: nthreads forced 1) ----
-  ssspBatch(indptr: Uint32Array, indices: Uint32Array, weights: Uint32Array, sources: Uint32Array): Uint32Array {
-    const v = indptr.length - 1, k = sources.length;
-    this.reset();
-    const pInd = this.put(indptr), pIx = this.put(indices), pW = this.put(weights);
-    const pSrc = this.put(sources);
-    const pOut = this.alloc(k * v * 4, 8);
-    this.ensure(this.cur);
-    checkRc(this.ex.nf_sssp_batch(pInd, indptr.length, pIx, pW, indices.length, pSrc, k, pOut, 1), "ssspBatch");
-    this.assertGuard();
-    return this.u32(pOut, k * v).slice();
-  }
-
-  // ---- Q-lookup: out[i] = (dist[i]*k[i] + speed[i]/2)/speed[i], INF-guarded ----
-  costTravel(dist: Uint32Array, speed: Uint32Array, k: Uint16Array): Uint32Array {
-    const n = dist.length;
-    this.reset();
-    const pD = this.put(dist), pS = this.put(speed), pK = this.put(k);
-    const pOut = this.alloc(n * 4, 8);
-    this.ensure(this.cur);
-    checkRc(this.ex.nf_cost_travel_batch(pD, pS, pK, n, pOut), "costTravel");
-    this.assertGuard();
-    return this.u32(pOut, n).slice();
-  }
-
+  /** Raw-offset call of `nf_cost_travel_batch`, returning the rc untranslated.
+   *
+   *  Kept for the two benchmark drivers (`qlookup.ts`, `demo.html`) that own
+   *  their own layout and measure the kernel alone. It is deliberately NOT
+   *  the library entry point: `kernels.costTravelBatch` validates, resolves
+   *  the return code, and converts traps. Use that one. */
   costTravelInto(dOff: number, sOff: number, kOff: number, n: number, outOff: number): number {
     return this.ex.nf_cost_travel_batch(dOff, sOff, kOff, n, outOff);
   }
-
-  // ---- cost interning: row-major vecs[n*width] -> ids + uniq table (returns ng) ----
-  costIntern(vecs: Uint32Array, n: number, width: number): { ng: number; ids: Uint32Array; uniq: Uint32Array } {
-    this.reset();
-    const pV = this.put(vecs);
-    const pIds = this.alloc(n * 4, 8);
-    const pUniq = this.alloc(n * width * 4, 8);
-    this.ensure(this.cur);
-    const ng = Number(this.ex.nf_cost_intern(pV, n, width, pIds, pUniq, n * width));
-    if (ng < 0) throw new Error(`costIntern: ng=${ng}`);
-    this.assertGuard();
-    return { ng, ids: this.u32(pIds, n).slice(), uniq: this.u32(pUniq, ng * width).slice() };
-  }
-
-  // ---- K-way: t lanes Int32 selectors + d lanes F32 payload -> best/min/argmin ----
-  kway(tLanes: Int32Array[], dLanes: Float32Array[]): { tBest: Int32Array; dBest: Float32Array; mBest: Uint8Array } {
-    const k = tLanes.length, n = tLanes[0].length;
-    if (k < 1 || k > 256 || dLanes.length !== k) throw new Error(`kway: k=${k}`);
-    this.reset();
-    const tOffs = tLanes.map((t) => this.put(t));
-    const dOffs = dLanes.map((d) => this.put(d));
-    const pT = this.alloc(k * 4, 8), pD = this.alloc(k * 4, 8);
-    const pTB = this.alloc(n * 4, 8), pDB = this.alloc(n * 4, 8), pMB = this.alloc(n, 8);
-    this.ensure(this.cur);
-    const u = this.u8;
-    const tw = new Uint32Array(u.buffer, pT, k), dw = new Uint32Array(u.buffer, pD, k);
-    for (let i = 0; i < k; i++) { tw[i] = tOffs[i]; dw[i] = dOffs[i]; }
-    checkRc(this.ex.nf_rowwise_kway_time_argmin_gather(pT, pD, k, n, pTB, pDB, pMB), "kway");
-    this.assertGuard();
-    return { tBest: this.i32(pTB, n).slice(), dBest: this.f32(pDB, n).slice(), mBest: this.u8v(pMB, n).slice() };
-  }
-
-  // ---- adjacency: query[K] -> [begins,ends) slices, then flat gather ----
-  adjacencySlice(indptr: Uint32Array, indices: Uint32Array, query: Uint32Array): { begins: Uint32Array; ends: Uint32Array } {
-    const k = query.length;
-    this.reset();
-    const pInd = this.put(indptr), pIx = this.put(indices), pQ = this.put(query);
-    const pB = this.alloc(k * 4, 8), pE = this.alloc(k * 4, 8);
-    this.ensure(this.cur);
-    checkRc(this.ex.nf_adjacency_slice(pInd, indptr.length, pIx, indices.length, pQ, k, pB, pE), "adjacencySlice");
-    this.assertGuard();
-    return { begins: this.u32(pB, k).slice(), ends: this.u32(pE, k).slice() };
-  }
-
-  adjacencyGather(indices: Uint32Array, begins: Uint32Array, ends: Uint32Array, total: number): Uint32Array {
-    const k = begins.length;
-    this.reset();
-    const pIx = this.put(indices), pB = this.put(begins), pE = this.put(ends);
-    const pOut = this.alloc(total * 4, 8);
-    this.ensure(this.cur);
-    checkRc(this.ex.nf_adjacency_gather(pIx, indices.length, pB, pE, k, pOut, total), "adjacencyGather");
-    this.assertGuard();
-    return this.u32(pOut, total).slice();
-  }
 }
 
-export const Q_INF = INF;
+/**
+ * End of the module's own initialised data, found by scanning the exported
+ * memory of a freshly instantiated module.
+ *
+ * wasm-ld merges `.rodata` and `.data` into segments whose declaration in the
+ * data section does NOT reveal the true extent (the shipped .wasm declares
+ * 2 data segments ending at 0x10000B while its real initialised image runs to
+ * 0x103203). The image itself is authoritative: everything the module did not
+ * initialise is zero, and this build leaves nothing below its first page, so
+ * the highest non-zero byte is the top of its data.
+ *
+ * A future build that pre-faults memory above its data would make this
+ * over-estimate, which costs a few kilobytes and is safe. A build that
+ * initialises nothing would make it return 0 and place buffers over live
+ * data — so `Bridge.alloc` re-checks every offset against the result.
+ */
+export function probeStaticDataEnd(mem: WebAssembly.Memory): number {
+  const u8 = new Uint8Array(mem.buffer);
+  let hi = 0;
+  for (let i = u8.length - 1; i >= 0; i--) {
+    if (u8[i] !== 0) { hi = i + 1; break; }
+  }
+  return hi;
+}

@@ -15,6 +15,8 @@ import time
 
 import numpy as np
 
+import vectors_meta
+
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 VEC = os.path.join(ROOT, "vectors")
 RES = os.path.join(ROOT, "results")
@@ -25,7 +27,10 @@ DLL = os.path.join(ROOT, "target", "x86_64-pc-windows-gnu", "release", "numfast_
 MJS = os.path.join(ROOT, "tools", "wasm_multi.mjs")
 
 NCOLS = 3
-meta = json.load(open(os.path.join(VEC, "meta.json")))["big"]
+# Resolved against THIS checkout: gen.py writes basenames, and a
+# meta.json carrying another machine's absolute path used to kill this
+# script with a FileNotFoundError that read like a parity failure.
+meta = vectors_meta.load("big")
 n, g = meta["n"], meta["g"]
 keys = np.fromfile(meta["keys"], dtype=np.int32)
 cols = np.stack(

@@ -1,0 +1,112 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+#
+# WHAT THIS WORKFLOW IS, STATED PLAINLY
+#
+# It builds the wasm32 artefact from source and proves the JavaScript package
+# built from it. It is GATING on the package it produces, and it gates for one
+# reason: a kernel package whose committed fixtures no longer match its own
+# kernels is worse than no package, because a reader would believe the parity
+# was established.
+#
+# It does NOT check in the .wasm. `numfast-native/.gitignore` excludes
+# `target/`, and that is correct: a committed copy of a build product is exactly
+# how `numfast-native/tools/numfast_native.wasm` survived in git 29 symbols
+# behind the current build, with four parity scripts validating it and reporting
+# green. So the artefact is built here, every time, from the same commit as the
+# source.
+#
+# WHY THIS IS A SEPARATE FILE AND NOT A JOB IN ci.yml
+# ci.yml is a Python suite with a documented reason for having no Linux job. The
+# wasm32 target needs a Rust toolchain and a Node runtime, and a red first run
+# teaches nothing. Kept separate, this workflow's failure is unambiguously about
+# this package.
+#
+# WHY THE FIXTURE STEP IS A DIFF AND NOT A RUN
+# `gen_fixtures.py` produces the expected values from TWO Python paths -- NumPy
+# with the documented int32 round-trip, and ctypes into the committed DLL. If
+# either moved, `git diff --exit-code` fails and the diff IS the report: a
+# behaviour change on the Python side becomes a visible change to the
+# expectation, in the commit that caused it. Running the JS suite against a
+# regenerated fixture instead would prove only that the JS can read the file the
+# Python just wrote.
+
+name: wasm-kernels
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  wasm-kernels:
+    name: @numfast/kernels (ubuntu, node 22 and 24)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["22", "24"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install the Rust toolchain and the wasm32 target
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup target add wasm32-unknown-unknown
+
+      - name: Build the wasm32 artefact (the build product, never committed)
+        run: cargo build --manifest-path numfast-native/Cargo.toml --target wasm32-unknown-unknown --release
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: numfast-native/ts/package-lock.json
+
+      - name: Install package dev dependencies
+        working-directory: numfast-native/ts
+        run: npm ci
+
+      - name: Build the package (tsc + wasm + BUILD.json)
+        working-directory: numfast-native/ts
+        run: npm run build
+
+      - name: Run the JS suites (ABI, traps, parity)
+        working-directory: numfast-native/ts
+        run: npm test
+
+      # --- the Python half of "parity with Python" ------------------------
+      # Without this step the job only proves the .wasm matches a fixture that
+      # some earlier commit wrote. With it, the fixture is re-derived on THIS
+      # commit from the Python host and must come out unchanged.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install the Python deps the fixture generator needs
+        run: python -m pip install --upgrade pip numpy
+
+      - name: Regenerate the parity fixtures from the Python host
+        run: python numfast-native/ts/test/gen_fixtures.py
+
+      - name: The committed fixtures must match the Python host on this commit
+        run: |
+          git diff --exit-code -- numfast-native/ts/test/fixtures/parity.json || {
+            echo "::error::The committed parity fixtures no longer match what the"
+            echo "::error::Python host produces on this commit. That is a real"
+            echo "::error::behaviour change, not a flaky test. Read the diff above:"
+            echo "::error::if the new values are correct, commit the regenerated"
+            echo "::error::file with the change that caused it. If they are not,"
+            echo "::error::a kernel changed behaviour and the fixtures are the"
+            echo "::error::record of what it used to do."
+            exit 1
+          }
+
+      - name: Upload dist/ so a failing run can be inspected
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: numfast-kernels-dist-node${{ matrix.node }}
+          path: numfast-native/ts/dist/BUILD.json
+          if-no-files-found: error

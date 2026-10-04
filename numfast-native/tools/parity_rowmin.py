@@ -22,6 +22,13 @@ seeded fuzz cases; every case runs twice (determinism, bit-exact).
 Seed 42 everywhere. Prints table + stage breakdown, writes
 results/parity_rowmin.json. Exit 0 = PASS.
 """
+# SCOPE, STATED: this script does NOT exercise the WASM build. It compares
+# an oracle against the NATIVE path (ctypes into the committed DLL) only,
+# so it can never report WASM parity and does not claim to. The scripts
+# that do validate the WASM artefact resolve it through
+# `wasm_artifact.resolve()` and abort loudly on a missing or stale build;
+# this one has no .wasm to resolve, and saying so is the point -- a reader
+# must not infer WASM coverage from a green run of this file.
 import importlib.util
 import json
 import os

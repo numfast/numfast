@@ -1,6 +1,19 @@
 <!doctype html>
 <!-- Copyright (c) 2026 NumFast, AGPL-3.0-only. Q-lookup browser demo. -->
 <!-- Serve: python -m http.server 8080 (from numfast-native/); open ts/demo.html -->
+<!--
+  WHY THIS GENERATES ITS INPUT IN THE BROWSER
+
+  It used to fetch three .bin fixtures totalling 10 MB, committed to git. They
+  were reproducible from a seed-42 LCG in one function, so 10 MB of tracked
+  binary was 10 MB of repository for something a loop produces in milliseconds.
+  They are untracked now and regenerated here; `node ts/qlookup.ts --gen [n]`
+  writes them for the Node driver.
+
+  Measured, not claimed: kernel-only timing with a warm-up. The box this was
+  written on is shared, so treat the numbers as this page's output, not as a
+  benchmark of anything.
+-->
 <html lang="en">
 <meta charset="utf-8">
 <title>numfast Q-lookup (wasm)</title>
@@ -9,14 +22,27 @@
 import { loadBridge } from "./dist/bridge.js";
 const log = (s) => { document.getElementById("log").textContent += "\n" + s; console.log(s); };
 const t = async (label, f) => { const t0 = performance.now(); const r = await f(); log(`${label}: ${(performance.now() - t0).toFixed(2)} ms`); return r; };
+
+// Seed 42, identical to qlookup.ts and to ts/test/gen_fixtures.py's LCG.
+function lcg(seed) { let s = seed >>> 0; return () => ((s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296); }
+function gen(n) {
+  const r = lcg(42);
+  const dist = new Uint32Array(n), speed = new Uint32Array(n), k = new Uint16Array(n);
+  for (let i = 0; i < n; i++) {
+    dist[i] = 1 + Math.floor(r() * 50_000);
+    speed[i] = r() < 0.02 ? 0 : 500 + Math.floor(r() * 29_500); // 2% zero -> INF
+    k[i] = 800 + Math.floor(r() * 401);
+  }
+  return { dist, speed, k };
+}
+
 try {
   const wasm = await t("fetch wasm", async () => (await (await fetch("../target/wasm32-unknown-unknown/release/numfast_native.wasm")).blob()).arrayBuffer());
-  const dist = new Uint32Array(await t("fetch dist.bin", async () => (await (await fetch("./artifacts/dist.bin")).blob()).arrayBuffer()));
-  const speed = new Uint32Array(await t("fetch speed.bin", async () => (await (await fetch("./artifacts/speed.bin")).blob()).arrayBuffer()));
-  const k = new Uint16Array(await t("fetch k.bin", async () => (await (await fetch("./artifacts/k.bin")).blob()).arrayBuffer()));
-  const n = dist.length;
-  log(`pairs: ${n} (${((dist.byteLength + speed.byteLength + k.byteLength) / 1048576).toFixed(2)} MiB)`);
+  const n = 1_000_000;
+  const { dist, speed, k } = gen(n);
+  log(`pairs: ${n}`);
   const b = await loadBridge(wasm);
+  log(`allocator base ${b.base} (module data ends ${b.staticDataEnd}; buffers must be above it)`);
   b.reset();
   const dOff = b.put(dist), sOff = b.put(speed), kOff = b.put(k), outOff = b.alloc(n * 4, 8);
   b.ensure(outOff + n * 4);
@@ -24,9 +50,11 @@ try {
   const ts = [];
   for (let i = 0; i < 10; i++) { const t0 = performance.now(); b.costTravelInto(dOff, sOff, kOff, n, outOff); ts.push(performance.now() - t0); }
   ts.sort((a, c) => a - c);
-  const med = ts[5];
-  log(`kernel median: ${med.toFixed(3)} ms`);
-  log(`lookup/s: ${Math.round(n / (med / 1000)).toLocaleString("en-US")} (native ctypes baseline: 171,000/s)`);
+  log(`kernel median over 10 runs: ${ts[5].toFixed(3)} ms`);
+  log(`lookup/s: ${Math.round(n / (ts[5] / 1000)).toLocaleString("en-US")}`);
+  const out = new Uint32Array(b.mem.buffer, outOff, n);
+  log(`out[0..3]: ${[...out.subarray(0, 4)].join(", ")}`);
+  log(`Q_INF lanes (speed==0): ${(() => { let c = 0; for (let i = 0; i < n; i++) if (out[i] === 0xffffffff) c++; return c; })()}`);
   b.assertGuard();
   log("guard: OK");
 } catch (e) { log("FAIL: " + (e && e.message)); }

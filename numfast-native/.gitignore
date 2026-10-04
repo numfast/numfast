@@ -5,3 +5,21 @@ vectors/
 # raw node outputs (reproducible via tools/parity.py); keep *.json evidence
 results/sums.f64
 results/counts.i64
+
+# --- ts/ (@numfast/kernels) -------------------------------------------------
+# node_modules and dist are BUILD OUTPUTS of `cd numfast-native/ts && npm run
+# build`, which also writes dist/BUILD.json recording the sha256, export count
+# and i64 list of the .wasm it copied. Nothing under dist/ belongs in git:
+# `ts/dist/bridge.js` was hand-committed with no tsconfig, no source map and no
+# provenance, which is exactly how a build output becomes a stale artefact that
+# nobody can trace. The fixtures under ts/test/fixtures ARE committed -- they
+# are the recorded output of the Python host, not a build product.
+ts/node_modules/
+ts/dist/
+
+# The 10 MB of tracked .bin fixtures that used to live in ts/artifacts/ are
+# gone from version control because nothing needs them: qlookup.ts regenerates
+# them (`node ts/qlookup.ts --gen [n]`) and demo.html now generates its own
+# input in the browser from the same seed-42 LCG. A committed binary fixture
+# that a script can reproduce is 10 MB of git history for nothing.
+ts/artifacts/*.bin

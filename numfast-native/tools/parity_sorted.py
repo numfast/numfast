@@ -15,16 +15,27 @@ import tempfile
 
 import numpy as np
 
+import vectors_meta
+
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 VEC = os.path.join(ROOT, "vectors")
 RES = os.path.join(ROOT, "results")
 os.makedirs(RES, exist_ok=True)
 NODE = r"C:\Program Files\nodejs\node.exe"
-WASM = os.path.join(ROOT, "target", "wasm32-unknown-unknown", "release", "numfast_native.wasm")
+import wasm_artifact
+# The CURRENT build, validated: 86 exports. wasm_artifact.resolve()
+# aborts loudly on a missing or stale .wasm rather than falling back --
+# four parity scripts used to validate the tracked 56-function copy and
+# report green, which is how a suite comes to prove the wrong bytes.
+WASM = wasm_artifact.resolve()
+print(wasm_artifact.banner(WASM))
 DLL = os.path.join(ROOT, "target", "x86_64-pc-windows-gnu", "release", "numfast_native.dll")
 MJS = os.path.join(ROOT, "tools", "wasm_sorted.mjs")
 
-meta = json.load(open(os.path.join(VEC, "meta.json")))["small"]
+# Resolved against THIS checkout: gen.py writes basenames, and a
+# meta.json carrying another machine's absolute path used to kill this
+# script with a FileNotFoundError that read like a parity failure.
+meta = vectors_meta.load("small")
 n = meta["n"]
 keys = np.sort(np.fromfile(meta["keys"], dtype=np.int32))
 rng = np.random.default_rng(42)

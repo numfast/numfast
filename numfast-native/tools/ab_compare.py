@@ -7,6 +7,10 @@ Builds no code; loads both via ctypes, interleaves A/B reps per kernel,
 reports median ms + B/A ratio. Integrity (exact) checked first; any
 mismatch = STOP. New-file rule: no existing bench touched.
 """
+# SCOPE, STATED: an A/B TIMING harness for two native DLLs. It exercises no
+# WASM artefact at all, so it establishes no parity and reports no
+# correctness claim beyond the exactness check it runs first. It is not a
+# parity script and must not be counted as one.
 import ctypes
 import sys
 import time

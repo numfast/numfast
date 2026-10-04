@@ -1,0 +1,44 @@
+{
+  "name": "@numfast/kernels",
+  "version": "0.2.1",
+  "description": "NumFast compute kernels compiled to WebAssembly: 85 functions, one memory, no imports. Portable kernel library, not a compute core.",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./wasm": "./dist/numfast_native.wasm",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "wasm",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test \"test/*.test.mjs\"",
+    "abi": "node build.mjs --check-only"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0"
+  },
+  "keywords": [
+    "webassembly",
+    "wasm",
+    "kernels",
+    "numfast",
+    "agpl"
+  ],
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  }
+}
