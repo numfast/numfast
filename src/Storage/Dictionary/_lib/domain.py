@@ -313,8 +313,7 @@ _LEN_LANE_CHUNK = 1 << 17  # 128 KiB of body bytes per pass -> fixed transient
 #
 # Exhaustive over every string in {a, NUL}^<=4 for str_len / startswith (35
 # prefixes) and over {ab, NUL}^<=4 for argsort, plus the 22-corpus x 3-carrier
-# x 4-op x 13-prefix grid and a 400-corpus fuzz in
-# develop/audit_foundation/probes/m7c_dict_len_lut.py; the rule itself is
+# x 4-op x 13-prefix grid and a 400-corpus fuzz; the rule itself is
 # pinned by tests/fast/test_ops_dict_ucs4.py.
 
 
@@ -556,8 +555,7 @@ def dict_ordering_impl(values, format_error=None):
     2.05x, Arrow pc.sort_indices 2.66x; at D=20k/maxlen=1024 the python one
     does win, 0.63x, but Arrow loses 4.91x). A fixed-width UCS-4 record sorts
     faster in C than any Python/Arrow path. The cost is memory, not time, and
-    it is bounded below by the cheapest exact sort. See
-    develop/audit_foundation/M7c_dict_len_lut.md.
+    it is bounded below by the cheapest exact sort.
     """
     _reject_i64_for_text_op(_coerce_i64(values), "dict_ordering",
                             "int64 code order == value order; sort codes directly",

@@ -56,28 +56,24 @@ declare.
 has a stated reason; `Expr.or_` exists and raises rather than returning an empty
 frame.
 
-**Where NumFast is slower than DuckDB.** Measured on ClickBench at ~1M rows, it is
-**7.39× to 2.59× slower** on eight high-cardinality grouping and distinct-count
-queries:
+**Where NumFast is slower than DuckDB.** On high-cardinality grouping and
+distinct-count shapes it is **several times slower, not a few percent** — a
+property of the CPU driver being a NumPy reference executor, not of missing
+effort. **If your workload is high-cardinality grouping, DuckDB is the better
+tool today.** Where NumFast wins, it wins on small aggregate-shaped queries,
+because one planner call replaces a fixed per-query setup: read that as *low
+fixed cost*, not as a large speedup.
 
-| Query | Shape | NumFast | DuckDB | NumFast slower by |
-|---|---|---|---|---|
-| Q30 | group-by-distinct | 231.25 ms | 31.28 ms | **7.39×** |
-| Q36 | 4-column composite group | 167.47 ms | 23.69 ms | **7.07×** |
-| Q9 | high-cardinality group | 165.72 ms | 37.14 ms | **4.46×** |
-| Q5 | distinct count | 78.75 ms | 19.21 ms | **4.10×** |
-| Q18 | large aggregate | 122.01 ms | 32.25 ms | **3.78×** |
-| Q10 | range scan + aggregate | 178.59 ms | 48.54 ms | **3.68×** |
-| Q17 | large aggregate | 122.01 ms | 40.71 ms | **3.00×** |
-| Q22 | medium aggregate | 97.06 ms | 37.46 ms | **2.59×** |
+This distribution quotes **no wall-clock numbers**. A benchmark claim is only
+worth reading if the artefact and the command that produced it are both in the
+package, and neither is: the inputs are external and too large to ship. Benchmark
+the operation mix you actually have.
 
-It is faster on the small, aggregate-shaped queries, where a fixed per-query
-overhead dominates — read that as *low fixed cost*, not as a large speedup.
-
-**Support: 34 of 43 ClickBench queries**, each verified as `EXACT` (26),
-`TIE-MULTISET` (4), `EXACT+TOL` (2) or `MULTISET` (2). The other 9 raise rather
-than guess: 8 because ClickBench's `UserID` / `WatchID` / `URLHash` values exceed
-`int32`, and 1 because the engine has no conditional/CASE primitive.
+**What raises rather than guesses.** A BIGINT key or literal above `int32` —
+`UserID`-shaped identifiers, for instance — raises and names the column, because
+logical values are `int32` and narrowing them silently would be a wrong answer
+rather than a slow one. A query needing a conditional (`CASE`) cannot be
+expressed at all: there is no such primitive.
 
 **The GPU does 15 of 33 operations**, measured on one RTX 2060 over Vulkan. The
 other 18 run on the CPU and are listed by `nf.app().gpu_capabilities()`. The
@@ -155,7 +151,6 @@ Full text: <https://github.com/numfast/numfast/blob/main/LICENSE>
 - [docs/API.md](https://github.com/numfast/numfast/blob/main/docs/API.md) — the 44-name surface and every guard
 - [docs/ARCHITECTURE.md](https://github.com/numfast/numfast/blob/main/docs/ARCHITECTURE.md) — how it fits together
 - [docs/EXAMPLES.md](https://github.com/numfast/numfast/blob/main/docs/EXAMPLES.md) — runnable programs with real output
-- [BENCHMARKS.md](https://github.com/numfast/numfast/blob/main/BENCHMARKS.md) — every performance number, with command, environment, date and whether it can be re-run
 - [KNOWN_LIMITATIONS.md](https://github.com/numfast/numfast/blob/main/KNOWN_LIMITATIONS.md) — what does not work, tagged by certainty
 - [SECURITY.md](https://github.com/numfast/numfast/blob/main/SECURITY.md) — how to report a vulnerability
 

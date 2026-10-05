@@ -1,10 +1,10 @@
 // Copyright (c) 2026 NumFast
 // SPDX-License-Identifier: AGPL-3.0-only
-//! `cost` mechanic: generic integer costing core (no RoadGraph semantics,
-//! no GPU/WASM/bindings vocabulary here).
+//! `cost` mechanic: generic integer costing core. No domain semantics, and no
+//! GPU/WASM/bindings vocabulary here.
 //!
-//! Frozen parity with `roadgraph/RouteApi/_lib/weights.py` (read-only
-//! reference: PROFILE_ID, bucket_of, traffic_k_for,
+//! Frozen parity with a reference Python costing implementation (read-only:
+//! PROFILE_ID, bucket_of, traffic_k_for,
 //! travel_time_for_bucket, CostTable intern/resolve):
 //! - `distance_mm` u32 is traffic-independent (stored separately, never
 //!   scaled by bucket; passthrough with no arithmetic).

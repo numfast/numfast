@@ -14,7 +14,9 @@ history is not part of this repository's published history, and none of its
 capabilities are claimed here.
 
 If you are looking for the previous generation's documentation, it is not in this
-repository.
+repository. Neither is its audit record, its research material or its benchmark
+archive: 0.2.1 is also the release that reduced the repository to the product,
+and the reason each category left is recorded under 0.2.1 → Changed.
 
 Release state: publishing is a **manual** step. There is no publish workflow in
 this repository and no `v*` tag trigger in CI, so no commit in this repository can
@@ -64,10 +66,18 @@ new consumer facade.
 
 ### Changed
 
-- Claims were reconciled against the artefacts they came from. Two were removed
-  because the artefacts contradict them: "ClickBench 8/43 supported" (this tree
-  measures **34 of 43**) and "Q30 affine 43.02× faster" (an unconfirmed prototype
-  the current code does not reproduce).
+- **The repository was reduced to the product.** Removed: benchmark archives and
+  result JSON, research experiments, the ClickBench material and every figure
+  derived from it, an internal auto-tuner, audit reports from a previous design
+  generation, a superseded `specs/` tree, session scratch, and a self-labelled
+  disposable shim. What remains is the engine, its tests, the Rust Corresponding
+  Source, the npm kernel package and user-facing documentation. Nothing removed
+  was reachable from `full.toml`, so no Extension changed.
+- **No wall-clock performance number is claimed in this distribution.** The
+  artefacts that backed them, and the scripts that produced them, are gone; the
+  benchmark inputs were never in the repository and cannot be. The README and
+  `README_PYPI.md` state the performance characteristics as design facts
+  instead, and say plainly that none is measured here.
 - The GPU path is described by what it is: **15 of 33 operations**, measured on
   one RTX 2060 over Vulkan, with the other 18 CPU-only. **No GPU speedup is
   claimed**; the recorded GPU timings at the sizes measured were slower than the
@@ -88,11 +98,10 @@ there are no cheap strided views and no resident GPU execution.
 
 ### Performance
 
-34 of 43 ClickBench queries run and return a verified answer; 9 do not (8 from
-BIGINT narrowing, 1 from a missing conditional primitive). NumFast is **7.39× to
-2.59× slower than DuckDB** on eight high-cardinality grouping and distinct-count
-queries, and faster on the small aggregate-shaped ones. Every number, its
-command, its environment and whether it can be re-run is in
-[`BENCHMARKS.md`](BENCHMARKS.md). No wall-clock number is claimed anywhere that was
-not produced by a command named there.
+No figure is quoted here, for the reason given under Changed. What can be said
+without a harness: one planner call per query means per-query overhead does not
+scale with the number of operations in the query, which favours small
+aggregate-shaped queries; high-cardinality grouping is several times behind
+DuckDB structurally, because the CPU driver is a NumPy reference executor; and
+the GPU buys parity and residency rather than speed.
 

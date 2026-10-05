@@ -234,7 +234,7 @@ operation that is CPU-only raises rather than falling back:
 
 ```
 ValueError: GPU driver: op 'unique' CPU-only in v0.2 (encode/gather-text need CPU
-path) Fix: run this op with backend='cpu'. See specs/06-drivers-gpu-cpu.md
+path) Fix: run this op with backend='cpu'.
 ```
 
 ---

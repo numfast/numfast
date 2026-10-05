@@ -1,8 +1,9 @@
 # NumFast architecture — orientation
 
-Enough to understand the design and where each decision lives. Not a
-specification: the specs are in [`specs/`](../specs/README.md) and, as that
-directory's own header says, parts of it describe a superseded design generation.
+Enough to understand the design and where each decision lives. Where the
+design is *normative* — the three-valued logic, NULL handling, tie order — this
+document states it and says so explicitly, in "Where the semantic contract
+lives" below. Where it only orients, it says that too.
 
 ---
 
@@ -197,7 +198,7 @@ parity fixtures on the same commit.
 
 ## Where the semantic contract lives
 
-In three places, in this order of authority:
+In two places, in this order of authority:
 
 1. **The code and its tests.** Three-valued logic, NULL handling and tie order are
    pinned by named tests. Where a test and a document disagree, the test is right
@@ -205,17 +206,16 @@ In three places, in this order of authority:
    stated premise (that NULL rows would come *first*) was false; they come
    *last*, matching pandas `na_position="last"`. The guard was removed and the
    behaviour is now pinned by a parity test.
-2. **`specs/core/`** — the normative specs, marked frozen.
-3. **`docs/`** — orientation and the internal design record.
+2. **`docs/`** — this document, plus [API.md](API.md) for the surface and
+   [EXAMPLES.md](EXAMPLES.md) for runnable programs.
+
+**This document is normative for the semantic contract.** Where a rule is stated
+here as a rule, it is the rule; the tests enforce it and a change to either
+without the other is the defect. The numeric tolerances that back it are
+machine-readable in
+[`specs-rebuilt/conformance-profile.toml`](../specs-rebuilt/conformance-profile.toml),
+which `tests/fast/harness.py` reads rather than hardcoding, so there is one
+number per tolerance rather than two.
 
 `KNOWN_LIMITATIONS.md` is the register of everything the contract does *not*
 cover, with a certainty tag on each entry.
-
-## A note on the specs
-
-`specs/` is marked "frozen, v0.2" and describes an **earlier design generation**:
-it names `LazyExpr`, `.compute()`, `.data()`, `nf.zeros`, `nf.mean`,
-`ColumnView`, `returns()`, `rolling_mean()` and a `WebGpuDriver` capability
-matrix. None of those is the API in this tree. Treat `specs/` as a record of
-design decisions, not as an API reference, and read
-[docs/API.md](API.md) for the surface that actually exists.

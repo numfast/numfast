@@ -109,7 +109,7 @@ def test_metadata_sorted_flag(kernel):
 # IndexError. The validity-omitted D>0 contract is UNCHANGED: it is a pure
 # gather, because code 0 is also the sorted rank of the smallest real value,
 # so a NULL row and a real code-0 row cannot be told apart without the
-# sidecar. See develop/audit_foundation/M4b_dictionary_fixes.md.
+# sidecar. The tests below pin both.
 
 
 @pytest.mark.fast

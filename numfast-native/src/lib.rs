@@ -1970,7 +1970,7 @@ pub unsafe extern "C" fn nf_text_equals(
 }
 
 // --- Segmented P1 (bounds-only reduce, additive). Frozen ABI above
-// untouched. Generic bounds reduce: no RoadGraph/SSSP/router vocabulary,
+// untouched. Generic bounds reduce: no graph/SSSP/router vocabulary,
 // no WASM export (native CPU research surface), no GPU path.
 // Codes (this surface only): 0 ok, -1 null pointer, -2 bad range
 // (non-monotone bounds, bounds[m] != n, lane outside [0, n],
@@ -2060,7 +2060,7 @@ segment_reduce_ffi!(
 );
 
 // --- Adjacency P2 (CSR slice + flat gather, additive). Frozen ABI above
-// untouched. Generic CSR surface: no RoadGraph/SSSP/router vocabulary,
+// untouched. Generic CSR surface: no graph/SSSP/router vocabulary,
 // no WASM export (native CPU research surface), no GPU path.
 // Codes (this surface only): 0 ok, -1 null pointer, -2 bad range
 // (UINT32_MAX reserved lane, non-monotone indptr, out-of-range query,
@@ -2159,7 +2159,7 @@ pub unsafe extern "C" fn nf_adjacency_gather(
 }
 
 // --- Cost P3 (generic integer costing core, additive). Frozen ABI above
-// untouched. Generic cost surface: no RoadGraph/TBRS/router/dispatcher/
+// untouched. Generic cost surface: no graph/router/dispatcher/
 // hierarchy/foam vocabulary, no WASM export (native CPU research
 // surface), no GPU path. Codes (this surface only): 0 ok, -1 null
 // pointer, -2 bad range (K == 0, width == 0 with n > 0), -3 bad
@@ -2536,7 +2536,7 @@ pub unsafe extern "C" fn nf_rowwise_min4_argmin_gather(
 
 // --- Rowwise MIN4 time-argmin + gather (FIX-1, additive). Frozen ABI
 // above untouched, existing nf_rowwise_min4_argmin_gather untouched.
-// Generic rowwise surface: no query/transport/Dispatcher/RoadGraph
+// Generic rowwise surface: no query/transport/dispatcher
 // vocabulary, no N-specific or benchmark branches, no WASM export
 // (native CPU research surface), no GPU path.
 // Codes (this surface only): 0 ok, -1 null pointer.

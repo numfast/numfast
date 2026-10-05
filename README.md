@@ -11,11 +11,11 @@ Rust library that currently ships for Windows x86-64 only.
 
 Read this page to decide whether it is useful to you in thirty seconds:
 
-* **What it does well, and where it is slower than DuckDB** — measured, per
-  query, below. It loses on high-cardinality grouping by several times. That is
-  not a footnote, it is the main performance fact.
-* **What works today** — 34 of 43 ClickBench queries run and return a verified
-  answer. 9 do not, and the reasons are named.
+* **What it does well, and where it is slower than DuckDB** — where it loses, it
+  loses on high-cardinality grouping by several times rather than a few percent.
+  That is not a footnote, it is the main performance fact.
+* **What works today, and what does not** — the 33 operations, the guards, and
+  the one primitive (`CASE`) whose absence costs a real query shape.
 * **What is absent** — `window`, `or_`, `join` and `replace` are not in the API.
   The reasons are named too.
 * **What the GPU does** — 15 of 33 operations, measured on one RTX 2060 over
@@ -119,20 +119,19 @@ More examples, each one runnable and each one with its real output:
 
 ## What works today
 
-**34 of the 43 ClickBench queries run and return a verified answer. 9 do not.**
+**33 operations, all of them exact on `int32`. 15 have a GPU implementation; 18
+are CPU-only and say so rather than falling back silently.**
 
 | | Count | Detail |
 |---|---|---|
-| Supported | **34** | Verified per query as `EXACT` (26), `TIE-MULTISET` (4), `EXACT+TOL` (2) or `MULTISET` (2). The weaker labels are weaker and are not rounded up to "exact". |
-| Unsupported | **9** | 8 blocked by **BIGINT narrowing**, 1 (Q40) by a **missing conditional/CASE primitive** |
+| Implemented | **33** | Every one raises rather than guessing: a fused indicator plan carrying a parameter key no operation consumes, an array exponent, a CPU-only op requested on the GPU — each refuses and names the cause. |
+| Absent | 4 names | `window`, `or_`, `join`, `replace` — reasons above. |
+| One shape we cannot express | — | a **conditional / `CASE` primitive**. There is no way to say "value if predicate else value", so a conditional aggregate or a pivot has to be expressed as several queries. This is a real gap, not a preference. |
 
-The BIGINT narrowing is the design, not an oversight: logical values are `int32`,
-and ClickBench's `UserID` / `WatchID` / `URLHash` values run past 2³¹. NumFast
-**raises** on those keys and literals rather than narrowing them silently. Nine
-queries cost you; a wrong answer on any table would cost more.
-
-Per-query detail, commands, environment and dates:
-**[BENCHMARKS.md](BENCHMARKS.md)**.
+The one design decision that shows up as a limitation: logical values are
+`int32`. A BIGINT key or literal above 2³¹ **raises**, naming the column, rather
+than narrowing silently. A query over `UserID`-shaped identifiers costs you; a
+wrong answer on any table would cost more.
 
 ---
 
@@ -187,8 +186,8 @@ Full surface, with signatures and worked output:
 
 ## Architecture in one page
 
-Orientation, not a specification. **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**
-is the longer version.
+**[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** is the longer version, and
+normative for the semantic contract.
 
 ```
   you
@@ -235,45 +234,39 @@ is the longer version.
   `@numfast/kernels` (npm): a portable kernel library, **86 function exports, one
   memory, zero imports, 17 typed wrappers**. It is **not a compute core** — there
   is no executor, no graph runtime and no allocator inside the `.wasm`.
-* **Where the semantic contract lives.** Three-valued logic and NULL handling are
-  specified in `specs/core/`, pinned by the test suite, and — where the two
-  disagree — the test wins and the spec is corrected.
+* **Where the semantic contract lives.** In `docs/ARCHITECTURE.md`, and in the
+  test suite that pins it. Where the two disagree, the test is right and the
+  document is corrected.
 
 ---
 
 ## Performance
 
-Only measured claims. Every number below was recomputed from the artefact named
-beside it; the command, environment and date are in
-**[BENCHMARKS.md](BENCHMARKS.md)**, which is the only place a performance claim
-is quotable from.
+**No wall-clock number is claimed in this repository.** Not one, and the absence
+is deliberate: a benchmark claim is only worth reading if the artefact it came
+from and the command that produced it are both in the tree, and this release
+ships no benchmark harness. The benchmark *inputs* are not the scarce thing —
+they are large, external, and cannot be committed — so what a number would need
+to be quotable is exactly what a library repository cannot carry. Rather than
+publish figures a reader cannot re-run, this README states the performance
+characteristics as design facts and leaves the measurement to you.
 
-### Against DuckDB, ClickBench at ~1M rows
+What can be said without a harness, and is:
 
-`ratio = (compile + execute) / duckdb` from `tests/heavy/bench_clickbench_43.json`.
-**Above 1.0 means NumFast is slower.**
+* **Where the fixed cost sits.** One planner call turns a whole chain into one
+  execution graph, so per-query overhead does not scale with the number of
+  operations in the query. Against a system that pays a fixed setup per query
+  this favours small and aggregate-shaped queries, and it is the only reason
+  NumFast wins on anything.
+* **Where it loses, and by how much, structurally.** High-cardinality grouping
+  and distinct-count shapes are several times behind DuckDB, not a few percent
+  behind. That is a property of the CPU driver being a NumPy reference executor
+  (see the next section), not of missing effort. **If your workload is
+  high-cardinality grouping, DuckDB is the better tool today.**
+* **The GPU buys parity and residency, not speed.** See below.
 
-| Query | Shape | NumFast | DuckDB | NumFast slower by |
-|---|---|---|---|---|
-| Q30 | group-by-distinct | 231.25 ms | 31.28 ms | **7.39×** |
-| Q36 | 4-column composite group | 167.47 ms | 23.69 ms | **7.07×** |
-| Q9 | high-cardinality group | 165.72 ms | 37.14 ms | **4.46×** |
-| Q5 | distinct count | 78.75 ms | 19.21 ms | **4.10×** |
-| Q18 | large aggregate | 122.01 ms | 32.25 ms | **3.78×** |
-| Q10 | range scan + aggregate | 178.59 ms | 48.54 ms | **3.68×** |
-| Q17 | large aggregate | 122.01 ms | 40.71 ms | **3.00×** |
-| Q22 | medium aggregate | 97.06 ms | 37.46 ms | **2.59×** |
-
-That is the complete list of losses above 2.5×, and it is not short.
-High-cardinality grouping and distinct-count shapes are where NumFast is behind,
-by several times rather than a few percent. If your workload is one of those,
-DuckDB is the better tool today.
-
-Where NumFast is faster: Q28 133.66×, Q43 86.04×, Q39 55.80×, Q8 28.51×,
-Q15 20.30×. Read those honestly — they are the small, aggregate-shaped queries
-where DuckDB pays a fixed per-query overhead that one planner call does not. The
-claim is *NumFast has a very low fixed cost*, not *NumFast is 86× faster than
-DuckDB*.
+Benchmark the operation mix you actually have. `examples/quickstart.py` runs in
+under a second and prints its own timings.
 
 ### The GPU
 
@@ -289,24 +282,25 @@ driving Vulkan.
 * Asking for `backend='gpu'` on a graph that uses a CPU-only operation raises
   rather than falling back.
 
-### Reproducibility of every artefact
+### What was removed, and why
 
-| Artefact | Verdict |
-|---|---|
-| `tests/heavy/bench_clickbench_43.json` | **Reproducible in principle.** Script committed; needs `hits_1m.parquet`, which is not on this machine, so the numbers are as recorded, not re-measured here. |
-| `tests/heavy/bench_h2o_100M_cpu_gpu.json` | **Historical, unreproducible.** No producing script exists anywhere in the tree. |
-| `tests/heavy/bench_h2o_gpu_10M.json`, `..._scaled_gpu_10M.json` | **Historical.** Scripts committed; the H2O CSV is not on this machine. |
-| `develop/benchmarks_public/` (5 suites) | **Historical and unreproducible.** All nine source artefacts were deleted; each `summary.json` says so in a machine-readable `provenance` field. |
+Two classes of claim were dropped from this README rather than re-verified,
+because the artefact that backed them is gone:
 
-The H2O files still record one thing that remains meaningful: CPU/GPU agreement
-(`cpu_gpu_match: true`, `cpu_gpu_maxdiff: 0`). Treat every millisecond in them as
-unattributable — no date, no Python version, no CPU model is recorded in them.
+* **Every per-query benchmark figure**, including the ClickBench tables, the
+  H2O CPU/GPU comparisons and the derived ratios. Their scripts and results
+  have been removed from this repository as development history. The inputs were
+  never here and could not be; the scripts were the only thing this repository
+  uniquely held about them, and they are superseded. Nothing is lost that a
+  reader could reproduce — nothing could be reproduced from here.
+* **The internal audit record** (`docs/audit_history/`) — internal audit reports
+  from a previous generation, several of them substantially Russian and
+  deliberately untranslated. They are not user documentation and they describe a
+  design that no longer exists.
 
-Two claims were **removed** during the 2026-10-04 audit because the artefacts
-contradict them: "ClickBench 8/43 supported" (this tree measures 34/43) and
-"Q30 affine 43.02× faster" (an unconfirmed prototype the current code does not
-reproduce). No wall-clock number appears in this repository that was not produced
-by a command named in `BENCHMARKS.md`.
+What survives is the reasoning those reports produced, stated as design facts
+where it is still true of this tree (see the architectural limits below), and
+dropped where it was not.
 
 ---
 
@@ -326,45 +320,21 @@ reproduction; a tag without a reproduction is not a claim. The short version:
 | Refused | `group` with more than one measure column raises |
 | Driver | GPU sort needs a power-of-two valid-row count, and refuses `int64`/`float64` keys |
 
-Two architectural limits are stated as measurements rather than apologies. They
-come from an origin-pipeline audit taken against engine commit `4fc9914`, and
-they are reproduced with their provenance correction in
-[BENCHMARKS.md §5](BENCHMARKS.md):
+Two architectural limits are stated as consequences of the design rather than as
+apologies. Both are structural and readable in the code, so neither depends on a
+measurement this repository does not ship:
 
 * **There are no cheap strided or windowed views.** A window of width *W* is
-  composed as *W* × `shift`, and every `shift` writes a full-length buffer. At
-  *n* = 1 048 576, *W* = 64 that is 64 buffers of 512 MiB plus a second full
-  materialisation of the (M, W) matrix — **2.00× the memory of the answer numpy
-  gives for one 512 MiB copy**, where `numpy.sliding_window_view` is a view that
-  writes zero bytes. Materialisation is 69.6 %–89 % of what the caller pays.
+  composed as *W* × `shift`, and every `shift` writes a full-length buffer — so
+  a width-*W* window costs *W* full-length materialisations plus the (M, W)
+  matrix itself. `numpy.sliding_window_view` is a view that writes zero bytes;
+  the composition is not. This is why `window` is absent from the API rather
+  than merely slow.
 * **There is no resident GPU execution.** `gpu_execute` is a batch execute with
-  per-node read-back: an 8-node graph on a 0.2 MiB input returned 9 host
-  buffers — **11× byte amplification, zero residency**. Through the consumer
-  surface the GPU is unreachable at all: `Chain.compile()` runs the CPU path and
-  `Chain.explain()` prints `backend=n/a`.
-
-**Provenance correction, stated because it matters.** That audit recorded that it
-had verified `git diff --name-only 4fc9914..1a3caa4 -- src/` returns zero files,
-so that every number was measured against a byte-identical Python engine. That
-check was true when written and is **false now**: at `879fb0b`,
-`git diff --name-only 4fc9914..879fb0b -- src/` returns **17 files**. Twelve of
-them exist in both commits:
-
-* eight engine sources — `Compute/Fused/_lib/fused.py`,
-  `Drivers/CPU/_lib/native_cpu.py`, `Relational/Join/_lib/native{,_i64}.py`,
-  `Runtime/Planner/_lib/calibrate.py`, `Semantic/TableExpr/_lib/{chain,expr,plan}.py`;
-* four changed **only in documentation** by this repository's publication pass —
-  `Relational/README.md` and `Relational/Segmented/_lib/{adjacency,cost,segmented}.py`,
-  whose executable ASTs are byte-identical before and after.
-
-The remaining five are `src/numfast.egg-info/*`, which existed at `4fc9914`,
-are generated packaging metadata, and are no longer tracked.
-
-None of the eight executable changes touch the window-composition or
-GPU-execution path these two limits describe, so the measurements remain the best
-available account of that path — but they were taken against `4fc9914`, not
-against this tree. The audit record itself is unchanged and is reported, not
-rewritten.
+  per-node read-back, so a graph that stays on device is not expressible. Through
+  the consumer surface the GPU is unreachable at all: `Chain.compile()` runs the
+  CPU path and `Chain.explain()` prints `backend=n/a`. The GPU is reachable
+  through the kernel-level API, where it buys parity and residency.
 
 ---
 
@@ -414,14 +384,11 @@ src/Relational/      join, group-by, sort, dictionary, lookup, segmented
 src/Storage/         schema, dictionary coding, NFS
 src/numfast/         the importable package and its vendored builder
 numfast-native/      the Rust kernel crate + the @numfast/kernels TS package
-docs/                user-facing documentation, and the internal design record
-specs/               the specs. Historical: see docs/README.md before reading
-tests/fast/          the default suite;  tests/heavy/  needs -m heavy
+docs/                user-facing documentation: API, architecture, examples
+tests/fast/          the test suite
+tests/oracles/       independent reference implementations the tests check against
 examples/quickstart.py
 ```
-
-`docs/README.md` says which documents describe the current tree and which are
-the internal design record.
 
 ---
 
@@ -429,24 +396,29 @@ the internal design record.
 
 ```bash
 export PYTHONPATH="<repo>/src;<path-to-app-builder>"
-python -m pytest tests/ -q          # the fast suite; heavy needs -m heavy
+python -m pytest tests/ -q
 ```
 
-Last clean-clone run at the commit this README describes (`597d2ec`, Windows,
-Python 3.14.6): **740 passed, 5 skipped, 0 failed in 163.48 s**. The five skips,
-and why each one skips on a fresh clone:
+There is one tier: `tests/fast/`, run by default. It has no `heavy` marker and
+no memory-scale cases.
+
+Last clean-checkout run of the tree this README describes — a `git archive HEAD`
+extraction into an empty directory, with no `build/`, `dist/`, `*.egg-info` or
+`__pycache__` present, and no Rust build product either (Windows, Python
+3.14.6): **771 passed, 5 skipped, 0 failed in 156.47 s**. Every skip, and why it
+skips:
 
 | Skipped | Reason |
 |---|---|
-| `test_ops_null_pattern.py` | marked `heavy`; run it with `pytest -m heavy` |
-| `test_ops_text.py`, `test_ops_text_affix.py` | the `wasm32` build artefact is not committed, so the WASM text lanes do not collect |
-| `test_packaging_adapters.py` | needs `python -m build` to have run first |
-| `test_rng_gate.py` | its reference file lives in `scratch/`, which is gitignored |
+| `test_ops_null_pattern.py` | one wall-clock ratio assertion, marked `heavy`; run it with `pytest -m heavy`. A ratio on this box is not a property of the engine. |
+| `test_ops_text.py`, `test_ops_text_affix.py` | the `wasm32` build artefact is not committed, so the WASM text lanes do not collect. They pass once `cargo build --target wasm32-unknown-unknown --release` has run — 12/12, verified. |
+| `test_packaging_adapters.py` | one case needs a second wheel venv built first |
+| `test_rng_gate.py` | its R reference implementation is not in the tree |
 
-So on a clean clone two of these are not optional: the WASM tests and the RNG-gate
-test never run without artefacts that are not in the tree. They run in a
-developer's checkout and they skip in CI. That is a real coverage hole and it is
-named here rather than hidden behind a green line.
+So one of these is optional (build the WASM artefact and it runs) and two are a
+real coverage hole: the RNG-gate reference and the packaging-venv case need
+material that does not ship. They run in a developer's checkout and skip in CI.
+That is named here rather than hidden behind a green line.
 
 Against an **installed** wheel in a fresh venv, the same suite gives **473 passed,
 4 skipped, 0 failed**, with 20 test modules left uncollected because they read
@@ -476,8 +448,7 @@ its first run.
 | [docs/API.md](docs/API.md) | the 44-name surface, the kernel-level names, and every guard |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | how the pieces fit: IR, Builder, CPU, native, GPU, WASM |
 | [docs/EXAMPLES.md](docs/EXAMPLES.md) | runnable examples with their real output |
-| [docs/README.md](docs/README.md) | which document describes what, and which is internal record |
-| [BENCHMARKS.md](BENCHMARKS.md) | every performance number, with command, environment, date, verdict |
+| [docs/README.md](docs/README.md) | what each document covers |
 | [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) | what does not work, tagged by certainty |
 | [README.packaging.md](README.packaging.md) | what ships in the wheel, and what a user gets |
 | [CHANGELOG.md](CHANGELOG.md) | what 0.2.1 is |

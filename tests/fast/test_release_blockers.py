@@ -68,9 +68,7 @@ def _of(table, col="r"):
 def _cse_pair():
     """Two columns that SHARE one DAG node, then a per-column row operator.
 
-    This is the origin bench's own recipe (`develop/audit_foundation/
-    ORIGIN_PIPELINE_BENCH.md` item 8: `derive(w0..w7).limit(64).compile()`),
-    reached the way its harness reached it -- every window derived from the
+    `derive(w0..w7).limit(64).compile()`, with every window derived from the
     same expression. `_bind`'s memo returns ONE node for one expression, so all
     eight columns point at it, and `limit` then emits eight byte-identical
     `ir_slice` nodes.

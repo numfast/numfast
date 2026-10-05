@@ -19,7 +19,29 @@ import numpy as np
 import pytest
 
 APP_DIR = str(Path(__file__).resolve().parents[2])
-LIB_DIR = Path(APP_DIR) / "src" / "Relational" / "Router" / "_lib"
+
+
+def _lib_dir():
+    """The Router `_lib/`, from the checkout or from the installed package.
+
+    The wheel vendors Extensions verbatim into `numfast/_ext/<Name>/`, so the
+    same bytes are reachable either way. Without this the module would raise
+    FileNotFoundError against an installed numfast, where there is no `src/`
+    tree to point at.
+    """
+    in_checkout = Path(APP_DIR) / "src" / "Relational" / "Router" / "_lib"
+    if in_checkout.is_dir():
+        return in_checkout
+    import numfast
+    vendored = Path(numfast.__file__).resolve().parent / "_ext" / "Router" / "_lib"
+    if not vendored.is_dir():
+        raise FileNotFoundError(
+            "Router/_lib not found in the checkout at %s nor vendored into the "
+            "installed package at %s" % (in_checkout, vendored))
+    return vendored
+
+
+LIB_DIR = _lib_dir()
 LIB_RT = LIB_DIR / "router.py"
 LIB_PLAN = LIB_DIR / "plan.py"
 
@@ -63,6 +85,8 @@ def plan_mod(rt):
 
 @pytest.fixture(scope="module")
 def kernel():
+    # conftest substitutes this `builder` against an installed numfast, where
+    # the kernel comes from numfast.get_kernel() and APP_DIR is ignored.
     from builder import MAIN
 
     return MAIN["build"](APP_DIR)
@@ -123,9 +147,8 @@ def test_kernel_alias_router(kernel):
 
 def test_manifest_alias_equals_mods():
     import tomllib
-    data = tomllib.loads(
-        (Path(APP_DIR) / "src" / "Relational" / "Router" / "Router.toml")
-        .read_text(encoding="utf-8"))
+    manifest = LIB_DIR.parent / "Router.toml"
+    data = tomllib.loads(manifest.read_text(encoding="utf-8"))
     assert data["name"] == "Router"
     assert data["alias"] == data["mods"]
     assert data["depends"] == []

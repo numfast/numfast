@@ -5,7 +5,7 @@
 NOT WIRED into any existing path (this step only places it alongside):
 Segmented.py / adjacency.py / native_cpu.py do not call this module.
 
-The boundary (strictly): a general compute mechanism with no RoadGraph semantics.
+The boundary (strictly): a general compute mechanism, no domain semantics.
 distance_mm u32 (traffic-independent); travel_time_ms resolution (u64 intermediate,
 INF guard, speed==0 -> INF); traffic_k u16 (K_SCALE=1000); CostTable/interning
 (vec -> cost_id dedup); directed rows kept separate (not collapsed); parallel

@@ -19,7 +19,7 @@
 //! on pre-validated errors (min/max empty, bad op) outputs are
 //! untouched, on streaming-validation errors lanes before the abort
 //! point may be written (same rule as the sorted-run speculative
-//! abort). No RoadGraph/SSSP/router vocabulary here: this is a
+//! abort). No graph/SSSP/router vocabulary here: this is a
 //! generic bounds reduce.
 
 use crate::core::errors::{BAD_RANGE, MALFORMED, OK};

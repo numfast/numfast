@@ -9,8 +9,7 @@
 //! runs ONE key pass PER column with a counts RMW in every pass (Q5 =
 //! 3 key passes + 3 counts arrays, 2 discarded). Decoupled counts +
 //! one sum-only pass moves less traffic at bandwidth saturation:
-//! Q5 +18%, Q3 +14% end-to-end (see tests/heavy/bench_p12_100M.py +
-//! scratch/bench_p12_100M.json). The single-pass WITH-counts variant
+//! Q5 +18%, Q3 +14% end-to-end. The single-pass WITH-counts variant
 //! (P1) was measured too and REJECTED (marginal at 16T, regresses at
 //! low thread counts) — it is not shipped here.
 //!

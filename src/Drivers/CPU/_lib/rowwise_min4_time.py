@@ -11,7 +11,7 @@ Contract: identical outputs with backend available or not
 (available=False never breaks correctness, only speed). Backend
 absence (missing DLL, NUMFAST_NATIVE_DISABLE=1, symbol predates the
 DLL) -> numpy fallback. No JIT dependency. No benchmark branches.
-No query/transport/Dispatcher/RoadGraph vocabulary: generic lanes only.
+No query/transport/dispatcher vocabulary: generic lanes only.
 
 Semantics (per row i over lanes k = 0..3):
   m[i] = argmin_k(T[k][i]) with strict `<` from lane 0

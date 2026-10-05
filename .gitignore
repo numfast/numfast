@@ -17,8 +17,12 @@ numfast-native/target/
 # depends on the machine (.gitignore excludes *.pdb, so a clone that has no
 # .pdb on disk produces a SOURCES.txt without it -- tracking the file made
 # every documented build command leave the tree dirty). Untracked 2026-10-05;
-# nothing reads it: MANIFEST.in `prune src/numfast.egg-info` already keeps it
-# out of the sdist.
+# nothing reads it.
+#
+# MANIFEST.in's `prune src/numfast.egg-info` does NOT keep it out of the sdist:
+# setuptools.command.sdist.run appends <egg_info>/SOURCES.txt to the file list
+# after MANIFEST.in has been applied, so no directive in MANIFEST.in can reach
+# it. setup.py's local `sdist` subclass drops it instead.
 src/numfast.egg-info/
 
 # Native artifacts
@@ -28,5 +32,6 @@ src/numfast.egg-info/
 # Editors / OS
 .idea/
 .DS_Store
-# Un-anchor: rules above must match at repo root only, so tools/scratch/*.py stays tracked.
-# NOTE: test golden oracles now live in tests/oracles/ (tracked), not scratch/.
+# NOTE: the rules above are anchored at the repo root, so `scratch/` here means
+# the top-level developer-toolchain directory only. Test golden oracles live in
+# tests/oracles/ (tracked).

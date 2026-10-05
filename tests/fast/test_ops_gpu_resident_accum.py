@@ -4,8 +4,7 @@
 
 Covers: Q1-like exact vs numpy + vs groupby_dense_impl, associativity
 (reversed chunk order), Q2 packed exact, Q3-spread exact, lo-carry wrap
-exact, scaled-f64 unscale tolerance. Heavy 100M numbers live in
-tests/heavy/bench_gpu_resident_accum_100M.py (not here).
+exact, scaled-f64 unscale tolerance. Small N and exact; no memory-scale case.
 """
 import importlib.util
 from pathlib import Path

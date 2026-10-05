@@ -1,5 +1,6 @@
-# Project-local cargo config (new): route the gnu target through the
-# restored zig 0.16.0 linker shim with correct (non-ponytail) paths.
-# Old scratch/feas configs untouched.
+# Project-local cargo config: route the gnu target through the restored
+# zig 0.16.0 linker shim, with correct paths for it.
+# The absolute linker path below names one machine; see CORRESPONDING-SOURCE.md
+# ("What is not here") for how a reader on another host repoints it.
 [target.x86_64-pc-windows-gnu]
 linker = "C:\\App\\numfast\\numfast\\numfast-native\\tools\\nf-link.bat"

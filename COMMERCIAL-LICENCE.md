@@ -33,9 +33,8 @@ copyright licence from the holder. That document does not exist yet.
 ## Where the reasoning lives
 
 The model behind this decision, including the open questions, is recorded
-internally in `LICENCE_MODEL.md` in the NumFast `develop/audit_foundation/`
-directory of the NumFast dev-env repository. That repository is private and is
-not a published source of licence terms. Three specific points in it — the
+internally in `LICENCE_MODEL.md` in the NumFast dev-env repository, which is
+private and is not a published source of licence terms. Three specific points in it — the
 network-use boundary, the "mere aggregation" boundary, and the sole-copyright-holder
 and patent position — require a qualified lawyer and are unresolved.
 

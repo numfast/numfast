@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 """P1 segmented_reduce + P2 adjacency_slice: unit/property + workload checks.
 
-Быстрые тесты (seed 42). Workload-проверки H2O/ClickBench/Taxi/RoadGraph —
-малые runnable-примеры с теми же ожиданиями, benchmark-файлы не тронуты.
+Fast tests (seed 42). Every case is a small runnable example over generic
+integer lanes -- no dataset names, no domain vocabulary.
 """
 import sys
 from pathlib import Path
@@ -283,7 +283,7 @@ def test_sparse_index_via_p2():
 
 
 @pytest.mark.fast
-def test_roadgraph_hierarchy_and_massod_via_p1():
+def test_run_boundaries_and_repeats_via_p1():
     coarse = np.array([0, 0, 1, 1, 1], dtype=np.int32)
     w = np.array([1, 2, 3, 4, 5], dtype=np.int32)
     order = np.argsort(coarse, kind="stable")

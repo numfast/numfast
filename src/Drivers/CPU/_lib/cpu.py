@@ -94,12 +94,11 @@ _POOLS = {}
 # lane per value column, 8B each) above fast-cache scale. Below it the
 # counts RMW is L2-resident (~free) while P2 still pays its fixed
 # streaming costs (SoA assembly + keys-only count pass) — measured:
-# M=101 multi-lane regresses 2x, M=1M wins 14-21% (100M/16T exact,
-# tests/heavy/bench_p12_100M.py). 1MB = L2 scale, generic over queries.
+# M=101 multi-lane regresses 2x, M=1M wins 14-21% (100M/16T exact).
+# 1MB = L2 scale, generic over queries.
 _P2_STATE_MIN = 1 << 20
 
-# M7b native-lane gates. Measured on this host (see
-# develop/audit_foundation/M7b_cpu_call_sites.md); every threshold is a
+# M7b native-lane gates. Measured on this host; every threshold is a
 # crossover of the SAME work, not a behaviour fork -- below it the proven
 # NumPy reference stays the owner, above it the fused DLL lane wins. Both
 # sides are bit-identical, so a gate changes speed only, never a value.

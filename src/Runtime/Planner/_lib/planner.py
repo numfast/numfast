@@ -309,8 +309,8 @@ def plan_pack_impl(kmin1, kmax1, kmin2, kmax2, m2=None):
 
 
 # Filter compact strategy profile (single source; STRUCTURE is the cost
-# model, VALUES are one measured profile -- see tests/heavy/bench_gpu_filter
-# .json crossover section): block-partials (GPU counts + host W-prefix + GPU
+# model, VALUES are one measured profile): block-partials (GPU counts + host
+# W-prefix + GPU
 # scatter) wins once dispatches amortize; host-assisted (full-mask D2H +
 # host prefix + GPU gather) only below the crossover.
 _FILTER_HOST_MAX = 2048

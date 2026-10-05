@@ -9,7 +9,7 @@ downstream resumes); NaN is a value with IEEE forward propagation
 (never a validity signal); int32 wraps mod 2**32 (never trap);
 empty -> empty same dtype. Oracle: independent NumPy (no numfast
 imports inside oracle fns). Seed 42 where RNG is used. Float
-tolerance read from specs/conformance-profile.toml (no
+tolerance read from specs-rebuilt/conformance-profile.toml (no
 hardcoded thresholds).
 """
 

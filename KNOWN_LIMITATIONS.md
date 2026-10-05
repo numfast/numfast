@@ -226,8 +226,9 @@ or `derive` a replacement column with `isin` / `str_eq`.
   exact. What is checked is int32: an out-of-int32 value in an int32 column
   raises rather than wrapping. Pinned by
   `tests/fast/test_ops_storage.py::test_persist_int64_stays_int64_and_roundtrips_exact`.
-* **BIGINT keys and literals raise** rather than narrowing — see
-  `BENCHMARKS.md` §1 for which ClickBench queries that costs.
+* **BIGINT keys and literals raise** rather than narrowing. Logical values are
+  `int32`, so a key or literal past 2³¹ is refused with the column named. Use
+  `to_pandas()`/`from_pandas()` and let pandas hold the `int64`.
 * **From-pandas dtype round-trip is not identity.** NumFast returns a *nullable*
   dtype where pandas' own `.loc[...] = None` upcast produced a plain float64
   with NaN. Values and order match; the dtype label may not. Use

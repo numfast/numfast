@@ -1,9 +1,0 @@
-{
- "n": 10000,
- "g": 128,
- "ncols": 3,
- "pass": true,
- "rust_count_bad": 0,
- "wasm_count_bad": 0,
- "wasm_cold_ms": 0.5799000000000021
-}

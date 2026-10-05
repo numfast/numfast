@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //! `scaled` mechanic (research-only): scaled-integer dense group-by.
 //!
-//! Schema semantics (SPEC v0.2 untouched; full table in
-//! `tests/research/scaled_mv/SEMANTICS.md`):
+//! Schema semantics (SPEC v0.2 untouched):
 //! logical decimal (v3, 6 digits) -> physical int64 ticks,
 //! `tick = round((logical - offset) * M)`, `M = 1_000_000`, `offset = 0`
 //! in this research. Native sums ticks with integer arithmetic;

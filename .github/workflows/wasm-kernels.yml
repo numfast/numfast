@@ -11,10 +11,10 @@
 #
 # It does NOT check in the .wasm. `numfast-native/.gitignore` excludes
 # `target/`, and that is correct: a committed copy of a build product is exactly
-# how `numfast-native/tools/numfast_native.wasm` survived in git 29 symbols
-# behind the current build, with four parity scripts validating it and reporting
-# green. So the artefact is built here, every time, from the same commit as the
-# source.
+# how a `numfast_native.wasm` under `numfast-native/tools/` survived in git 29
+# symbols behind the current build, with four parity scripts validating it and
+# reporting green. It has since been deleted. So the artefact is built here,
+# every time, from the same commit as the source.
 #
 # WHY THIS IS A SEPARATE FILE AND NOT A JOB IN ci.yml
 # ci.yml is a Python suite with a documented reason for having no Linux job. The

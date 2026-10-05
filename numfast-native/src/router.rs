@@ -1,11 +1,11 @@
 // Copyright (c) 2026 NumFast
 // SPDX-License-Identifier: AGPL-3.0-only
 //! `router` mechanic: multi-source Dijkstra (SSSP) over a flat CSR graph
-//! with early exit on a target set. Port of the query hot path in
-//! `roadgraph/ClusterRouter/_lib/router.py::route_nodes`
-//! (portal graph, V=235734, E=922245, avg_deg 3.9).
+//! with early exit on a target set. Port of a reference Python hot path
+//! (`route_nodes`), measured on a real road graph
+//! (V=235734, E=922245, avg_deg 3.9).
 //!
-//! Frozen semantics (parity with `route_nodes`):
+//! Frozen semantics (parity with that reference):
 //! - all sources at dist 0, min-heap of `(dist, vertex)` (tie-break by
 //!   vertex id, same as CPython `heapq` on `(d, u)` tuples);
 //! - stale-pop skip (`d != dist[u]`);
@@ -14,7 +14,7 @@
 //! - unreachable -> no target popped.
 //! INF edges (`0xFFFFFFFF`) are excluded at flatten time in Python
 //! (same `continue` as the Python build); negative weights are skipped.
-//! No heuristics, no GPU/WGSL, no whole-RoadGraph port: this one kernel
+//! No heuristics, no GPU/WGSL, no whole-system port: this one kernel
 //! only. Python owns orchestration/data/ABI.
 
 use core::cmp::Reverse;

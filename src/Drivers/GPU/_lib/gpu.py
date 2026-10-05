@@ -2171,7 +2171,7 @@ def _as_col(values, dtype, err, what):
 
 
 # ---- Standalone Scan / Reduction primitives (portable WGSL, no subgroups) ----
-# Design (alternatives measured in tests/heavy/bench_gpu_scan.json, not guessed):
+# Design (alternatives measured, not guessed):
 #   block-scan (Hillis-Steele, 256-lane shared mem, uniform barriers only) ->
 #   per-block totals [W] -> exclusive prefix over W -> fixup add (+optional
 #   subtract of input for exclusive). Default hybrid scan_inclusive/
@@ -2479,7 +2479,7 @@ def reduce_ref(values, dtype="int32", op="sum"):
 #   empty. Output feeds Filter/Gather (mask -> filter_compact /
 #   filter_indices -> gather). No IR/Planner wiring here: standalone
 #   primitive, GroupBy/Sort/Filter/Scan untouched.
-# Design (ponytail: minimal, host build + GPU probe):
+# Design (minimal: host build + GPU probe):
 #   build on host (numpy unique+sort, O(M log M) once, amortized over
 #   probes); probe binary-search on GPU (per-thread iterative, uniform
 #   loop, no subgroups, no shared memory: U random-access, shared tile
@@ -3300,8 +3300,7 @@ def gpu_execute_impl(nodes, canonical_dtype=None, format_error=None):
         else:
             raise err(f"GPU driver: op '{op}' CPU-only in v0.2 "
                       "(encode/gather-text need CPU path)",
-                      fix="run this op with backend='cpu'",
-                      doc="specs/06-drivers-gpu-cpu.md")
+                      fix="run this op with backend='cpu'")
     return bufs
 
 

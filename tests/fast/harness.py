@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 """Golden harness: exact int, tolerance/ULP float.
 
-Thresholds ONLY from specs/conformance-profile.toml (no hardcode).
-Numeric contract (spec 08): int exact; float passes if
+Thresholds ONLY from specs-rebuilt/conformance-profile.toml (no hardcode).
+Numeric contract: int exact; float passes if
 max_abs_diff <= max(atol, rtol*|ref|) OR ULP distance <= max_ulp.
 """
 

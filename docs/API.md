@@ -194,7 +194,7 @@ refusals you can rely on. Each is pinned by a named test.
 | ordering a TEXT column (`< <= > >=`) | `ValueError` at `filter`: it needs a collation the engine does not define. |
 | array exponent (`col ** col`) | `ValueError`: `pow` is scalar-exponent only. |
 | an out-of-`int32` value in an `int32` column | `ValueError` rather than wrap-around. |
-| a BIGINT key or literal above 2³¹ | `ValueError` rather than silent narrowing. This is what blocks 8 ClickBench queries. |
+| a BIGINT key or literal above 2³¹ | `ValueError` rather than silent narrowing. |
 | `backend='gpu'` on a CPU-only operation | `RuntimeError` naming `op:<name>`. |
 | a fused GPU indicator plan with a parameter key no operation consumes | `ValueError` naming the output, the key, the op, and that op's accepted keys. |
 
