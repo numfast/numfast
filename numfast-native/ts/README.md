@@ -7,12 +7,15 @@ TypeScript.
 npm install @numfast/kernels
 ```
 
-**This package's entry point is Node-only.** The `.wasm` has zero imports and
-instantiates in any host with a WebAssembly runtime, but `loadKernels()` reads
-the packaged module with `node:fs`, so `import "@numfast/kernels"` does not
-bundle for the browser. The browser-capable module is `dist/bridge.js`, which
-takes the bytes you hand it — see [Browser](#browser-not-through-the-package-entry-point)
-below. Node 22.18 or newer.
+**This package's entry point is Node-only; its browser surface is a subpath.**
+The `.wasm` has zero imports and instantiates in any host with a WebAssembly
+runtime, but `loadKernels()` reads the packaged module with `node:fs`, so
+`import "@numfast/kernels"` does not bundle for the browser — that needs a dual
+build, which this release does not do. A browser app imports
+`@numfast/kernels/bridge` and `@numfast/kernels/kernels` instead, which carry the
+whole kernel surface with no Node dependency; a real call is measured working
+from a `--platform=browser` bundle — see
+[Browser](#browser-through-the-subpath-not-the-entry-point). Node 22.18 or newer.
 
 **Where everything else is:**
 
@@ -126,21 +129,55 @@ names on every run so the gap cannot be mistaken for coverage.
 
 ---
 
-## Browser: not through the package entry point
+## Browser: through the subpath, not the entry point
 
-**Not supported.** `import "@numfast/kernels"` does not work in a browser:
-`dist/index.js` statically imports `node:module`, `node:fs` and `node:crypto`,
-and bundling it with `--platform=browser` fails on all three. The package's
-`exports` map exposes only `.`, `./wasm` and `./package.json`, so
-`dist/bridge.js` is not importable by subpath either
-(`ERR_PACKAGE_PATH_NOT_EXPORTED`).
+**The entry point is still Node-only.** `dist/index.js` statically imports
+`node:module`, `node:fs` and `node:crypto`, because `loadKernels()` reads the
+packaged `.wasm` and `dist/BUILD.json` off disk so the caller need not. That is
+a real Node dependency, not a packaging oversight, so `import "@numfast/kernels"`
+still does not bundle with `--platform=browser` and this release does not claim it
+does. Making the bare entry browser-safe needs a **dual build** — a second entry
+that takes the bytes and the build info as arguments — which is a different
+decision from this one and has not been taken.
 
-What *is* true: `dist/bridge.js` bundles for the browser cleanly (measured, 3.3
-kB) and holds the whole kernel surface — allocator, memory probe, guards — with
-no Node dependency. It takes the `.wasm` bytes as an argument. Reaching it needs
-either a subpath export or a vendored copy, and **this release provides
-neither**. `demo.html` in the repository demonstrates the pattern against the
-build tree; it is not shipped in this package.
+**The browser-capable surface is reachable, and is what a browser app should
+import.** Every module except `index.js` is free of Node imports, so the package
+exports it:
+
+```js
+import wasmBinary from "@numfast/kernels/wasm";       // the conveyed .wasm
+import { loadBridge } from "@numfast/kernels/bridge";  // raw ABI + allocator
+import { ssspCsr } from "@numfast/kernels/kernels";    // the typed wrappers
+```
+
+Both subpaths are needed: `loadBridge` is what instantiates the module and it
+lives in `bridge.js`, while the wrappers live in `kernels.js`. Your bundler
+resolves `@numfast/kernels/wasm` as an asset — `?url`, an asset rule, or
+esbuild's `loader: { ".wasm": "binary" }`.
+
+Measured against the packed tarball, not the build tree, with
+`esbuild --bundle --platform=browser`:
+
+| | |
+|---|---|
+| package modules in the bundle | 4 — `bridge.js`, `errors.js`, `abi.js`, `kernels.js` |
+| `node:` specifiers in the bundle | **none** |
+| `require()` in the bundle | **none** |
+| `ssspCsr(...)` through the typed wrapper | `[0, 10, 30]` — the example above, unchanged |
+| `k.base` / `k.staticDataEnd` | `1114112` / `1061411`, and `base > staticDataEnd` |
+| `k.assertGuard()` | OK |
+
+`--platform=browser` is what makes that table evidence rather than assertion: it
+forbids the Node builtins, so any Node dependency surviving in the graph is a
+build error, not a surprise in someone's browser. **This is a real kernel
+returning a correct result from a browser-shaped bundle — not "the `.wasm` is
+reachable".**
+
+`demo.html` in the repository demonstrates the raw-`Bridge` pattern against the
+build tree. It is **not** shipped, and as written it could not run from the
+tarball: it fetches `../target/wasm32-unknown-unknown/release/numfast_native.wasm`,
+a cargo build path that does not exist in a published package. The table above is
+the shipped-and-verified version of the same thing.
 
 ---
 
@@ -370,7 +407,7 @@ produce one.
 | W3 no unrecoverable abort | met **for the wrapped surface** — lengths are validated before the call, so the trap channel is unreachable through a typed wrapper; `callRaw` normalises it to `NumFastTrap` |
 | W4 per-symbol error table | met for the 17 wrapped kernels (`abi.ts`), checked against the `.wasm`. The other 69 are not tabulated, and are not wrapped |
 | W5 parity with Python | met for the 9 elementwise kernels (203 cases, fixture-backed, CI-gated). The 8 graph kernels are **not** parity-fixtured |
-| W6 installable artefact | met — `package.json`, `exports`, declarations, `dist/`, CI, a clean-room install of the packed tarball that runs a real call, and the Corresponding Source in `corresp_src/` (53 files, `SHA256SUMS`-verified). **Not met for a browser**: see [Browser](#browser-not-through-the-package-entry-point) |
+| W6 installable artefact | met — `package.json`, `exports`, declarations, `dist/`, CI, a clean-room install of the packed tarball that runs a real call, and the Corresponding Source in `corresp_src/` (53 files, `SHA256SUMS`-verified). Browser: met **through the `./bridge` + `./kernels` subpaths**, measured from a `--platform=browser` bundle of the packed tarball. The bare entry point is Node-only — see [Browser](#browser-through-the-subpath-not-the-entry-point) |
 | W7 not a compute core | held — no doc calls it an executor, a graph runtime or a compute core |
 
 ## Layout

@@ -22,6 +22,16 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./bridge": {
+      "types": "./dist/bridge.d.ts",
+      "import": "./dist/bridge.js",
+      "default": "./dist/bridge.js"
+    },
+    "./kernels": {
+      "types": "./dist/kernels.d.ts",
+      "import": "./dist/kernels.js",
+      "default": "./dist/kernels.js"
+    },
     "./wasm": "./dist/numfast_native.wasm",
     "./package.json": "./package.json"
   },
