@@ -17,6 +17,15 @@ results/counts.i64
 ts/node_modules/
 ts/dist/
 
+# ts/corresp_src/ is GENERATED at `npm pack` time by ts/corresp-src.mjs, the
+# same way dist/ is: the crate's .rs files are copied out of numfast-native/
+# and hashed into SHA256SUMS so the tarball carries the source of the .wasm it
+# conveys. It is a build output of prepack and must not be committed -- a
+# committed copy would be a second source of truth that could drift away from
+# the .wasm without anything failing, which is the reason this is done by copy
+# rather than by relocation. See ts/corresp-src.mjs.
+ts/corresp_src/
+
 # The 10 MB of tracked .bin fixtures that used to live in ts/artifacts/ are
 # gone from version control because nothing needs them: qlookup.ts regenerates
 # them (`node ts/qlookup.ts --gen [n]`) and demo.html now generates its own

@@ -44,17 +44,22 @@ Five lines, and the answer is checkable by hand.
 
 ## What this is, stated exactly
 
-> NumFast compiles its compute kernels to WebAssembly: an **86-function** module
-> with **one memory and no imports**, so the module itself runs in any host with
-> a WebAssembly runtime. **This is a portable kernel library, not a compute
-> core** — orchestration, buffer management and the type layer stay in the host.
-> This package wraps **17 of those 86 kernels** with typed wrappers; the
-> remaining 69 are reachable by name through `callRaw` and have no documented
-> argument order.
+> NumFast compiles its compute kernels to WebAssembly: an 86-function module
+> with one memory and no imports, so the module itself instantiates in any host
+> with a WebAssembly runtime. This package wraps 17 of those 86 kernels with
+> typed wrappers and is a portable kernel library, not a compute core:
+> orchestration, buffer management and the type layer stay in the host. Its own
+> entry point is Node-only (it reads the packaged .wasm with node:fs); the
+> browser-facing module is dist/bridge.js, which takes the bytes you give it.
+> The remaining 69 kernels are reachable by name through `callRaw` and have no
+> documented argument order.
 
 That paragraph is not typed by hand. `SCOPE.statement` generates it from
-`TOTAL_EXPORTS` and `WRAPPED`, and `npm test` checks both of those against the
-bytes of the shipped `.wasm`.
+`TOTAL_EXPORTS` and `WRAPPED`, `npm test` checks both of those against the
+bytes of the shipped `.wasm`, and the block above reproduces that generated
+sentence word for word — the only difference is the markdown code formatting
+around `callRaw`. Including the Node-only clause is why it also appears at the
+top of this file.
 
 **What this package is not.** There is no executor, no graph runtime, no IR
 dispatch and no buffer allocator inside the `.wasm`. It exports functions and a
@@ -67,14 +72,28 @@ is a separate project and this package does not start it.
 of this package is a consumer of AGPL-licensed software. `LICENSE` and `NOTICE`
 ship at the root of this package, byte-identical to the repository's copies.
 
-**Corresponding Source.** The Python wheel conveys `numfast_native.dll` and
-therefore carries the crate's Rust source with it, at
-`numfast/_corresp_src/numfast-native/`. **This npm package does not.** It
-conveys the compiled `.wasm` and no `.rs` file, so AGPL-3.0 section 6 is not
-discharged by this tarball. Until that is fixed, the source of the shipped
-`.wasm` is the crate at commit `21df878` in the repository linked above — treat
-that as the location of the source, not as a satisfying legal conclusion. The
-Python distribution's own §6 position is documented in `CORRESPONDING-SOURCE.md`.
+**Corresponding Source.** This tarball conveys `dist/numfast_native.wasm`, so
+AGPL-3.0 section 6 applies to it exactly as it applies to the wheel — and it is
+discharged by the **same mechanism**, not by a second one. `corresp-src.mjs`
+runs at `prepack` and copies the crate's **47 `.rs` files**, its `Cargo.toml`,
+`Cargo.lock`, `REUSE.md`, `.cargo/config.toml` and `tools/nf-link.{bat,py}`,
+plus this repository's `CORRESPONDING-SOURCE.md`, into
+`corresp_src/numfast-native/` — **53 files** — and writes `SHA256SUMS` over
+exactly the bytes that shipped. In an unpacked tarball:
+
+```bash
+cd corresp_src/numfast-native
+sha256sum -c SHA256SUMS        # 53 files, all OK
+cargo build --release --target wasm32-unknown-unknown
+```
+
+In the repository, `npm run corresp` re-verifies the vendored copy against
+`numfast-native/`: every `SHA256SUMS` line must verify and every shipped byte
+must equal the crate's. It is vendored at pack time rather than committed under
+`ts/` on purpose — a committed second copy would let `SHA256SUMS` hash stale
+bytes and pass, satisfying the obligation in appearance only. **The written
+offer is not used on this channel either**, for the reason
+`CORRESPONDING-SOURCE.md` gives for the Python distribution.
 
 ---
 
@@ -351,7 +370,7 @@ produce one.
 | W3 no unrecoverable abort | met **for the wrapped surface** — lengths are validated before the call, so the trap channel is unreachable through a typed wrapper; `callRaw` normalises it to `NumFastTrap` |
 | W4 per-symbol error table | met for the 17 wrapped kernels (`abi.ts`), checked against the `.wasm`. The other 69 are not tabulated, and are not wrapped |
 | W5 parity with Python | met for the 9 elementwise kernels (203 cases, fixture-backed, CI-gated). The 8 graph kernels are **not** parity-fixtured |
-| W6 installable artefact | met for Node — `package.json`, `exports`, declarations, `dist/`, CI, and a clean-room install of the packed tarball runs a real call. **Not met for a browser**: see [Browser](#browser-not-through-the-package-entry-point) |
+| W6 installable artefact | met — `package.json`, `exports`, declarations, `dist/`, CI, a clean-room install of the packed tarball that runs a real call, and the Corresponding Source in `corresp_src/` (53 files, `SHA256SUMS`-verified). **Not met for a browser**: see [Browser](#browser-not-through-the-package-entry-point) |
 | W7 not a compute core | held — no doc calls it an executor, a graph runtime or a compute core |
 
 ## Layout
@@ -359,12 +378,16 @@ produce one.
 ```
 ts/
   package.json  tsconfig.json  build.mjs   wasm-info.mjs
+  corresp-src.mjs   prepack: vendor the crate source + SHA256SUMS into the tarball
   LICENSE  NOTICE   copies of the repository's, shipped in the tarball
   bridge.ts     raw ABI, allocator, memory probe
   errors.ts     NumFastError / NumFastTrap / NumFastArgumentError, callGuarded
   abi.ts        per-symbol argument order and return-code meanings
   kernels.ts    the 17 typed wrappers
   index.ts      public surface, loadKernels, SCOPE
+  corresp_src/  GENERATED at prepack: numfast-native/ (47 .rs + 6 build inputs
+                + SHA256SUMS) and CORRESPONDING-SOURCE.md. Gitignored; ships
+                in the tarball.
   test/
     artifact.mjs     the artefact guard
     abi.test.mjs     published numbers vs the bytes

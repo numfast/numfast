@@ -23,10 +23,11 @@ promise.
 | sdist `numfast-<v>.tar.gz` | `numfast-native/` at the archive root |
 | wheel `numfast-<v>-py3-none-<plat>.whl` | `numfast/_corresp_src/numfast-native/` |
 | wheel `numfast-<v>-py3-none-any.whl` | `numfast/_corresp_src/numfast-native/` -- present even though that wheel conveys no object code |
-| npm `@numfast/kernels` | **NOWHERE. This is an open obligation, stated here rather than left silent.** See below. |
+| npm `@numfast/kernels` | `corresp_src/numfast-native/` in the tarball — the same 47 `.rs` + 6 build inputs + `SHA256SUMS`, vendored at `prepack` |
 
-This document ships as `CORRESPONDING-SOURCE.md` at the sdist root and as
-`numfast/_corresp_src/CORRESPONDING-SOURCE.md` in the wheel.
+This document ships as `CORRESPONDING-SOURCE.md` at the sdist root, as
+`numfast/_corresp_src/CORRESPONDING-SOURCE.md` in the wheel, and as
+`corresp_src/CORRESPONDING-SOURCE.md` in the npm tarball.
 
 `LICENSE` (the verbatim AGPL-3.0 text) and `NOTICE` reach
 `numfast-<v>.dist-info/licenses/` in both sdist and wheel, and
@@ -35,35 +36,32 @@ This document ships as `CORRESPONDING-SOURCE.md` at the sdist root and as
 a property of the metadata, not of a copy step someone can forget. Both also
 travel at the root of the npm package `@numfast/kernels`.
 
-## The npm package: an obligation this release does not meet
+## The npm package: the same mechanism, vendored at `prepack`
 
 `@numfast/kernels` conveys object code too — `dist/numfast_native.wasm`, a
-compiled build of this same crate. Its `package.json` `files` list is
-`["dist", "README.md", "LICENSE", "NOTICE"]`, and **no `.rs` file is in that
-tarball**. The crate source lives one directory above the package root, where
-npm's `files` cannot reach.
+compiled build of this same crate — so the same obligation applies to it. It is
+discharged by the **same mechanism**, not by a second one:
 
-So on the npm channel AGPL-3.0 section 6 is **not** discharged by the shipped
-artefact. Two routes close it and neither is a documentation change:
+`numfast-native/ts/corresp-src.mjs` runs at `prepack`, copies the crate's
+`src/` plus the six build inputs above into `corresp_src/numfast-native/`,
+copies this document beside them, and writes `SHA256SUMS` **from the bytes that
+shipped**. `files` in `package.json` carries `corresp_src` into the tarball.
+`npm run corresp` re-verifies an existing copy against the crate: every
+`sha256sum -c` line must verify and every shipped byte must equal the crate's.
 
-1. **Ship the source in the tarball.** npm cannot include files from outside
-   the package directory, so this means either vendoring `numfast-native/src`
-   under `numfast-native/ts/`, or moving the npm package to the repository root
-   beside the crate. The first duplicates 47 source files; the second relocates a
-   published package's layout.
-2. **Use the written-offer route** for this channel: a written offer to
-   provide the Corresponding Source, valid for as long as any copy of the
-   `.wasm` exists, naming the exact commit and a delivery route.
+**Why vendoring and not relocating the files into `ts/`.** npm cannot include
+files from outside the package directory, so the choice is a copy or a move. A
+committed copy under `ts/` would be a second source of truth: the `.wasm` is
+built from `numfast-native/src/`, the tarball would ship `ts/corresp_src/…`, and
+`SHA256SUMS` — regenerated at pack time — would hash the stale copy and pass. The
+obligation would then be satisfied in appearance only, which is the one outcome
+this mechanism exists to make impossible. Copying at pack time keeps the shipped
+bytes and the built bytes the same bytes by construction. The generated
+directory is a build output and is gitignored, exactly as `dist/` is.
 
-`CORRESPONDING-SOURCE.md` deliberately does not use the written offer for the
-Python distribution (see the note at the top), so route 2 would be a
-channel-specific exception and is a decision for the copyright holder, not a
-packaging default.
-
-Until one of them is taken, the honest statement — which is what
-`numfast-native/ts/README.md` now says — is that the source of the shipped
-`.wasm` is the crate at the `numfast-native/` directory of the repository, and
-that this is a statement of location, not a discharge of the obligation.
+The **written-offer route is not used on this channel either.** It remains a
+decision for the copyright holder, and taking it for npm alone would make two
+channels of one project answer the same question differently.
 
 ## What is here, and why each item is here
 
@@ -82,7 +80,8 @@ this tree back into the shipped binary. Nothing else was copied in.
 `numfast-native/SHA256SUMS` is written **at build time** from the bytes that
 went into the wheel. It is the evidence that the shipped source is the source
 in the repository, and it is regenerable: `sha256sum -c SHA256SUMS` must pass
-after unpacking.
+after unpacking. The npm tarball carries the same file over the same 53 paths,
+written the same way by `corresp-src.mjs`, and verifies the same way.
 
 The crate uses no `include!`, `include_str!` or `env!` (verified: zero
 matches under `numfast-native/src`), so there is no generated or embedded
@@ -99,6 +98,11 @@ cargo build --release --target x86_64-pc-windows-gnu
 # from an unpacked wheel
 cd numfast/_corresp_src/numfast-native
 cargo build --release
+
+# from an unpacked npm tarball (the .wasm this package conveys)
+cd corresp_src/numfast-native
+cargo build --release --target wasm32-unknown-unknown
+# -> target/wasm32-unknown-unknown/release/numfast_native.wasm
 ```
 
 `cargo build --release` with no `--target` reproduces the native binary for the

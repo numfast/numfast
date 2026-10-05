@@ -27,6 +27,7 @@
   },
   "files": [
     "dist",
+    "corresp_src",
     "README.md",
     "LICENSE",
     "NOTICE"
@@ -34,7 +35,9 @@
   "scripts": {
     "build": "node build.mjs",
     "test": "node --test \"test/*.test.mjs\"",
-    "abi": "node build.mjs --check-only"
+    "abi": "node build.mjs --check-only",
+    "prepack": "node corresp-src.mjs",
+    "corresp": "node corresp-src.mjs --check"
   },
   "devDependencies": {
     "typescript": "^5.6.0",
