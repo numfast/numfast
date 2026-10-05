@@ -24,12 +24,16 @@
 #
 # WHY NO LINUX JOB
 # Only a Windows binary is committed: `src/numfast/_native/numfast_native.dll`.
-# There is no `.so` in the tree. Measured 2026-10-04 with the native library
-# disabled (`NUMFAST_NATIVE_DISABLE=1`): 10 failed, 627 passed -- the native
-# lanes (`ir_unique`, pair-insert, bitmask sweep, DLL packaging) are
-# load-bearing, not optional. A Linux job would be red on its first run, and a
-# CI file that fails is worse than no CI. Add Linux when a Linux build of the
-# native library is committed and its suite run has been observed green.
+# There is no `.so` in the tree. Measured 2026-10-05 on WSL2 / Ubuntu 24.04 /
+# CPython 3.12 with the native library disabled (`NUMFAST_NATIVE_DISABLE=1`) and
+# only numpy/pandas/pyarrow/pytest installed: 74 failed, 664 passed, 38 skipped
+# -- the GPU lanes (no `wgpu`) and the native lanes are both load-bearing, not
+# optional. With the native library built from its own Corresponding Source and
+# `wgpu` installed the same suite gives 10 failed, 729 passed, 37 skipped, the
+# residual being 8 native-lane tests plus 2 timing-sensitive ones. A Linux job
+# would be red on its first run either way, and a CI file that fails is worse
+# than no CI. Add Linux when a Linux build of the native library is committed,
+# its failures are fixed, and its suite run has been observed green.
 #
 # WHY PYTHON 3.14 ONLY
 # `pyproject.toml` declares `requires-python = ">=3.11"`, but 3.14 is the only

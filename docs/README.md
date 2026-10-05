@@ -6,6 +6,7 @@ the truth and the document is the bug.
 
 | Document | What it covers |
 |---|---|
+| [INSTALL.md](INSTALL.md) | how to install, all five channels: Python/PyPI, JavaScript/npm, Browser/WASM, Linux native, Windows native — what each gives you, and how to verify it |
 | [API.md](API.md) | the 44-name consumer surface, the package boundary, the kernel-level names, and every guard |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | the IR, the Builder Extension model, the planner, the CPU driver, the native Rust kernels, the GPU split, the WASM path, and where the semantic contract lives |
 | [EXAMPLES.md](EXAMPLES.md) | runnable programs with their real output |

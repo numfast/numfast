@@ -12,13 +12,13 @@
 Please do **not** report a security vulnerability through a public GitHub issue.
 
 - **Preferred:** use [private vulnerability reporting](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability)
-  on this repository. It reaches the maintainers without publishing anything.
-- **Email:** `security@numfast.example`
+  on this repository. It reaches the maintainers without publishing anything,
+  and it needs no mailbox to be configured first.
 
-  > **PLACEHOLDER — must be replaced before this repository is published.**
-  > `security@numfast.example` uses the reserved `.example` TLD and reaches
-  > nobody. Replace it with a monitored address, or delete this bullet and rely
-  > on GitHub private vulnerability reporting alone, which needs no mailbox.
+  No email address is published for this repository. That is deliberate: a
+  stale or placeholder address in a security policy is worse than none, because
+  a reporter who trusts it waits for a reply that never comes. Use the GitHub
+  route above.
 
 Please include as much of the following as you can:
 

@@ -7,6 +7,23 @@ TypeScript.
 npm install @numfast/kernels
 ```
 
+**This package's entry point is Node-only.** The `.wasm` has zero imports and
+instantiates in any host with a WebAssembly runtime, but `loadKernels()` reads
+the packaged module with `node:fs`, so `import "@numfast/kernels"` does not
+bundle for the browser. The browser-capable module is `dist/bridge.js`, which
+takes the bytes you hand it — see [Browser](#browser-not-through-the-package-entry-point)
+below. Node 22.18 or newer.
+
+**Where everything else is:**
+
+| | |
+|---|---|
+| Engine (Python) | <https://pypi.org/project/numfast/> · <https://github.com/numfast/numfast> |
+| How to install, all five channels | <https://github.com/numfast/numfast/blob/main/docs/INSTALL.md> |
+| This package's source | <https://github.com/numfast/numfast/tree/main/numfast-native/ts> |
+| The Rust crate these kernels come from | <https://github.com/numfast/numfast/tree/main/numfast-native> |
+| Issues | <https://github.com/numfast/numfast/issues> |
+
 ```js
 import { loadKernels, ssspCsr } from "@numfast/kernels";
 
@@ -27,16 +44,17 @@ Five lines, and the answer is checkable by hand.
 
 ## What this is, stated exactly
 
-> NumFast compiles its compute kernels to WebAssembly: an **85-function** module
-> with **one memory and no imports**, runnable in any host with a WebAssembly
-> runtime. **This is a portable kernel library, not a compute core** —
-> orchestration, buffer management and the type layer stay in the host. This
-> package wraps **17 of those 85 kernels** with typed wrappers; the remaining
-> 68 are reachable by name through `callRaw` and have no documented argument
-> order.
+> NumFast compiles its compute kernels to WebAssembly: an **86-function** module
+> with **one memory and no imports**, so the module itself runs in any host with
+> a WebAssembly runtime. **This is a portable kernel library, not a compute
+> core** — orchestration, buffer management and the type layer stay in the host.
+> This package wraps **17 of those 86 kernels** with typed wrappers; the
+> remaining 69 are reachable by name through `callRaw` and have no documented
+> argument order.
 
-Every number in that paragraph is asserted against the bytes of the shipped
-`.wasm` by `npm test`. None of them is a claim.
+That paragraph is not typed by hand. `SCOPE.statement` generates it from
+`TOTAL_EXPORTS` and `WRAPPED`, and `npm test` checks both of those against the
+bytes of the shipped `.wasm`.
 
 **What this package is not.** There is no executor, no graph runtime, no IR
 dispatch and no buffer allocator inside the `.wasm`. It exports functions and a
@@ -47,7 +65,16 @@ is a separate project and this package does not start it.
 
 **Licence.** AGPL-3.0-only, inherited from the Rust core. A JavaScript consumer
 of this package is a consumer of AGPL-licensed software. `LICENSE` and `NOTICE`
-travel with the package.
+ship at the root of this package, byte-identical to the repository's copies.
+
+**Corresponding Source.** The Python wheel conveys `numfast_native.dll` and
+therefore carries the crate's Rust source with it, at
+`numfast/_corresp_src/numfast-native/`. **This npm package does not.** It
+conveys the compiled `.wasm` and no `.rs` file, so AGPL-3.0 section 6 is not
+discharged by this tarball. Until that is fixed, the source of the shipped
+`.wasm` is the crate at commit `21df878` in the repository linked above — treat
+that as the location of the source, not as a satisfying legal conclusion. The
+Python distribution's own §6 position is documented in `CORRESPONDING-SOURCE.md`.
 
 ---
 
@@ -56,7 +83,7 @@ travel with the package.
 ```js
 import { WRAPPED, TOTAL_EXPORTS, SCOPE } from "@numfast/kernels";
 WRAPPED.length;   // 17
-TOTAL_EXPORTS;    // 85
+TOTAL_EXPORTS;    // 86
 SCOPE.statement;  // the paragraph above, generated from those two numbers
 ```
 
@@ -67,7 +94,7 @@ SCOPE.statement;  // the paragraph above, generated from those two numbers
 | graph | `nf_sssp_csr`, `nf_sssp_csr_pred`, `nf_sssp_batch`, `nf_cost_travel_batch`, `nf_cost_intern`, `nf_rowwise_kway_time_argmin_gather`, `nf_adjacency_slice`, `nf_adjacency_gather` |
 | elementwise `map` | `nf_map_i32`, `nf_map_scalar_i32`, `nf_map_fscalar_i32`, `nf_map_f32`, `nf_map_f32_divpow`, `nf_map_scalar_f32`, `nf_map_scalar_f32_divpow`, `nf_map_f64`, `nf_map_scalar_f64` |
 
-68 **not** wrapped. They are listed by `WRAPPED`'s absence and reachable through
+69 **not** wrapped. They are listed by `WRAPPED`'s absence and reachable through
 `callRaw(bridge, "nf_group_sum_count", ...)`. They are unwrapped on purpose: the
 pointer-vs-length order of each argument is recorded nowhere in the repository,
 so a wrapper written from the signature alone would be a guess dressed as an
@@ -77,6 +104,24 @@ documented with a signature that disagrees with the `.wasm`.
 Parity fixtures cover **9** of the 17. The eight graph kernels are wrapped but
 have **no** Python parity fixture yet, and `test/parity.test.mjs` prints their
 names on every run so the gap cannot be mistaken for coverage.
+
+---
+
+## Browser: not through the package entry point
+
+**Not supported.** `import "@numfast/kernels"` does not work in a browser:
+`dist/index.js` statically imports `node:module`, `node:fs` and `node:crypto`,
+and bundling it with `--platform=browser` fails on all three. The package's
+`exports` map exposes only `.`, `./wasm` and `./package.json`, so
+`dist/bridge.js` is not importable by subpath either
+(`ERR_PACKAGE_PATH_NOT_EXPORTED`).
+
+What *is* true: `dist/bridge.js` bundles for the browser cleanly (measured, 3.3
+kB) and holds the whole kernel surface — allocator, memory probe, guards — with
+no Node dependency. It takes the `.wasm` bytes as an argument. Reaching it needs
+either a subpath export or a vendored copy, and **this release provides
+neither**. `demo.html` in the repository demonstrates the pattern against the
+build tree; it is not shipped in this package.
 
 ---
 
@@ -112,7 +157,7 @@ So `Bridge` does not use a constant base. It probes the instantiated memory for
 the top of the module's initialised image and places the first buffer above it:
 
 ```js
-k.staticDataEnd;  // 1061379 on the current build
+k.staticDataEnd;  // 1061411 on the current build
 k.base;           // 1114112
 ```
 
@@ -139,7 +184,7 @@ class NumFastError extends Error { symbol; code; reason; }
 A code with no entry in the table is reported as *not in this package's table*
 — never as a number pretending to mean something.
 
-**A trap.** `WebAssembly.RuntimeError`. Measured: **63 of the 85 kernels trap
+**A trap.** `WebAssembly.RuntimeError`. Measured: **63 of the 86 kernels trap
 on a negative length**, because the kernels build a slice with `n: usize` and a
 negative `i32` becomes a ~4·10⁹ element slice. Catchable in JavaScript, but an
 unhandled one terminates the host process.
@@ -166,7 +211,7 @@ a buffer on a failure path.
 
 ## i64 and the BigInt boundary
 
-**20 of the 85 exports** declare `i64` somewhere in their `FuncType`. On the
+**21 of the 86 exports** declare `i64` somewhere in their `FuncType`. On the
 JavaScript side that is a hard type boundary, not a coercion:
 
 ```js
@@ -186,7 +231,7 @@ and `callTrapped` are kept separate for exactly this reason: `nf_cost_intern`
 answers with a **count**, so a successful call returns `3` and running it
 through a return-code check would turn every success into an error.
 
-The list of the 20 is in `dist/BUILD.json`, written by every build.
+The list of the 21 is in `dist/BUILD.json`, written by every build.
 
 ---
 
@@ -242,7 +287,7 @@ a real measured difference, reported rather than hidden.
 **The known divergence that was not a kernel bug.** An earlier revision recorded
 WASM i32 `map pow` with a fractional exponent as agreeing at `n=6` and diverging
 at `n=100000`, while the native path agreed at both, and suspected a stale
-`.wasm`. Re-measured on the current 85-function build: **it was neither a stale
+`.wasm`. Re-measured on the current 86-function build: **it was neither a stale
 artefact nor a `powf` difference.** It was the caller writing its buffer over
 the module's constant pool — see rule 3. Native agreed with NumPy at every size
 and every exponent, and so does WASM once the buffers are placed correctly.
@@ -261,22 +306,29 @@ cd numfast-native/ts && npm install && npm run build
 ```
 
 `npm run build` runs `tsc`, copies the release `.wasm` into `dist/`, and writes
-`dist/BUILD.json`:
+`dist/BUILD.json`. The values below are the ones the current build emits; every
+one is checked against the bytes, so a build that moves any of them fails:
 
 ```json
-{ "sha256": "...", "bytes": 196149, "exportCount": 86, "funcCount": 85,
-  "importCount": 0, "i64Count": 20, "i64Exports": [...],
+{ "sha256": "16f50fe9...", "bytes": 196719, "exportCount": 87, "funcCount": 86,
+  "importCount": 0, "i64Count": 21, "i64Exports": [...],
   "initialMemoryPages": 17, "stackPointer": 1048576,
   "dataSectionEnd": 1048587, "version": "0.2.1", "builtFrom": "<git sha>" }
 ```
 
-Every test prints that line, so a failure is attributable to one build.
+`builtFrom` is `GITHUB_SHA` when the build runs in CI and the result of
+`git rev-parse HEAD` when it runs in a checkout. It reads `unknown` when the
+build runs from an unpacked tarball, which has no `.git` — so a `BUILD.json`
+that says `unknown` is a locally packed artefact, not a release build.
 
 The build **fails** — it does not warn — if the export count has moved, if the
-module has gained an import, if the i64 count has moved, or if any `abi.ts`
-entry disagrees with the `.wasm`. Those checks are the reason a 56-function
-build cannot sit in git unnoticed again: `numfast-native/tools/` still carries
-such a copy, 29 symbols behind, and four parity scripts used to validate it.
+module has gained an import, if the i64 count has moved, if any `abi.ts` entry
+disagrees with the `.wasm`, or if `package.json` or `numfast-native/Cargo.toml`
+disagrees with `pyproject.toml` on the version. Those checks are the reason a
+56-function build cannot sit in git unnoticed again: a `numfast_native.wasm`
+under `numfast-native/tools/` survived for a long time 29 symbols behind the
+current build, with four parity scripts validating it and reporting green. It
+has since been deleted.
 
 **The `.wasm` is not committed.** `numfast-native/.gitignore` excludes `target/`
 and that is correct — it is a build product, and a committed copy is precisely
@@ -295,11 +347,11 @@ produce one.
 | criterion | status |
 |---|---|
 | W1 obtain the artefact | met — one documented cargo line, verified by CI |
-| W2 export introspection | met — 86 = 85 Func + 1 Memory, 0 imports, asserted from the bytes |
+| W2 export introspection | met — 87 = 86 Func + 1 Memory, 0 imports, asserted from the bytes |
 | W3 no unrecoverable abort | met **for the wrapped surface** — lengths are validated before the call, so the trap channel is unreachable through a typed wrapper; `callRaw` normalises it to `NumFastTrap` |
-| W4 per-symbol error table | met for the 17 wrapped kernels (`abi.ts`), checked against the `.wasm`. The other 68 are not tabulated, and are not wrapped |
+| W4 per-symbol error table | met for the 17 wrapped kernels (`abi.ts`), checked against the `.wasm`. The other 69 are not tabulated, and are not wrapped |
 | W5 parity with Python | met for the 9 elementwise kernels (203 cases, fixture-backed, CI-gated). The 8 graph kernels are **not** parity-fixtured |
-| W6 installable artefact | met — `package.json`, `exports`, declarations, `dist/`, CI |
+| W6 installable artefact | met for Node — `package.json`, `exports`, declarations, `dist/`, CI, and a clean-room install of the packed tarball runs a real call. **Not met for a browser**: see [Browser](#browser-not-through-the-package-entry-point) |
 | W7 not a compute core | held — no doc calls it an executor, a graph runtime or a compute core |
 
 ## Layout
@@ -307,6 +359,7 @@ produce one.
 ```
 ts/
   package.json  tsconfig.json  build.mjs   wasm-info.mjs
+  LICENSE  NOTICE   copies of the repository's, shipped in the tarball
   bridge.ts     raw ABI, allocator, memory probe
   errors.ts     NumFastError / NumFastTrap / NumFastArgumentError, callGuarded
   abi.ts        per-symbol argument order and return-code meanings
@@ -319,5 +372,5 @@ ts/
     parity.test.mjs  Python <-> JS/WASM
     gen_fixtures.py  produces test/fixtures/parity.json from the Python host
   qlookup.ts    a benchmark driver, outside the tsc program
-  demo.html     a browser demo
+  demo.html     a browser demo against the build tree (not shipped)
 ```

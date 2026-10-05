@@ -120,12 +120,21 @@ export async function loadKernels(): Promise<Bridge> {
 export const SCOPE = Object.freeze({
   wrapped: WRAPPED.length,
   total: TOTAL_EXPORTS,
+  // The host sentence is deliberately narrower than "any host with a
+  // WebAssembly runtime", which is what this said until it was measured. The
+  // .wasm itself has zero imports and does instantiate anywhere; this module
+  // does not, because index.ts reads its own .wasm through node:fs. Measured
+  // against the packed tarball: `dist/index.js` fails to bundle for the browser
+  // on node:module / node:fs / node:crypto. So the kernel module is portable
+  // and this package's entry point is Node-only, and the sentence says both.
   statement:
     `NumFast compiles its compute kernels to WebAssembly: an ${TOTAL_EXPORTS}-function ` +
-    `module with one memory and no imports, runnable in any host with a ` +
-    `WebAssembly runtime. This package wraps ${WRAPPED.length} of those ${TOTAL_EXPORTS} ` +
-    `kernels with typed wrappers. It is a portable kernel library, not a ` +
-    `compute core: orchestration, buffer management and the type layer stay ` +
-    `in the host. The remaining ${TOTAL_EXPORTS - WRAPPED.length} kernels are ` +
+    `module with one memory and no imports, so the module itself instantiates in any ` +
+    `host with a WebAssembly runtime. This package wraps ${WRAPPED.length} of those ` +
+    `${TOTAL_EXPORTS} kernels with typed wrappers and is a portable kernel library, ` +
+    `not a compute core: orchestration, buffer management and the type layer stay in ` +
+    `the host. Its own entry point is Node-only (it reads the packaged .wasm with ` +
+    `node:fs); the browser-facing module is dist/bridge.js, which takes the bytes ` +
+    `you give it. The remaining ${TOTAL_EXPORTS - WRAPPED.length} kernels are ` +
     `reachable by name through callRaw and have no documented argument order.`,
 });

@@ -13,12 +13,29 @@ name = "numfast"
 # and numfast-native/ts/package.json mirror this value; the JS build refuses to
 # run if package.json disagrees (ts/build.mjs:engineVersion).
 version = "0.2.1"
-description = "NumFast: packaged GPU-numeric boundary (Series/Table + NumPy/Pandas/Arrow adapters)"
-readme = "README.packaging.md"
+description = "NumFast: columnar compute engine for Python (Series/Table + NumPy/Pandas/Arrow adapters)"
+# The PyPI long description. README_PYPI.md is the user-facing page written for
+# that slot; README.packaging.md is the developer-facing note on what the wheel
+# contains and stayed pointed at here until now, so PyPI rendered a build
+# recipe as the project description. README_PYPI.md must also be listed in
+# MANIFEST.in, or the wheel built from the sdist cannot find it.
+readme = "README_PYPI.md"
 license = "AGPL-3.0-only"
 license-files = ["LICENSE", "NOTICE"]
 requires-python = ">=3.11"
 dependencies = ["numpy>=1.24"]
+
+# Without these the PyPI page shows no link back to the source, the
+# documentation or the changelog: the project page would be a dead end.
+[project.urls]
+Homepage = "https://github.com/numfast/numfast"
+Repository = "https://github.com/numfast/numfast"
+Documentation = "https://github.com/numfast/numfast/blob/main/docs/INSTALL.md"
+"API reference" = "https://github.com/numfast/numfast/blob/main/docs/API.md"
+Changelog = "https://github.com/numfast/numfast/blob/main/CHANGELOG.md"
+"Known limitations" = "https://github.com/numfast/numfast/blob/main/KNOWN_LIMITATIONS.md"
+Issues = "https://github.com/numfast/numfast/issues"
+"WebAssembly kernels (npm)" = "https://www.npmjs.com/package/@numfast/kernels"
 
 [project.optional-dependencies]
 pandas = ["pandas>=1.5"]

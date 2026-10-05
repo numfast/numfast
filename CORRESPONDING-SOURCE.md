@@ -23,6 +23,7 @@ promise.
 | sdist `numfast-<v>.tar.gz` | `numfast-native/` at the archive root |
 | wheel `numfast-<v>-py3-none-<plat>.whl` | `numfast/_corresp_src/numfast-native/` |
 | wheel `numfast-<v>-py3-none-any.whl` | `numfast/_corresp_src/numfast-native/` -- present even though that wheel conveys no object code |
+| npm `@numfast/kernels` | **NOWHERE. This is an open obligation, stated here rather than left silent.** See below. |
 
 This document ships as `CORRESPONDING-SOURCE.md` at the sdist root and as
 `numfast/_corresp_src/CORRESPONDING-SOURCE.md` in the wheel.
@@ -31,7 +32,38 @@ This document ships as `CORRESPONDING-SOURCE.md` at the sdist root and as
 `numfast-<v>.dist-info/licenses/` in both sdist and wheel, and
 `METADATA` carries `License-Expression: AGPL-3.0-only`. They are declared in
 `pyproject.toml` under `[project] license-files` (PEP 639), so their arrival is
-a property of the metadata, not of a copy step someone can forget.
+a property of the metadata, not of a copy step someone can forget. Both also
+travel at the root of the npm package `@numfast/kernels`.
+
+## The npm package: an obligation this release does not meet
+
+`@numfast/kernels` conveys object code too — `dist/numfast_native.wasm`, a
+compiled build of this same crate. Its `package.json` `files` list is
+`["dist", "README.md", "LICENSE", "NOTICE"]`, and **no `.rs` file is in that
+tarball**. The crate source lives one directory above the package root, where
+npm's `files` cannot reach.
+
+So on the npm channel AGPL-3.0 section 6 is **not** discharged by the shipped
+artefact. Two routes close it and neither is a documentation change:
+
+1. **Ship the source in the tarball.** npm cannot include files from outside
+   the package directory, so this means either vendoring `numfast-native/src`
+   under `numfast-native/ts/`, or moving the npm package to the repository root
+   beside the crate. The first duplicates 47 source files; the second relocates a
+   published package's layout.
+2. **Use the written-offer route** for this channel: a written offer to
+   provide the Corresponding Source, valid for as long as any copy of the
+   `.wasm` exists, naming the exact commit and a delivery route.
+
+`CORRESPONDING-SOURCE.md` deliberately does not use the written offer for the
+Python distribution (see the note at the top), so route 2 would be a
+channel-specific exception and is a decision for the copyright holder, not a
+packaging default.
+
+Until one of them is taken, the honest statement — which is what
+`numfast-native/ts/README.md` now says — is that the source of the shipped
+`.wasm` is the crate at the `numfast-native/` directory of the repository, and
+that this is a statement of location, not a discharge of the obligation.
 
 ## What is here, and why each item is here
 

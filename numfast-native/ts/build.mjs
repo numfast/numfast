@@ -44,20 +44,36 @@ export const CARGO_CMD =
 
 /** The engine's version. The Python package owns the version number
  *  (pyproject.toml `[project].version`, mirrored to `numfast.__version__`);
- *  `Cargo.toml` still says 0.1.0 and is stale. Read from pyproject so the
- *  package version cannot silently fork from the engine's. */
+ *  `Cargo.toml` and `package.json` mirror it. All three are checked here, so a
+ *  mirror that drifts stops the build instead of shipping a kernel package that
+ *  cannot be traced to a commit. */
 function engineVersion() {
   const pyproject = join(NATIVE, "..", "pyproject.toml");
   if (!existsSync(pyproject)) throw new Error(`cannot find ${pyproject}`);
   const m = /^version\s*=\s*"([^"]+)"/m.exec(readFileSync(pyproject, "utf8"));
   if (!m) throw new Error(`no [project].version in ${pyproject}`);
   const v = m[1];
+
   const pkg = JSON.parse(readFileSync(join(HERE, "package.json"), "utf8"));
   if (pkg.version !== v) {
     throw new Error(
       `package.json version ${pkg.version} != engine version ${v} (pyproject.toml). ` +
       `A kernel package that reports a different version from the engine cannot ` +
       `be traced to a commit.`);
+  }
+
+  // The crate mirrors the same number. Nothing else reads it, so without this
+  // check a stale Cargo.toml would survive until someone compared the two by
+  // hand -- which is how it sat at 0.1.0 while the engine was at 0.2.1.
+  const cargoToml = join(NATIVE, "Cargo.toml");
+  if (!existsSync(cargoToml)) throw new Error(`cannot find ${cargoToml}`);
+  const cm = /^version\s*=\s*"([^"]+)"/m.exec(readFileSync(cargoToml, "utf8"));
+  if (!cm) throw new Error(`no [package] version in ${cargoToml}`);
+  if (cm[1] !== v) {
+    throw new Error(
+      `Cargo.toml version ${cm[1]} != engine version ${v} (pyproject.toml). ` +
+      `A crate whose version cannot be traced to the engine's cannot be ` +
+      `matched to a release.`);
   }
   return v;
 }

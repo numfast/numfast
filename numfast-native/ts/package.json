@@ -4,6 +4,15 @@
   "description": "NumFast compute kernels compiled to WebAssembly: 86 functions, one memory, no imports. Portable kernel library, not a compute core.",
   "license": "AGPL-3.0-only",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/numfast/numfast.git",
+    "directory": "numfast-native/ts"
+  },
+  "homepage": "https://github.com/numfast/numfast",
+  "bugs": {
+    "url": "https://github.com/numfast/numfast/issues"
+  },
   "engines": {
     "node": ">=22.18"
   },
@@ -18,8 +27,9 @@
   },
   "files": [
     "dist",
-    "wasm",
-    "README.md"
+    "README.md",
+    "LICENSE",
+    "NOTICE"
   ],
   "scripts": {
     "build": "node build.mjs",

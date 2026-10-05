@@ -9,6 +9,14 @@ into one execution graph.
 **Version 0.2.1.** AGPL-3.0-only. Python 3.11+. The native compute kernels are a
 Rust library that currently ships for Windows x86-64 only.
 
+| | |
+|---|---|
+| Engine, Python | PyPI: <https://pypi.org/project/numfast/> · npm kernels: <https://www.npmjs.com/package/@numfast/kernels> |
+| **How to install, all five channels** | **[docs/INSTALL.md](docs/INSTALL.md)** |
+| Source | <https://github.com/numfast/numfast> |
+| Changelog | [CHANGELOG.md](CHANGELOG.md) |
+| Problems | <https://github.com/numfast/numfast/issues> |
+
 Read this page to decide whether it is useful to you in thirty seconds:
 
 * **What it does well, and where it is slower than DuckDB** — where it loses, it
@@ -29,11 +37,19 @@ Read this page to decide whether it is useful to you in thirty seconds:
 
 ## Install
 
+**[docs/INSTALL.md](docs/INSTALL.md) is the single installation page** — Python,
+JavaScript, Browser, Linux native and Windows native, each with what it gives
+you and how to check it. The short version:
+
 ```bash
 pip install numfast            # the engine
 pip install "numfast[pandas]"  # + pandas adapters
 pip install "numfast[arrow]"   # + pyarrow adapters
 pip install "numfast[gpu]"     # + wgpu, required to execute on the GPU path
+```
+
+```bash
+npm install @numfast/kernels   # the same kernels as WebAssembly, Node host only
 ```
 
 `numpy>=1.24` is the only hard dependency.
@@ -233,7 +249,9 @@ normative for the semantic contract.
 * **The WASM path** compiles the same Rust kernels to
   `@numfast/kernels` (npm): a portable kernel library, **86 function exports, one
   memory, zero imports, 17 typed wrappers**. It is **not a compute core** — there
-  is no executor, no graph runtime and no allocator inside the `.wasm`.
+  is no executor, no graph runtime and no allocator inside the `.wasm`. The
+  **`.wasm`** is host-independent; the **published npm package is Node-only** and
+  has no browser entry point — see [docs/INSTALL.md](docs/INSTALL.md).
 * **Where the semantic contract lives.** In `docs/ARCHITECTURE.md`, and in the
   test suite that pins it. Where the two disagree, the test is right and the
   document is corrected.
@@ -402,28 +420,38 @@ python -m pytest tests/ -q
 There is one tier: `tests/fast/`, run by default. It has no `heavy` marker and
 no memory-scale cases.
 
-Last clean-checkout run of the tree this README describes — a `git archive HEAD`
-extraction into an empty directory, with no `build/`, `dist/`, `*.egg-info` or
+Measured on the tree this README describes — a `git archive HEAD` extraction
+into an empty directory, with no `build/`, `dist/`, `*.egg-info` or
 `__pycache__` present, and no Rust build product either (Windows, Python
-3.14.6): **771 passed, 5 skipped, 0 failed in 156.47 s**. Every skip, and why it
-skips:
+3.14.6): **772 passed, 4 skipped, 0 failed in 156.20 s**, with the optional
+extras `wgpu` and `psutil` installed. Without `wgpu` the same run is **707
+passed, 5 skipped, 64 failed** — the GPU lanes are load-bearing, not optional.
+Every skip, and why it skips:
 
 | Skipped | Reason |
 |---|---|
 | `test_ops_null_pattern.py` | one wall-clock ratio assertion, marked `heavy`; run it with `pytest -m heavy`. A ratio on this box is not a property of the engine. |
-| `test_ops_text.py`, `test_ops_text_affix.py` | the `wasm32` build artefact is not committed, so the WASM text lanes do not collect. They pass once `cargo build --target wasm32-unknown-unknown --release` has run — 12/12, verified. |
+| `test_ops_regexp_deferred.py` | needs `duckdb`, which is not a dependency and is not installed |
 | `test_packaging_adapters.py` | one case needs a second wheel venv built first |
 | `test_rng_gate.py` | its R reference implementation is not in the tree |
+| `test_gpu_disclosure.py` | one case skips when `wgpu` is not importable |
 
-So one of these is optional (build the WASM artefact and it runs) and two are a
-real coverage hole: the RNG-gate reference and the packaging-venv case need
-material that does not ship. They run in a developer's checkout and skip in CI.
-That is named here rather than hidden behind a green line.
+So two of these are a real coverage hole: the RNG-gate reference and the
+packaging-venv case need material that does not ship. They run in a developer's
+checkout and skip in CI. That is named here rather than hidden behind a green
+line.
 
-Against an **installed** wheel in a fresh venv, the same suite gives **473 passed,
-4 skipped, 0 failed**, with 20 test modules left uncollected because they read
-engine source text that an installed package does not lay out as a source tree.
-Each one is named, with its reason, at the end of the run.
+Against an **installed** wheel in a fresh venv, with the test tree taken from
+the sdist and the package from site-packages, the same suite gives **503 passed,
+5 skipped, 0 failed in 122.76 s**, with 20 test modules left uncollected
+because they read engine source text that an installed package does not lay out
+as a source tree. Each one is named, with its reason, at the end of the run.
+
+On **Linux** (WSL2, Ubuntu 24.04, CPython 3.12, no native library) the same
+checkout gives **74 failed, 664 passed, 38 skipped**; with the native library
+built from its own Corresponding Source and `wgpu` installed, **10 failed, 729
+passed, 37 skipped**. No Linux native artefact is published; see
+[docs/INSTALL.md](docs/INSTALL.md).
 
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) has three Windows jobs:
 
@@ -435,9 +463,10 @@ Each one is named, with its reason, at the end of the run.
 3. **the whole suite** — non-gating, for the reason above.
 
 There is **no publish workflow in this repository and no `v*` tag trigger**.
-There is no Linux CI job either: only a Windows binary is committed, and with the
-native library disabled the suite does not pass, so a Linux job would be red on
-its first run.
+There is no Linux CI job either, and there is no Linux wheel: only a Windows
+binary is committed, and with the native library disabled the Linux suite does
+not pass (74 failures, measured above), so a Linux job would be red on its first
+run.
 
 ---
 
@@ -445,13 +474,38 @@ its first run.
 
 | Document | What it is |
 |---|---|
+| [docs/INSTALL.md](docs/INSTALL.md) | **how to install, all five channels**, and what each one gives you |
 | [docs/API.md](docs/API.md) | the 44-name surface, the kernel-level names, and every guard |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | how the pieces fit: IR, Builder, CPU, native, GPU, WASM |
-| [docs/EXAMPLES.md](docs/EXAMPLES.md) | runnable examples with their real output |
+| [docs/EXAMPLES.md](docs/EXAMPLES.md) | runnable programs with their real output |
 | [docs/README.md](docs/README.md) | what each document covers |
 | [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) | what does not work, tagged by certainty |
+| [README_PYPI.md](README_PYPI.md) | the PyPI long description, verbatim |
 | [README.packaging.md](README.packaging.md) | what ships in the wheel, and what a user gets |
+| [numfast-native/ts/README.md](numfast-native/ts/README.md) | `@numfast/kernels` — the npm package |
 | [CHANGELOG.md](CHANGELOG.md) | what 0.2.1 is |
 | [SECURITY.md](SECURITY.md) | how to report a vulnerability |
 | [CORRESPONDING-SOURCE.md](CORRESPONDING-SOURCE.md) | AGPL §6: where the source is in each artefact |
 | [COMMERCIAL-LICENCE.md](COMMERCIAL-LICENCE.md) | the announced commercial licence, and what it is not |
+
+---
+
+## Published artefacts
+
+| | |
+|---|---|
+| PyPI | <https://pypi.org/project/numfast/> — `numfast-0.2.1-py3-none-win_amd64.whl`, `numfast-0.2.1-py3-none-any.whl`, `numfast-0.2.1.tar.gz` |
+| npm | <https://www.npmjs.com/package/@numfast/kernels> — `@numfast/kernels-0.2.1` |
+
+Publishing is a **manual** step. There is no publish workflow in this
+repository and no `v*` tag trigger in CI.
+
+**One name, one description.** The Python package and the npm package are two
+artefacts of one project at one version, described consistently on PyPI, on npm
+and here. Note also that the PyPI project name `numfast` and the npm scope
+`@numfast` already carry three earlier releases (`0.0.1` yanked, `1.0.0a1`,
+`1.0.0a2` on PyPI; `1.0.0-alpha.1/2/3` as `@numfast/numfast` on npm) from a
+superseded design generation. `pip install numfast` and
+`npm install @numfast/kernels` resolve to 0.2.1 and 0.2.1 respectively; a
+pre-release pin (`pip install numfast --pre`, or `npm install
+@numfast/numfast`) installs the earlier generation, not this one.

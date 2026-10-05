@@ -8,10 +8,17 @@ query is one lazy chain that a single planner call turns into one execution grap
 ```bash
 pip install numfast
 pip install "numfast[pandas]"   # + pandas adapters
+pip install "numfast[arrow]"    # + pyarrow adapters
 pip install "numfast[gpu]"      # + wgpu, required to execute on the GPU path
 ```
 
 Python 3.11+. `numpy>=1.24` is the only hard dependency.
+
+- **How to install, all five channels** — Python, JavaScript, Browser, Linux
+  native, Windows native: <https://github.com/numfast/numfast/blob/main/docs/INSTALL.md>
+- **The same kernels as WebAssembly** for Node:
+  <https://www.npmjs.com/package/@numfast/kernels>
+- **Source and issues**: <https://github.com/numfast/numfast>
 
 ---
 
@@ -107,6 +114,8 @@ It is not a short list, and it is not apologetics.
 - **A WebAssembly build of the same kernels** (`@numfast/kernels` on npm): a
   portable kernel library, 86 function exports, one memory, zero imports, 17
   typed wrappers. **Not a compute core** — there is no executor inside the `.wasm`.
+  The `.wasm` is host-independent; the published npm package is **Node-only** and
+  has no browser entry point.
 - **Refusals you can rely on**: NULL group keys, arithmetic or ordering on a text
   column, out-of-`int32` values, BIGINT keys and literals, CPU-only operations on
   the GPU. Each raises and names the cause.
@@ -128,7 +137,11 @@ degraded, not broken, and it is visible rather than latent:
 ```
 
 The native directory is simply absent and every Rust-backed call falls back to the
-NumPy CPU path — not a binary that fails to load at run time.
+NumPy CPU path — not a binary that fails to load at run time. **No Linux native
+wheel is published**; a Linux user who wants the native kernels can build them
+from the Corresponding Source this wheel already carries, and
+[the installation page](https://github.com/numfast/numfast/blob/main/docs/INSTALL.md)
+gives the one command. It is unsupported, and the Linux test suite is red.
 
 ## Licence
 
@@ -147,17 +160,21 @@ Full text: <https://github.com/numfast/numfast/blob/main/LICENSE>
 
 ## Documentation
 
+- [How to install, all five channels](https://github.com/numfast/numfast/blob/main/docs/INSTALL.md) — the single installation page
 - [README](https://github.com/numfast/numfast/blob/main/README.md) — the front door
 - [docs/API.md](https://github.com/numfast/numfast/blob/main/docs/API.md) — the 44-name surface and every guard
 - [docs/ARCHITECTURE.md](https://github.com/numfast/numfast/blob/main/docs/ARCHITECTURE.md) — how it fits together
 - [docs/EXAMPLES.md](https://github.com/numfast/numfast/blob/main/docs/EXAMPLES.md) — runnable programs with real output
 - [KNOWN_LIMITATIONS.md](https://github.com/numfast/numfast/blob/main/KNOWN_LIMITATIONS.md) — what does not work, tagged by certainty
 - [SECURITY.md](https://github.com/numfast/numfast/blob/main/SECURITY.md) — how to report a vulnerability
+- [CHANGELOG.md](https://github.com/numfast/numfast/blob/main/CHANGELOG.md) — what 0.2.1 is
 
 ---
 
-*Publishing note:* this file is the prepared PyPI long description. Publishing to
-PyPI is a **manual** step — there is no publish workflow in this repository and no
-tag trigger in CI. Note also that `pyproject.toml` currently points `readme` at
-`README.packaging.md`, so PyPI renders that file instead of this one until that
-pointer is changed.
+*Publishing note:* this file **is** the PyPI long description —
+`pyproject.toml` declares `readme = "README_PYPI.md"`. Publishing to PyPI is a
+**manual** step; there is no publish workflow in this repository and no tag
+trigger in CI. The PyPI project name `numfast` also carries three earlier
+releases from a superseded design generation (`0.0.1`, yanked; `1.0.0a1`;
+`1.0.0a2`). `pip install numfast` selects **0.2.1**; `pip install numfast --pre`
+selects `1.0.0a2`, which is not this project.

@@ -30,6 +30,82 @@ The first release of the current generation: a columnar engine with a Rust
 compute-kernel layer, a GPU path for a declared subset of operations, and a small
 new consumer facade.
 
+### Fixed before release — the information surface
+
+The release is one artefact set and one description of it. The following were
+measured against the built artefacts and corrected; each was a place where two
+channels described the same release differently, or where one of them described
+it wrongly.
+
+- **PyPI now renders this release's own page.** `pyproject.toml` pointed
+  `readme` at `README.packaging.md`, a developer note containing a
+  `python -m build` recipe, so the project's PyPI long description was a build
+  instruction. It now points at `README_PYPI.md`, which is added to `MANIFEST.in`
+  so the wheel built from the sdist can still find it. `README.packaging.md`
+  stays, and stays linked, as the developer-facing note it actually is.
+- **`[project.urls]` added.** The PyPI page carried no link to the source, the
+  documentation or the changelog.
+- **The npm page said 85 kernels. There are 86.** `numfast-native/ts/README.md`
+  hardcoded `85` in nine places, `68` unwrapped, `20` i64 exports, a stale
+  `staticDataEnd` and a stale `.wasm` byte count, while the same repository's
+  `README.md`, `docs/ARCHITECTURE.md` and `CHANGELOG.md` all said 86, and the
+  generated `SCOPE.statement` said 86. Every one of those numbers now matches
+  the build. The generated statement is what makes it stick: it is derived from
+  `TOTAL_EXPORTS`, which the build checks against the artefact's bytes.
+- **The npm package claimed "runnable in any host with a WebAssembly runtime" and
+  "`LICENSE` and `NOTICE` travel with the package".** Measured: the packed
+  tarball bundles for the browser with three errors (`node:module`, `node:fs`,
+  `node:crypto`), so it is **Node-only**, and it carried no licence file at all.
+  `LICENSE` and `NOTICE` now ship at the package root, and the host claim says
+  what is true: the `.wasm` is host-independent, the package's entry point is
+  not. The browser channel is recorded as unsupported in
+  `docs/INSTALL.md` rather than implied to work.
+- **The npm package had no links.** `repository`, `homepage` and `bugs` added, so
+  the npm page leads back to the source and its issues.
+- **`build.mjs` asserted the version against `package.json` only.** `Cargo.toml`
+  is checked too, so a mirror that drifts stops the build instead of shipping a
+  kernel package that cannot be traced to a commit. The function's docstring
+  also still claimed `Cargo.toml` said `0.1.0`; it has said `0.2.1` for some time.
+- **The stated test results were stale in every figure.** Re-measured on a
+  `git archive HEAD` extraction into an empty directory (Windows, Python
+  3.14.6): clean checkout **772 passed, 4 skipped, 0 failed in 156.20 s**; the
+  same run without `wgpu` **707 passed, 5 skipped, 64 failed**; installed wheel
+  **503 passed, 5 skipped, 0 failed in 122.76 s**. The README quoted 771/5 and
+  473/4 and named a skip table whose modules do not match what skips.
+  `ci.yml` quoted a Linux figure of "10 failed, 627 passed"; measured on
+  WSL2/Ubuntu 24.04 it is **74 failed, 664 passed, 38 skipped** without the
+  native library and **10 failed, 729 passed, 37 skipped** with it built from
+  its own Corresponding Source.
+- **`docs/INSTALL.md` added** — one installation page with the five sections
+  Python/PyPI, JavaScript/npm, Browser/WASM, Linux native, Windows native. Each
+  states its install command, its requirements, a minimal example, how to verify
+  it, and — where the channel is not delivered — **"not supported"**.
+- **`SECURITY.md` shipped a placeholder mailbox.** `security@numfast.example`
+  uses the reserved `.example` TLD and reached nobody. Removed; the policy is
+  GitHub private vulnerability reporting alone, which needs no mailbox.
+- **The published registries already carry the previous generation.** PyPI
+  `numfast` holds `0.0.1` (yanked), `1.0.0a1` and `1.0.0a2`; npm carries
+  `@numfast/numfast` 1.0.0-alpha.1/2/3. `pip install numfast` selects 0.2.1
+  because a final release outranks a pre-release, and `npm install
+  @numfast/kernels` is a different package name. A pre-release pin installs the
+  old generation. This is now stated on both landing pages rather than left for
+  a reader to discover.
+
+### Known gaps in this release, recorded rather than papered over
+
+- **The npm package conveys the `.wasm` and no Rust source.** AGPL-3.0 §6 is
+  discharged by construction for the Python wheels and **not** for the npm
+  tarball. `CORRESPONDING-SOURCE.md` names the two routes that close it and says
+  plainly that neither is a documentation change.
+- **No browser entry point.** The `.wasm` is host-independent;
+  `dist/bridge.js` bundles for the browser, but it is unreachable through the
+  published `exports` map and `dist/index.js` is Node-only.
+- **No Linux native artefact.** The library is buildable on Linux with one
+  `cargo build --release` and no `zig` — `.cargo/config.toml` is scoped to the
+  Windows target — and the wheel's own Corresponding Source is enough to do it.
+  It is not published, no Linux wheel exists, no Linux CI job exists, and the
+  suite on Linux is red. Recorded, not fixed by building a pipeline for it.
+
 ### Added
 
 - **The consumer facade — 44 public names, new in this release.** `app()`,
