@@ -93,6 +93,9 @@ SOURCE_ONLY = {
     "test_planner_auto_v1.py": (
         "puts src/Runtime/Planner on sys.path and imports `_lib.calibrate` as "
         "a top-level package"),
+    "test_planner_profile_validity.py": (
+        "puts src/Runtime/Planner on sys.path and imports `_lib.calibrate` as "
+        "a top-level package"),
     "test_release_blockers.py": (
         "asserts on engine source text (text guards over the Extension sources)"),
 }

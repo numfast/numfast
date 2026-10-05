@@ -17,9 +17,10 @@ from _lib.calibrate import check_eligibility as _check_eligibility
 from _lib.calibrate import estimate_cost_v1 as _estimate_cost_v1
 from _lib.calibrate import estimate_graph as _estimate_graph
 from _lib.calibrate import format_explain as _format_explain
-from _lib.calibrate import load_profile as _load_profile
 from _lib.calibrate import profile_status as _profile_status
 from _lib.calibrate import propagate_residence as _propagate_residence
+from _lib.calibrate import resolve_routing_profile as _resolve_routing_profile
+from _lib.calibrate import routing_reject_warning as _routing_reject_warning
 
 # Calibrated-parameter STUB (shape of calibrated_v1, values are placeholders).
 _CALIBRATED_STUB = {
@@ -393,9 +394,14 @@ def select_backend_dual_impl(graph, n, cpu_capability, gpu_capability,
             "estimate": None,
             "context": _build_context(graph, n, hints),
         }
-    prof = profile if isinstance(profile, dict) else _load_profile()
+    if isinstance(profile, dict):
+        prof, _decision = profile, None
+    else:
+        prof, _decision = _resolve_routing_profile(
+            gpu_capability=gpu_capability)
     if prof is None:
-        return _stub_select(graph, n, gpu_capability, gate, hints)
+        return _stub_select(graph, n, gpu_capability, gate, hints,
+                            decision=_decision)
     cov = _check_coverage(graph, prof, hints)
     status = _profile_status(prof)
     ctx = _build_context(graph, n, hints, prof)
@@ -439,12 +445,17 @@ def select_backend_dual_impl(graph, n, cpu_capability, gpu_capability,
     }
 
 
-def _stub_select(graph, n, gpu_capability, gate, hints=None):
+def _stub_select(graph, n, gpu_capability, gate, hints=None, decision=None):
     """Pre-calibration path (P9): safe CPU, no fabricated routing.
 
     Stub placeholders are documented structure only; without a measured
     profile GPU costs are unknown, so auto never prefers GPU here.
     Explicit backend='gpu' still executes (override path, Runtime owns it).
+
+    `decision` is the routing-profile verdict when there was one to reject
+    (see resolve_routing_profile): the stub must then name WHY it is on stub,
+    because a profile that exists but describes another machine is a different
+    situation from no profile at all, and only one of them is the user's to fix.
     """
     gops = _ops(gpu_capability)
     blockers = sorted({nd["kernel_id"] for nd in graph["nodes"]} - gops)
@@ -461,10 +472,12 @@ def _stub_select(graph, n, gpu_capability, gate, hints=None):
         "cost_estimate": {"cpu": None, "gpu": None},
         "profile": {
             "version": "stub",
-            "source": "none",
+            "source": (decision or {}).get("origin", "none"),
             "age": "n/a",
             "matched": False,
-            "warning": "no measured calibration profile; stub costs (spec 03)",
+            "warning": (_routing_reject_warning(decision) if decision else
+                        "no measured calibration profile; stub costs "
+                        "(spec 03)"),
         },
         "gpu_eligible": eligible,
         "gpu_blockers": blockers,

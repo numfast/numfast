@@ -103,11 +103,36 @@ Two consequences a user can observe:
 
 The shipped `calibration.toml` is a measured profile: `source = "measured:seed42"`,
 fitted on one machine (Intel Family 6 Model 79, Windows 11, Python 3.14.6, GPU
-NVIDIA GeForce RTX 2060 over Vulkan). It travels with both wheels, and
-`NUMFAST_CALIBRATION_DIR` overrides it. When no profile is found the planner says
-so — `version: "stub"`, `source: "none"`, `warning: "no measured calibration
-profile; stub costs"` — rather than inventing numbers. When the device changes it
-says that too: `device changed (…); recalibrate, costs are stale`.
+NVIDIA GeForce RTX 2060 over Vulkan). It travels with both wheels — and it is
+**honoured only on a machine whose `[hardware]` block matches**. A cost profile
+is a set of timings; routing on timings taken somewhere else is the engine
+making a decision from data that does not describe the user, so the order is:
+
+1. `NUMFAST_CALIBRATION_DIR` — a profile measured on this machine. Authoritative
+   whatever its `[hardware]` says: pointing the variable at a file is the
+   assertion.
+2. The shipped profile — used only when `[hardware]` matches this machine.
+3. Neither — stub costs, honestly.
+
+The compared fields are `cpu`, `platform`, `python`, `gpu_device`, `gpu_backend`.
+`vram_mb` is not one of them: it is recorded only on the `nvidia-smi` fallback
+path, so a profile measured where the driver note already named the device
+legitimately reads `"unknown"`. Fields are compared by plain equality, so two
+`"unknown"`s agree and unknown-versus-known does not — a probe that cannot name
+the device is not proof it is the device the numbers came from.
+
+The refusal is discoverable, never a silent stub:
+
+- `kernel.alias['calibrate_info']()['routing']` — whether the profile at the path
+  may drive routing here, and which fields disagreed (`origin`, `matched`,
+  `differ`, `reason`). `['profile']` still describes the *file*, so a complete
+  profile measured elsewhere is visible as complete and as not yours.
+- `select_backend(...)['profile']['warning']`, which is also what `EXPLAIN`
+  prints on its `PROFILE` line.
+
+When no profile is found at all the planner says `version: "stub"`,
+`source: "none"`, and says to calibrate. The two refusals read differently,
+because they are different situations and only one of them is the user's to fix.
 
 One thing to be precise about: **the calibration profile is loaded and honoured by
 the kernel-level path, but the consumer facade does not surface a backend

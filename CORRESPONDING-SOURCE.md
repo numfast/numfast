@@ -129,8 +129,11 @@ Python distribution and is therefore not part of *its* Corresponding Source.
   *not* Corresponding Source of the Rust crate and are not under this
   directory. They are runtime data of the Python engine, shipped one level up
   as `numfast/calibration.toml` and `numfast/calibration_dataset.json`. They
-  are measurements taken on one Windows host; `NUMFAST_CALIBRATION_DIR`
-  overrides them.
+  are measurements taken on one Windows host. `NUMFAST_CALIBRATION_DIR`
+  overrides them; otherwise the shipped file drives routing only where its
+  `[hardware]` block matches the machine, and otherwise the planner says so
+  (`alias['calibrate_info']()['routing']`) rather than routing on another
+  machine's timings.
 - **Third-party source.** None. The crate has no third-party dependencies (see
   `Cargo.lock`) and no third-party Rust or C source is vendored here or in the
   wheel. See `NOTICE`.

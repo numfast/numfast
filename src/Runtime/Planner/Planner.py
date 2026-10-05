@@ -5,6 +5,7 @@ from _lib.calibrate import hook_status as _hook_status
 from _lib.calibrate import load_profile as _load_profile
 from _lib.calibrate import profile_path as _profile_path
 from _lib.calibrate import profile_status as _profile_status
+from _lib.calibrate import resolve_routing_profile as _resolve_routing_profile
 from _lib.planner import chunk_plan_impl as _chunk_plan_impl
 from _lib.planner import compile_impl as _compile_impl
 from _lib.planner import explain_impl as explain
@@ -78,9 +79,19 @@ def calibrate(quick=False, force=False):
 
 
 def calibrate_info():
+    """What the Planner would route on here, and why.
+
+    `profile` describes the FILE at `path` (what it measured, how complete).
+    `routing` is the decision the planner acts on: whether that file may drive
+    routing on this machine, and which [hardware] fields stood in the way when
+    it may not. They differ on purpose -- a shipped profile can be complete and
+    still not yours.
+    """
     prof = _load_profile()
+    _applied, routing = _resolve_routing_profile(_gpu_cap())
     return {"path": _profile_path(),
             "profile": _profile_status(prof),
+            "routing": routing,
             "hooks": _hook_status(prof)}
 
 

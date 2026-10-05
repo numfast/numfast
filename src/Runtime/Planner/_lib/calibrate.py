@@ -111,6 +111,129 @@ def dataset_path(name=DATASET_NAME):
     return str(_fork_root() / name)
 
 
+# --- Profile validity: costs may drive routing only where they were measured --
+#
+# A profile is a set of timings taken on ONE machine. The [hardware] block
+# records which one. These fields identify it, and are compared by plain
+# equality: two "unknown"s agree with each other, unknown-vs-known does not --
+# if the live probe cannot name the device, we cannot claim it is the device
+# the numbers came from.
+#
+# Deliberately NOT identity fields:
+#   backend  -- the constant "webgpu" on both sides; carries no identity.
+#   vram_mb, vram_source -- recorded only on the nvidia-smi fallback path, so
+#   a profile measured on a host whose capability note already named the
+#   device legitimately reads "unknown" while a live probe reads a real size.
+#   Comparing it would reject a perfectly good profile as stale.
+HARDWARE_IDENTITY = ("cpu", "platform", "python", "gpu_device", "gpu_backend")
+
+_PLATFORM_HW = None
+
+
+def _platform_hw():
+    """The machine fields that cannot change inside a process."""
+    global _PLATFORM_HW
+    if _PLATFORM_HW is None:
+        import platform
+        _PLATFORM_HW = {
+            "cpu": platform.processor() or "unknown",
+            "platform": platform.platform(),
+            "python": platform.python_version(),
+            "backend": "webgpu",
+        }
+    return _PLATFORM_HW
+
+
+def _device_from_note(note):
+    """(gpu_device, gpu_backend) as a driver capability note reports them."""
+    dev = back = "unknown"
+    for token in ("RTX 2060", "Vulkan", "DX12"):
+        if token in note:
+            if "RTX" in token:
+                dev = "NVIDIA GeForce RTX 2060"
+            else:
+                back = token
+    return dev, back
+
+
+def hardware_now(gpu_capability=None):
+    """[hardware] for THIS machine, in the shape calibrate writes.
+
+    No nvidia-smi here: the comparison runs on every select_backend and must
+    not depend on a subprocess. vram therefore always reads "unknown" on the
+    live side, which is why it is not an identity field.
+    """
+    cap = gpu_capability if isinstance(gpu_capability, dict) else {}
+    dev, back = _device_from_note(str(cap.get("note", "")))
+    hw = dict(_platform_hw())
+    hw.update({"gpu_device": dev, "gpu_backend": back,
+               "vram_mb": "unknown", "vram_source": "unknown"})
+    return hw
+
+
+def hardware_match(profile_hw, now_hw):
+    """(ok, [(field, recorded_here, live_here)]) -- equality per field."""
+    differ = []
+    for f in HARDWARE_IDENTITY:
+        a = str((profile_hw or {}).get(f, "unknown"))
+        b = str((now_hw or {}).get(f, "unknown"))
+        if a != b:
+            differ.append((f, a, b))
+    return (not differ), differ
+
+
+def resolve_routing_profile(gpu_capability=None, path=None):
+    """(profile_or_None, decision) -- the profile allowed to route HERE.
+
+    Order, and why:
+      1. NUMFAST_CALIBRATION_DIR. A profile the operator measured on this
+         machine and pointed us at. Authoritative whatever its [hardware]
+         says: pointing the variable at a file IS the assertion.
+      2. The shipped profile. It travels inside the wheel and was measured on
+         one machine; used only when its [hardware] matches this one.
+      3. Nothing. The Planner falls back to stub costs. `decision` says which
+         case it was and why, so the fallback is never silent --
+         `alias['calibrate_info']()` reports it verbatim.
+    """
+    p = path or profile_path()
+    local = bool(os.environ.get("NUMFAST_CALIBRATION_DIR"))
+    origin = "local" if local else "shipped"
+    now = hardware_now(gpu_capability)
+    prof = load_profile(p)
+    if prof is None:
+        return None, {"path": p, "origin": origin, "routing": False,
+                      "matched": False, "differ": [], "hardware": now,
+                      "profile_hardware": {},
+                      "reason": "no calibration profile at this path"}
+    p_hw = prof.get("hardware", {})
+    if local:
+        return prof, {"path": p, "origin": "local", "routing": True,
+                      "matched": True, "differ": [], "hardware": now,
+                      "profile_hardware": p_hw,
+                      "reason": "local profile (NUMFAST_CALIBRATION_DIR); "
+                                "authoritative regardless of [hardware]"}
+    ok, differ = hardware_match(p_hw, now)
+    return (prof if ok else None), {
+        "path": p, "origin": "shipped", "routing": bool(ok),
+        "matched": bool(ok), "differ": differ, "hardware": now,
+        "profile_hardware": p_hw,
+        "reason": ("shipped profile [hardware] matches this machine" if ok
+                   else "shipped profile was measured on a different machine: "
+                        + ", ".join("{0} {1!r} != {2!r}".format(*d)
+                                    for d in differ))}
+
+
+def routing_reject_warning(decision):
+    """One line for profile.warning / EXPLAIN when nothing may drive routing."""
+    r = (decision or {}).get("reason", "n/a")
+    if r.startswith("no calibration profile"):
+        return ("no measured calibration profile at this path; routing on "
+                "stub costs; run calibrate(force=True)")
+    return ("profile does not describe this machine (" + r + "); routing on "
+            "stub costs; run calibrate(force=True) or point "
+            "NUMFAST_CALIBRATION_DIR at a profile measured here")
+
+
 def fit_line(xs, ys):
     """Least-squares (a, b) for ms = a*n + b. Pure, no constants."""
     xs = [float(x) for x in xs]
@@ -1497,13 +1620,8 @@ def _hardware(alias):
           "vram_source": "unknown"}
     try:
         cap = alias.get("gpu_capability", lambda: {})()
-        note = str(cap.get("note", ""))
-        for token in ("RTX 2060", "Vulkan", "DX12"):
-            if token in note:
-                if "RTX" in token:
-                    hw["gpu_device"] = "NVIDIA GeForce RTX 2060"
-                else:
-                    hw["gpu_backend"] = token
+        hw["gpu_device"], hw["gpu_backend"] = _device_from_note(
+            str(cap.get("note", "")))
     except (AttributeError, TypeError, KeyError):
         pass
     if hw["gpu_device"] == "unknown":
