@@ -139,12 +139,18 @@ import { loadKernels, ssspCsr } from "@numfast/kernels";
 
 const k = await loadKernels();
 const dist = ssspCsr(k,
-  new Uint32Array([0, 1, 2, 3]),      // indptr
-  new Uint32Array([1, 2, 0]),         // indices
+  new Uint32Array([0, 1, 2, 3]),      // indptr  -> V = indptr.length - 1 = 3
+  new Uint32Array([1, 2, 0]),         // indices -> 0->1, 1->2, 2->0
   new Uint32Array([10, 20, 30]),      // weights
   0);                                 // source
+// dist is [0, 10, 30]: one lane per vertex, all reachable from 0
 console.log(dist[1], dist[2]);        // 10 30
 ```
+
+Both snippets here, and the quick-start in the package README, state the same
+result; `numfast-native/ts/test/readme.test.mjs` extracts all of them from the
+prose and checks them against the shipped `.wasm`, so the three cannot drift
+apart or away from the kernel.
 
 ### How to verify it works
 

@@ -31,17 +31,20 @@ from a `--platform=browser` bundle — see
 import { loadKernels, ssspCsr } from "@numfast/kernels";
 
 const k = await loadKernels();               // the packaged .wasm, verified
-// 0 -> 1 -> 2, and 2 -> 3
+// 3 vertices: 0 -> 1 -> 2, and 2 -> 0
 const dist = ssspCsr(k,
   new Uint32Array([0, 1, 2, 3]),             // indptr
   new Uint32Array([1, 2, 0]),                // indices
   new Uint32Array([10, 20, 30]),             // weights
   0);                                        // source
-// Uint32Array [ 0, 10, 30, Infinity-as-0xffffffff ]
+// Uint32Array [ 0, 10, 30 ] -- one lane per vertex, and all 3 are reachable
 console.log(dist[1], dist[2]);               // 10 30
 ```
 
-Five lines, and the answer is checkable by hand.
+Five lines, and the answer is checkable by hand. **`dist` has one lane per
+vertex: `V = indptr.length - 1`, so this graph is 3 lanes and none of them is
+unreachable.** An unreachable vertex is what `Q_INF` looks like — add a fourth
+vertex and the answer becomes `[0, 10, 30, 4294967295]`.
 
 ---
 
