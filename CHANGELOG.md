@@ -47,8 +47,8 @@ new consumer facade.
   single-source shortest paths, cost travel, bounded select, pair insert, text
   encode and RNG.
 - **AGPL-3.0 §6 Corresponding Source inside the wheel.** 47 `.rs` files plus the
-  crate manifest, lockfile, cargo config and link shims under
-  `numfast/_corresp_src/numfast-native/`, with a 52-entry `SHA256SUMS`. The
+  crate manifest, lockfile, `REUSE.md`, cargo config and link shims under
+  `numfast/_corresp_src/numfast-native/`, with a 53-entry `SHA256SUMS`. The
   written-offer route is deliberately not used.
 - **Two wheels at one version.** `py3-none-win_amd64` carries the native library;
   `py3-none-any` does not, and says so through `native_info()` rather than

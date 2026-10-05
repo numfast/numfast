@@ -10,7 +10,7 @@
   build error** — silently skipping it is how the old `0.2.1` wheel shipped
   18 of 29 Extensions.
 - The wheel builder (`src/numfast/_builder/`) is a fresh minimal
-  implementation: no import from the dev-tree `app-builder-ponytail`,
+  implementation: no import from the dev-tree app-builder,
   no hardcoded filesystem roots.
 - Optional deps: `pip install numfast[pandas]`, `numfast[arrow]`.
   Without pyarrow the CPU path keeps working (NumPy fallback).

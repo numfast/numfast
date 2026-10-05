@@ -37,12 +37,13 @@ graft specs-rebuilt
 graft examples
 graft docs
 
-# The Rust crate. graft src/ gives Cargo.toml/Cargo.lock plus the .cargo config
-# and the linker shim in one go; the explicit includes are here so that dropping
-# any single line is a visible diff rather than a silent omission.
+# The Rust crate. `lib.rs` (which ships in every wheel) cites REUSE.md as the
+# map of how the kernels share one core, so REUSE.md has to travel with it --
+# otherwise the crate's own source points a reader at a file that is not there.
 graft numfast-native/src
 include numfast-native/Cargo.toml
 include numfast-native/Cargo.lock
+include numfast-native/REUSE.md
 include numfast-native/.cargo/config.toml
 include numfast-native/tools/nf-link.bat
 include numfast-native/tools/nf-link.py

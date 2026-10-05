@@ -43,6 +43,7 @@ this tree back into the shipped binary. Nothing else was copied in.
 | `Cargo.toml` | crate manifest: `[lib] crate-type`, and the normative `[profile.release]` (`opt-level`, `lto`, `panic = "abort"`) that fixes the code the binary contains |
 | `Cargo.lock` | the resolved dependency graph. Here it holds exactly one package, `numfast-native`, i.e. the crate has no third-party dependencies |
 | `src/**/*.rs` | the crate source |
+| `REUSE.md` | the REUSE matrix the crate's own `src/lib.rs` cites: how the hot kernels share one physical core. Documentation, not build input -- but it is cited from source that ships, so it travels with it |
 | `.cargo/config.toml` | project-local cargo config. On this project it selects the Windows link step; see "What is not here" |
 | `tools/nf-link.bat`, `tools/nf-link.py` | the linker shim that `.cargo/config.toml` points at |
 
@@ -79,10 +80,12 @@ Python distribution and is therefore not part of *its* Corresponding Source.
   `results/`** — build outputs and generated test vectors, reproducible from
   the sources above (`cargo build`, `npm ci`, `tools/gen.py`, seed 42). They
   are not source and are not in version control either.
-- **`numfast-native/tools/`** other than the linker shim — benchmarks,
-  parity harnesses and JS oracle drivers. They do not contribute a single byte
-  to the binary. The ones that gate the *correctness* of the crate are part of
-  this repository and travel in the sdist under `numfast-native/tools/`.
+- **`numfast-native/tools/`** other than `nf-link.bat`, `nf-link.py` and
+  `gen.py` — standalone benchmarks, parity harnesses and JS oracle drivers.
+  They do not contribute a single byte to the binary. The crate's own
+  correctness harnesses are the 37 `#[test]` unit tests inside `src/**`, and
+  those travel here; this distribution carries exactly three files from
+  `tools/`, not the harnesses a reader might expect to find under that name.
 - **The absolute linker path inside `.cargo/config.toml`.** It names a linker
   on the machine that produced the release, and that path does not exist on
   yours. This is build-environment configuration, not project configuration:

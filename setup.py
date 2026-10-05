@@ -36,8 +36,13 @@ from pathlib import Path
 
 from setuptools import setup
 from setuptools.command.build_py import build_py as _build_py
+from setuptools.command.sdist import sdist as _sdist
 
 ROOT = Path(__file__).resolve().parent
+
+#: Generated packaging metadata setuptools rewrites on every command. It is
+#: listed in .gitignore and carries nothing the build needs.
+EGG_INFO = "src/numfast.egg-info"
 
 NATIVE_DIR = ROOT / "src" / "numfast" / "_native"
 CRATE = ROOT / "numfast-native"
@@ -50,6 +55,8 @@ RUNTIME_DATA = ("calibration.toml", "calibration_dataset.json")
 CORRESPONDING_SOURCE = (
     ("Cargo.toml", "Cargo.toml"),
     ("Cargo.lock", "Cargo.lock"),
+    # Cited by src/lib.rs, which ships in every wheel.
+    ("REUSE.md", "REUSE.md"),
     (".cargo/config.toml", ".cargo/config.toml"),
     ("tools/nf-link.bat", "tools/nf-link.bat"),
     ("tools/nf-link.py", "tools/nf-link.py"),
@@ -133,6 +140,42 @@ INCLUDE_NATIVE, PLAT_NAME, BINARIES = resolve_flavour()
 # has_ext_modules() instead would produce cp3xx-cp3xx-win_amd64 and pin the
 # package to one interpreter.
 OPTIONS = {"bdist_wheel": {"plat_name": PLAT_NAME}} if PLAT_NAME else {}
+
+
+class sdist(_sdist):
+    """sdist that carries no generated egg-info.
+
+    ``setuptools.command.sdist.run`` does, in this order:
+
+        self.filelist = ei_cmd.filelist
+        self.filelist.append(os.path.join(ei_cmd.egg_info, 'SOURCES.txt'))
+
+    The append happens *after* ``egg_info`` has applied MANIFEST.in, so
+    ``prune src/numfast.egg-info`` in MANIFEST.in can only stop the directory
+    from being grafted -- it cannot stop this one explicit append, and
+    SOURCES.txt lands in the archive regardless. Nothing in the build reads
+    it: it is setuptools' own index of the very tree the sdist already carries.
+    So it is dropped here, where the append actually happens.
+
+    Everything else is stock. ``make_release_tree`` additionally writes a
+    generated ``setup.cfg`` holding ``[egg_info] tag_build / tag_date``; that
+    is setuptools pinning the version so a wheel built from this sdist gets the
+    same number, and it is left in place on purpose.
+    """
+
+    def make_distribution(self):
+        parts = EGG_INFO.replace("/", os.sep).split(os.sep)
+
+        def inside(path):
+            norm = os.path.normpath(path).split(os.sep)
+            return norm[:len(parts)] == parts
+
+        before = len(self.filelist.files)
+        self.filelist.files = [f for f in self.filelist.files if not inside(f)]
+        dropped = before - len(self.filelist.files)
+        if dropped:
+            print("sdist: dropped %d generated egg-info entries" % dropped)
+        super().make_distribution()
 
 
 class build_py(_build_py):
@@ -247,4 +290,4 @@ class build_py(_build_py):
             shutil.copyfile(b, self._dest("numfast", "_native", b.name))
 
 
-setup(cmdclass={"build_py": build_py}, options=OPTIONS)
+setup(cmdclass={"build_py": build_py, "sdist": sdist}, options=OPTIONS)

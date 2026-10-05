@@ -378,9 +378,9 @@ attributions are in [`NOTICE`](NOTICE). Every source file carries an
 **Corresponding Source ships in the wheel.** Because the wheel conveys
 `numfast_native.dll` — object code — AGPL-3.0 §6 is discharged by construction,
 not by a written offer: the wheel carries all **47** `.rs` files plus `Cargo.toml`,
-`Cargo.lock`, `.cargo/config.toml` and the two link shims under
-`numfast/_corresp_src/numfast-native/`, with a `SHA256SUMS` (52 entries) over
-exactly those bytes. Verified on the 0.2.1 release candidate: 52 of 52 checksums
+`Cargo.lock`, `REUSE.md`, `.cargo/config.toml` and the two link shims under
+`numfast/_corresp_src/numfast-native/`, with a `SHA256SUMS` (53 entries) over
+exactly those bytes. Verified on the 0.2.1 release candidate: 53 of 53 checksums
 match in the wheel and again in the installed package, and `LICENSE` + `NOTICE`
 land in `numfast-0.2.1.dist-info/licenses/` in both wheel flavours with
 `License-Expression: AGPL-3.0-only` in `METADATA`. Details:
