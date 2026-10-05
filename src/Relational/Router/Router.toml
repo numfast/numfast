@@ -1,0 +1,11 @@
+# Copyright (c) 2026 NumFast
+# SPDX-License-Identifier: AGPL-3.0-only
+name = "Router"
+version = "0.2.0"
+depends = []
+alias = ["router_route", "router_available", "RouterPlan"]
+mods = ["router_route", "router_available", "RouterPlan"]
+
+[metadata]
+level = "relational"
+description = "Multi-source Dijkstra router over CSR u32 with target-set early exit (native nf_router_route); RouterPlan hoists the per-call prologue for repeated queries"

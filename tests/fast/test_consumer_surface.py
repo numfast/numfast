@@ -9,6 +9,13 @@ from outside would itself be the PRIVATE access §2.1 forbids.
 `check_alias_delta` counts the DELTA, not a screenshot: the Extension adds
 exactly the four `tableexpr_*` aliases of TableExpr.toml, independently of
 which methods the chain happens to have.
+
+The delta is 7, not 4. TableExpr contributes four and Router -- wired in
+`full.toml` after this file was written -- contributes three
+(`router_route`, `router_available`, `RouterPlan`). The 126 baseline is the
+public alias count before TableExpr; both Extensions add to it. Keeping the
+count rather than loosening the assertion to `>= 4` is the point: a new
+Extension that registers aliases without updating this number fails here.
 """
 
 import importlib.util
@@ -57,9 +64,13 @@ def check_no_internal_leak():
     return True
 
 
-def check_alias_delta(before=ALIASES_BEFORE, expected=4):
-    # The screenshot 126 is replaced by a delta: the Extension adds exactly
-    # the four tableexpr_* aliases declared in TableExpr.toml.
+#: TableExpr's four tableexpr_* aliases plus Router's three.
+ALIASES_ADDED = 7
+
+
+def check_alias_delta(before=ALIASES_BEFORE, expected=ALIASES_ADDED):
+    # The screenshot 126 is replaced by a delta: the four tableexpr_* aliases
+    # declared in TableExpr.toml plus the three declared in Router.toml.
     import numfast as nf
     after = len([n for n in nf.get_kernel().alias if not n.startswith("_")])
     assert after - before == expected, (after, before)

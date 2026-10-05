@@ -217,10 +217,10 @@ is the longer version.
 
 * **The IR** is a list of jobs, `{op, inputs, params, out}`, one node per
   column. Expressions lower to nodes; a chain holds jobs, never a second IR.
-* **Extensions.** The engine is 29 Builder Extensions, each a folder with a
+* **Extensions.** The engine is 30 Builder Extensions, each a folder with a
   `.toml` manifest, a `.py` entry point and a `_lib/` implementation. The
-  manifest declares its aliases and dependencies; `setup.py` vendors all 29 into
-  the wheel as `numfast/_ext/` — **128 files, byte-identical to the tree**. A
+  manifest declares its aliases and dependencies; `setup.py` vendors all 30 into
+  the wheel as `numfast/_ext/` — **133 files, byte-identical to the tree**. A
   manifest that names a directory which does not exist is a hard build error.
 * **The CPU driver** is the reference executor, NumPy-backed, and is FROZEN.
   Several limitations below are consequences of that, not of missing effort.

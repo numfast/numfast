@@ -101,7 +101,7 @@ It is not a short list, and it is not apologetics.
 - **A 44-name consumer facade** — `filter`, `derive`, `group`, `sort`, `limit`,
   `reduce`, `compile`, a 23-name expression vocabulary including `isin`,
   `is_null`, `cumsum`, `shift` and five text predicates.
-- **29 Builder Extensions** forming the engine: a semantic IR of one node per
+- **30 Builder Extensions** forming the engine: a semantic IR of one node per
   column, a cost-calibrated planner, a NumPy reference CPU driver, a wgpu-py/WGSL
   GPU driver, and the storage layer.
 - **A Rust kernel layer** (`numfast-native`, no third-party dependencies) loaded

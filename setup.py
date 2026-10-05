@@ -9,7 +9,7 @@ Three jobs:
    packaged builder resolves extensions package-relatively and the repo tree
    stays free of duplicated sources. A ``[[extensions]]`` entry whose directory
    is missing is a hard error: skipping it silently is how the 0.2.1 wheel came
-   to ship 18 of 29 Extensions.
+   to ship a partial Extension set.
 
 2. Vendor the Rust Corresponding Source into
    ``build_lib/numfast/_corresp_src/numfast-native/`` and write SHA256SUMS over

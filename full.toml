@@ -104,6 +104,10 @@ name = "Sssp"
 path = "src/Relational/Sssp"
 
 [[extensions]]
+name = "Router"
+path = "src/Relational/Router"
+
+[[extensions]]
 name = "PairInsert"
 path = "src/Relational/PairInsert"
 

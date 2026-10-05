@@ -64,7 +64,7 @@ Two properties worth knowing:
 
 ## The Builder Extension model
 
-The engine is assembled from **29 Extensions**, each a folder with three things:
+The engine is assembled from **30 Extensions**, each a folder with three things:
 
 ```
 src/Relational/Sort/
@@ -75,15 +75,15 @@ src/Relational/Sort/
 
 `setup(kernel)` may only fill `kernel.metadata`. The manifest declares the
 Extension's aliases and its dependencies; the Builder resolves them and mounts
-Extensions by name. `full.toml` at the repository root lists all 29.
+Extensions by name. `full.toml` at the repository root lists all 30.
 
 Two consequences a user can observe:
 
 * **Packaging is explicit.** `setup.py` vendors every Extension into the wheel as
-  `numfast/_ext/<Name>/` — 128 files, byte-identical to the tree — and a
+  `numfast/_ext/<Name>/` — 133 files, byte-identical to the tree — and a
   `[[extensions]]` entry whose directory is missing is a **hard build error**.
-  (That check exists because an earlier build shipped 18 of 29 Extensions without
-  anyone noticing.)
+  (That check exists because an earlier build shipped a partial Extension set
+  without anyone noticing.)
 * **The installed package carries its own builder.** `src/numfast/_builder/` is a
   self-contained Builder with no filesystem roots baked in, so `numfast` resolves
   its own Extension set from `numfast/full.toml` beside `numfast/_ext/`.

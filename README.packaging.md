@@ -7,8 +7,8 @@
 - Engine Extension sources are vendored into the wheel (`numfast/_ext/*`)
   verbatim at build time by `setup.py`; the repo tree stays clean. A
   `[[extensions]]` entry in `full.toml` whose directory is missing is a **hard
-  build error** — silently skipping it is how the old `0.2.1` wheel shipped
-  18 of 29 Extensions.
+  build error** — silently skipping it is how the old `0.2.1` wheel shipped a
+  partial Extension set.
 - The wheel builder (`src/numfast/_builder/`) is a fresh minimal
   implementation: no import from the dev-tree app-builder,
   no hardcoded filesystem roots.
@@ -31,7 +31,7 @@ native path, so the release is **two wheels at the same version**:
 module — the `.dll` is loaded through `ctypes` — so the implementation tag
 stays `py3` and neither wheel is pinned to one interpreter.
 
-**What a Linux/macOS user of `py3-none-any` gets:** the complete engine, all 29
+**What a Linux/macOS user of `py3-none-any` gets:** the complete engine, all 30
 Extensions, the calibration profile, and the NumPy CPU path. The native path
 does not exist: `numfast/_native/` is absent, `native_info()` reports
 `{'disabled': False, 'dll': None, 'dll_exists': False}`, and every Rust-backed
