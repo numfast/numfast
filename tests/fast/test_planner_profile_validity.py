@@ -38,8 +38,8 @@ FORK = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(FORK / "src" / "Runtime" / "Planner"))
 
 from _lib.calibrate import (  # noqa: E402
-    HARDWARE_IDENTITY, hardware_match, hardware_now, profile_path,
-    resolve_routing_profile, routing_reject_warning)
+    HARDWARE_IDENTITY, calibrate_impl as C_calibrate, hardware_match,
+    hardware_now, profile_path, resolve_routing_profile, routing_reject_warning)
 
 
 @pytest.fixture(scope="module")
@@ -274,3 +274,181 @@ def test_recorded_and_compared_hardware_come_from_one_parser(kernel,
     # The one documented difference is the deliberate one: _hardware() may fill
     # vram from nvidia-smi, hardware_now() never does, and vram is not identity.
     assert recorded.get("vram_mb") == compared.get("vram_mb"), "unexpected drift"
+
+
+# --- 10. calibrate() may not claim someone else's profile ------------------
+#
+# The router was fixed above; calibrate() is the adjacent surface and had the
+# same defect one level out: its reuse check was `Path(p).exists() and
+# load_profile(p) is not None`, with no machine test at all, so on every
+# foreign machine it answered {"status": "reused"} naming a profile taken on
+# another host. Same class, different function.
+#
+# And the refusal it needed had a second half. Returning something other than
+# "reused" means the call falls through to measurement and a write, and
+# profile_path() resolves to the INSTALLED PACKAGE DIRECTORY in a wheel
+# (numfast/full.toml beside numfast/_ext/). So fixing the reuse check without
+# closing the write would have turned a false claim into a write into
+# site-packages. Both halves are pinned here.
+
+
+def _this_machine_profile(tmp_path, capability):
+    """A copy of the shipped profile carrying THIS machine's [hardware].
+
+    Built from hardware_now(), not hand-written, so the test holds on the
+    measuring host and on any foreign one -- which is the point: "reused"
+    must depend on the identity comparison, never on whose host runs the test.
+    """
+    text = (FORK / "calibration.toml").read_text(encoding="utf-8")
+    now = hardware_now(capability)
+    for f in HARDWARE_IDENTITY:
+        old = None
+        for line in text.splitlines():
+            if line.startswith(f + " ="):
+                old = line
+                break
+        assert old is not None, f"shipped profile no longer records {f}"
+        text = text.replace(old, '%s = "%s"' % (f, now[f]), 1)
+    p = tmp_path / "calibration.toml"
+    p.write_text(text, encoding="utf-8")
+    return p
+
+
+def _no_measurement(monkeypatch):
+    """Make the measurement matrix a hard error: it must not be reached."""
+    import _lib.calibrate as C
+
+    def _boom(*a, **kw):
+        raise AssertionError("calibrate() reached the measurement matrix")
+
+    monkeypatch.setattr(C, "measure_matrix", _boom)
+
+
+@pytest.mark.fast
+def test_calibrate_reuses_a_profile_that_describes_this_machine(
+        kernel, real_capability, tmp_path):
+    p = _this_machine_profile(tmp_path, real_capability)
+    out = C_calibrate(dict(kernel.alias), path=str(p))
+    assert out["status"] == "reused", out
+    assert out["routing"]["matched"] is True, out["routing"]
+    assert out["routing"]["reason"].startswith("shipped profile [hardware] "
+                                               "matches"), out["routing"]
+
+
+@pytest.mark.fast
+def test_calibrate_on_a_foreign_machine_is_not_reused_and_writes_nothing(
+        kernel, real_capability, tmp_path, monkeypatch):
+    """The defect: pre-fix this returned {"status": "reused"} here.
+
+    Asserted three ways, because each catches a different half-done fix:
+    the status is not "reused", the byte content of the file is untouched, and
+    the measurement matrix is never entered (no measurement, no write).
+    """
+    _no_measurement(monkeypatch)
+    a = kernel.alias
+    real = a["gpu_capability"]
+    foreign = dict(real_capability)
+    foreign["note"] = "wgpu-py AMD Radeon Pro 5500M DX12: elementwise"
+    a["gpu_capability"] = lambda: foreign
+    try:
+        p = _this_machine_profile(tmp_path, real_capability)
+        before = p.read_bytes()
+        out = C_calibrate(dict(a), path=str(p))
+    finally:
+        a["gpu_capability"] = real
+    assert out["status"] != "reused", out
+    assert out["status"] == "foreign", out
+    assert p.read_bytes() == before, "calibrate() rewrote a foreign profile"
+    # It says WHICH machine, rather than merely declining.
+    differ = {f for f, _, _ in out["routing"]["differ"]}
+    assert differ == {"gpu_device", "gpu_backend"}, out["routing"]
+    assert "NUMFAST_CALIBRATION_DIR" in out["note"], out["note"]
+    assert "force=True" in out["note"], out["note"]
+
+
+@pytest.mark.fast
+def test_a_locally_measured_profile_is_authoritative_whatever_its_hardware_says(
+        kernel, tmp_path, monkeypatch):
+    """Rule 1 applies to calibrate() as it does to the router: naming the
+    directory IS the assertion, so a foreign [hardware] block is still reused
+    rather than reported as someone else's."""
+    d = _foreign_profile(tmp_path)
+    monkeypatch.setenv("NUMFAST_CALIBRATION_DIR", str(d))
+    out = C_calibrate(dict(kernel.alias))
+    assert out["status"] == "reused", out
+    assert out["path"] == str(d / "calibration.toml"), out
+    assert out["routing"]["origin"] == "local", out["routing"]
+    assert out["routing"]["differ"] == [], out["routing"]
+
+
+@pytest.mark.fast
+def test_calibrate_refuses_to_write_into_an_installed_package_directory(
+        kernel, tmp_path, monkeypatch):
+    """A wheel's fork root IS the package directory, so the default write
+    target for every pip-installed user is site-packages.
+
+    Refused BEFORE the matrix runs, and the refusal names the way out.
+    """
+    _no_measurement(monkeypatch)
+    pkg = tmp_path / "site-packages" / "numfast"
+    pkg.mkdir(parents=True)
+    (pkg / "__init__.py").write_text("", encoding="utf-8")
+    (pkg / "full.toml").write_text("", encoding="utf-8")
+    with pytest.raises(ValueError) as ei:
+        C_calibrate(dict(kernel.alias), path=str(pkg / "calibration.toml"))
+    msg = str(ei.value)
+    assert "installed numfast package" in msg, msg
+    assert "NUMFAST_CALIBRATION_DIR" in msg, msg
+    assert not (pkg / "calibration.toml").exists()
+
+
+@pytest.mark.fast
+def test_calibrate_refuses_a_destination_that_cannot_be_written(
+        kernel, tmp_path, monkeypatch):
+    """Two shapes of the same refusal: the directory is not there, and it is
+    there but nothing can be written into it.
+
+    The second is checked against a real filesystem refusal (a file where a
+    directory must be), not against a stubbed predicate -- os.access() answers
+    for the caller's privileges, and root writes a 0o555 directory happily, so
+    a permission-bit assertion would pass for the wrong reason on the machine
+    that runs it.
+    """
+    _no_measurement(monkeypatch)
+    missing = tmp_path / "no-such-dir" / "calibration.toml"
+    with pytest.raises(ValueError) as ei:
+        C_calibrate(dict(kernel.alias), path=str(missing))
+    assert "does not exist" in str(ei.value), str(ei.value)
+
+    blocked = tmp_path / "blocked"
+    blocked.write_text("this is a file, not a directory", encoding="utf-8")
+    with pytest.raises(ValueError) as ei:
+        C_calibrate(dict(kernel.alias), path=str(blocked / "calibration.toml"))
+    assert "does not exist" in str(ei.value), str(ei.value)
+    assert blocked.read_text(encoding="utf-8").startswith("this is a file"), \
+        "calibrate() wrote into a path it was told not to"
+
+
+@pytest.mark.fast
+def test_the_public_calibrate_verb_never_rewrites_the_repo_profile(
+        kernel, real_capability):
+    """Through the kernel alias, on whatever host runs it, and the shipped
+    calibration.toml comes back byte-identical either way.
+
+    On the machine that measured it that is the gate for this change --
+    calibrate() does exactly what it did before. On any other host it is the
+    fix: the call reports `foreign` and stops, where before it reported
+    `reused`. The assertion is on the file, not on which of the two happened,
+    because the second outcome is the bug this test exists to catch.
+    """
+    a = kernel.alias
+    real_profile = FORK / "calibration.toml"
+    _p, decision = resolve_routing_profile(real_capability)
+    before = real_profile.read_bytes()
+    out = a["calibrate"](quick=True)
+    assert out["path"] == str(real_profile), out
+    assert out["status"] == ("reused" if decision["matched"] else "foreign"), \
+        out
+    assert real_profile.read_bytes() == before, "calibrate() wrote the profile"
+    assert not list(FORK.glob(".numfast-write-probe-*")), \
+        "the writability probe left a file behind"

@@ -111,6 +111,77 @@ def dataset_path(name=DATASET_NAME):
     return str(_fork_root() / name)
 
 
+# --- Where a measured profile may be written -------------------------------
+#
+# profile_path() walks up to the fork root, which is the repository in a
+# checkout and THE INSTALLED PACKAGE DIRECTORY in a wheel (numfast/full.toml
+# beside numfast/_ext/). calibrate() writes files, so the default destination
+# is a package directory for every user who pip-installed numfast -- and a
+# measurement is the user's, not the package's: it is discarded by the next
+# upgrade and is not part of what the package claims to ship.
+#
+# Two refusals, both raised BEFORE the measurement matrix runs, because that
+# matrix is minutes of work whose result the write would then discard:
+#   * the destination is an installed package directory, and
+#   * the destination does not exist or cannot be written.
+#
+# NUMFAST_CALIBRATION_DIR is how a user names a directory of their own, and it
+# is checked exactly as strictly -- naming a directory asserts that it is
+# theirs, not that writing to it works.
+_PACKAGE_MARKER = "__init__.py"
+
+
+def is_package_dir(directory):
+    """True when `directory` is a Python package directory, not a checkout.
+
+    A wheel's fork root IS one: setup.py puts full.toml and _ext/ inside
+    numfast/, next to numfast/__init__.py. A checkout's fork root is the
+    repository, which has no __init__.py at its top level. That single
+    structural fact is what separates "write the measurement beside the
+    sources I am developing" from "write it into site-packages".
+    """
+    try:
+        return (Path(directory) / _PACKAGE_MARKER).is_file()
+    except OSError:
+        return False
+
+
+def profile_write_refusal(path=None):
+    """'' when a measured profile may be written at `path`, else why not.
+
+    Measured, not guessed: writability is probed by creating and removing one
+    file in the destination, because os.access() answers for the caller's
+    privileges (root writes a 0o555 directory happily) and the answer has to
+    hold for whoever runs calibrate().
+    """
+    p = Path(path or profile_path())
+    d = p.parent
+    named = bool(os.environ.get("NUMFAST_CALIBRATION_DIR"))
+    if not named and is_package_dir(d):
+        return ("calibrate would write %s into the installed numfast package at "
+                "%s. That directory belongs to the installed package: the "
+                "measurement is discarded by the next upgrade and never ships "
+                "with anything. Set NUMFAST_CALIBRATION_DIR to a directory you "
+                "own, or run calibrate() from a source checkout." % (p.name, d))
+    if not d.is_dir():
+        return ("calibration directory %s does not exist, so %s cannot be "
+                "written. Create it, or set NUMFAST_CALIBRATION_DIR to a "
+                "directory you own." % (d, p.name))
+    probe = d / (".numfast-write-probe-%d" % os.getpid())
+    try:
+        probe.write_bytes(b"")
+    except OSError as e:
+        return ("calibration directory %s is not writable (%s), so %s cannot be "
+                "written. Fix its permissions, or set NUMFAST_CALIBRATION_DIR "
+                "to a directory you own." % (d, e.strerror or e, p.name))
+    finally:
+        try:
+            probe.unlink()
+        except OSError:
+            pass
+    return ""
+
+
 # --- Profile validity: costs may drive routing only where they were measured --
 #
 # A profile is a set of timings taken on ONE machine. The [hardware] block
@@ -1642,23 +1713,73 @@ def _hardware(alias):
     return hw
 
 
+def _alias_gpu_cap(alias):
+    """The driver's own capability dict, or {} when the alias is absent."""
+    try:
+        cap = alias.get("gpu_capability", lambda: {})()
+    except (AttributeError, TypeError, KeyError):
+        return {}
+    return cap if isinstance(cap, dict) else {}
+
+
 def calibrate_impl(alias, quick=False, force=False, path=None):
-    """nf.calibrate(quick, force). Measure -> fit -> write artifacts."""
+    """nf.calibrate(quick, force). Measure -> fit -> write artifacts.
+
+    Two rules, and both are refusals rather than actions:
+
+      * A profile is REUSED only when it may drive routing on this machine --
+        the same verdict resolve_routing_profile() reaches, from the same
+        function, so calibrate() and the router cannot disagree about whose
+        profile is in play. A profile measured on another machine is not
+        reported as ours and is not silently overwritten: calibrate() says so
+        and stops.
+      * The measurement is written only to a directory the user named or owns.
+        profile_path() resolves to the installed package directory in a wheel,
+        and the write is refused before the matrix runs rather than after.
+
+    The refusals are raised, not returned: both mean the call could not do what
+    was asked, and a status string nobody reads is how this defect class starts.
+    """
     p = path or profile_path()
     if not force and Path(p).exists() and load_profile(p) is not None:
         prof = load_profile(p)
-        return {"status": "reused", "path": p,
+        _prof, decision = resolve_routing_profile(_alias_gpu_cap(alias),
+                                                  path=p)
+        if decision["matched"]:
+            return {"status": "reused", "path": p,
+                    "profile": profile_status(prof),
+                    "routing": decision,
+                    "note": "profile exists and describes this machine; "
+                            "force=True remeasures"}
+        return {"status": "foreign", "path": p,
                 "profile": profile_status(prof),
-                "note": "profile exists; force=True remeasures"}
+                "routing": decision,
+                "note": "the profile at this path was measured on another "
+                        "machine (" + decision["reason"] + "); it is not "
+                        "yours, it is not reused here, and nothing was "
+                        "measured or written. Set NUMFAST_CALIBRATION_DIR to a "
+                        "profile measured on this machine, or call "
+                        "calibrate(force=True) to measure here and overwrite "
+                        "this file."}
+    refusal = profile_write_refusal(p)
+    if refusal:
+        raise ValueError("calibrate: " + refusal)
     Ns = tuple(MATRIX_QUICK_NS) if quick else tuple(MATRIX_FULL_NS)
     all_ns = tuple(Ns) + tuple(n for n in VALIDATION_NS if n not in Ns)
     reps, warmup = (3, 2) if quick else (5, 3)
     data, stages = measure_matrix(alias, all_ns, reps, warmup)
     profile, dataset = fit_profile(data, all_ns, quick, reps, warmup,
                                    _hardware(alias))
-    Path(p).write_text(_toml_dump(profile), encoding="utf-8")
-    dp = dataset_path()
-    Path(dp).write_text(json.dumps(dataset, indent=1), encoding="utf-8")
+    try:
+        Path(p).write_text(_toml_dump(profile), encoding="utf-8")
+        dp = dataset_path()
+        Path(dp).write_text(json.dumps(dataset, indent=1), encoding="utf-8")
+    except OSError as e:
+        raise ValueError(
+            "calibrate: measured a profile but could not write %s (%s). The "
+            "measurement is discarded; fix the destination or set "
+            "NUMFAST_CALIBRATION_DIR to a directory you own."
+            % (p, e.strerror or e)) from None
     return {"status": "measured", "path": p, "dataset": dp,
             "profile": profile_status(profile),
             "stages": stages, "validation": dataset["validation"],

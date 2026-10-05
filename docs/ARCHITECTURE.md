@@ -134,6 +134,28 @@ When no profile is found at all the planner says `version: "stub"`,
 `source: "none"`, and says to calibrate. The two refusals read differently,
 because they are different situations and only one of them is the user's to fix.
 
+**`calibrate()` obeys the same rule, and writes only where you own the
+directory.** Its reuse check asks the same question — a profile is reused only
+when it may drive routing *here* — so the two can never disagree about whose
+profile is in play:
+
+| `calibrate()` on | result |
+|---|---|
+| the machine that measured the profile | `{"status": "reused"}`, nothing written |
+| any other machine | `{"status": "foreign", "routing": {...}}` naming the fields that differ — **not** reused, **nothing** measured, **nothing** written |
+| `NUMFAST_CALIBRATION_DIR` set | `{"status": "reused"}` whatever `[hardware]` says: naming the file *is* the assertion |
+
+A foreign profile is not silently overwritten either. And the measurement is
+written only to a directory the user named or owns: `profile_path()` resolves
+to the **installed package directory** in a wheel (`numfast/full.toml` beside
+`numfast/_ext/`), so a measurement written there would be discarded by the next
+`pip install` and would never ship with anything. That target is refused —
+together with a destination that does not exist or cannot be written — **before
+the measurement matrix runs**, because the matrix is minutes of work whose
+result the write would then discard. Writability is probed by creating and
+removing one file rather than by `os.access()`, which answers for the caller's
+privileges (root writes a `0o555` directory happily).
+
 One thing to be precise about: **the calibration profile is loaded and honoured by
 the kernel-level path, but the consumer facade does not surface a backend
 decision.** `Chain.explain()` prints `backend=n/a`, and `Chain.compile()` runs the
