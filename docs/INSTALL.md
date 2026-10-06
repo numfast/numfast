@@ -286,7 +286,13 @@ actually run.
 | npm tarball works | `npm pack`, installed into a clean project, `loadKernels()` + `ssspCsr()` run against the packed tarball |
 | npm browser claim | `esbuild --bundle --platform=browser` against the installed tarball — **fails**, and is documented as unsupported above |
 | Windows suite | installed-wheel run: 503 passed, 5 skipped, 0 failed |
-| Linux suite | WSL2 Ubuntu 24.04: 10 failed, 729 passed, 37 skipped with the library built |
+| Linux suite, checkout, per file | WSL2 Ubuntu 24.04 / CPython 3.12.3, library built from its own Corresponding Source, `wgpu` 0.32.0: **770 passed, 0 failed, 21 skipped**, each file in its own process |
+| Linux suite, checkout, one process | **SIGSEGV**, 3 runs of 3, in the native TEXT lane. With that file deselected: 729 passed, 0 failed, 21 skipped |
+| Linux native wheel tag | `py3-none-linux_x86_64`, parsed by `packaging.utils.parse_wheel_filename` and read from the wheel's own `WHEEL`: `Root-Is-Purelib: true`, no `cp3xx` anywhere. The `.so` loads from the extracted wheel through `ctypes` |
+| Linux native wheel installs | clean venv, `pip install` of the built wheel, `numfast.get_kernel()`, and real primitives: RNG (native == numpy fallback), `filter`/`map`/`reduce`, `cumsum`, `unique_inverse` against `np.unique(return_inverse=True)`, bit-identical numpy round-trip |
+| Linux installed-wheel suite | the built wheel installed into a clean venv with `tests/` and `specs-rebuilt/` copied outside the repository: **488 passed, 20 skipped, 0 failed**; 21 source-tree-only modules named, not dropped |
+| AGPL §6 on the Linux wheel | 47 `.rs` present (equal to the crate's own count), `SHA256SUMS` 53/53 OK against the shipped bytes, and `cargo build --release` in the installed `_corresp_src/` produces an 86-export `.so` on Linux |
+| Linux wheel is reproducible from the sdist | a wheel built from the unpacked sdist has 214 entries and all 214 are byte-identical to the one built from the checkout |
 
 **Not verified, and therefore not claimed anywhere:**
 
@@ -296,7 +302,9 @@ actually run.
 - **macOS.** No macOS artefact is built or tested. The `py3-none-any` wheel is
   platform-independent and will install; nothing beyond that is known.
 - **Any browser.**
-- **A Linux native wheel**, because none exists.
+- **A published Linux native wheel.** It builds, installs and passes the
+  installed-package suite, but the single-process suite run above is not green,
+  so it is not published.
 
 ---
 

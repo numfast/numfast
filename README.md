@@ -447,11 +447,17 @@ the sdist and the package from site-packages, the same suite gives **503 passed,
 because they read engine source text that an installed package does not lay out
 as a source tree. Each one is named, with its reason, at the end of the run.
 
-On **Linux** (WSL2, Ubuntu 24.04, CPython 3.12, no native library) the same
-checkout gives **74 failed, 664 passed, 38 skipped**; with the native library
-built from its own Corresponding Source and `wgpu` installed, **10 failed, 729
-passed, 37 skipped**. No Linux native artefact is published; see
-[docs/INSTALL.md](docs/INSTALL.md).
+On **Linux** (WSL2, Ubuntu 24.04, CPython 3.12) with the native library built
+from its own Corresponding Source and `wgpu` installed, the same checkout gives
+**770 passed, 0 failed, 21 skipped**, every test file in its own process.
+
+In **one** process — `pytest tests/` — it is a different number, and the
+difference is a real defect rather than a test artefact: the run **dies with
+SIGSEGV** in the native TEXT lane, reproducibly, 3 runs out of 3. With that one
+file deselected the single-process run is green: 729 passed, 0 failed, 21
+skipped. The cause is in a frozen component and is not yet fixed; it is written
+up in the report that accompanies this release. No Linux native artefact is
+published; see [docs/INSTALL.md](docs/INSTALL.md).
 
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) has three Windows jobs:
 
@@ -463,10 +469,12 @@ passed, 37 skipped**. No Linux native artefact is published; see
 3. **the whole suite** — non-gating, for the reason above.
 
 There is **no publish workflow in this repository and no `v*` tag trigger**.
-There is no Linux CI job either, and there is no Linux wheel: only a Windows
-binary is committed, and with the native library disabled the Linux suite does
-not pass (74 failures, measured above), so a Linux job would be red on its first
-run.
+There is no Linux CI job either, and no Linux wheel is published: only a
+Windows binary is committed. A Linux wheel **builds and installs** — measured
+here as `numfast-0.2.1-py3-none-linux_x86_64.whl`, verified by `packaging` and
+by installing it into a clean venv and running the installed-package suite
+(488 passed, 20 skipped) — but the single-process suite run above is not yet
+green, so it is not published.
 
 ---
 
