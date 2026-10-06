@@ -39,21 +39,43 @@ from numfast._lib import native_env  # noqa: E402
 
 NATIVE = "numfast_native"
 
+_NATIVE_VARS = ("NUMFAST_NATIVE_DLL", "NUMFAST_NATIVE_DISABLE")
+
+
+@pytest.fixture(autouse=True)
+def _native_vars_restored():
+    """Restore both native variables after every test in this file.
+
+    `monkeypatch` cannot do this. The code under test writes `os.environ`
+    DIRECTLY, and `monkeypatch.delenv` only remembers what it saw at setup, so
+    the value discovery pins survives teardown -- measured: this file left
+    `NUMFAST_NATIVE_DLL` pointing at a deleted `tmp_path` for the rest of the
+    session, and because boot resolves once and then treats the variable as an
+    operator's override, every later `native_info()` reported that dead path.
+    """
+    saved = {k: os.environ.get(k) for k in _NATIVE_VARS}
+    yield
+    for k, v in saved.items():
+        if v is None:
+            os.environ.pop(k, None)
+        else:
+            os.environ[k] = v
+
 
 @pytest.fixture
-def tree(tmp_path, monkeypatch):
+def tree(tmp_path):
     """A checkout-shaped tree: <root>/full.toml + <root>/src/numfast/_native/.
 
     `full.toml` is what `fork_root` walks to, so its presence is what makes the
-    build-tree half of `probed_paths` reachable at all. Both native env vars
-    are cleared: a suite run that inherited either would silently change what
-    these tests measure.
+    build-tree half of `probed_paths` reachable at all. The native variables are
+    cleared by `_native_vars_restored`, not here: a suite run that inherited
+    either would silently change what these tests measure.
     """
     (tmp_path / "full.toml").write_text("", encoding="utf-8")
     pkg = tmp_path / "src" / "numfast"
     (pkg / "_native").mkdir(parents=True)
-    monkeypatch.delenv("NUMFAST_NATIVE_DISABLE", raising=False)
-    monkeypatch.delenv("NUMFAST_NATIVE_DLL", raising=False)
+    os.environ.pop("NUMFAST_NATIVE_DISABLE", None)
+    os.environ.pop("NUMFAST_NATIVE_DLL", None)
     return tmp_path, pkg
 
 
