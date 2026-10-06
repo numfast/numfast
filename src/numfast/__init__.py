@@ -65,8 +65,13 @@ def _package_root():
 
 
 def _ensure_native_env():
+    """-> the paths native discovery considered, in order.
+
+    Returned rather than dropped: `native_info()` is the surface that reports
+    the answer, and it must not be the only way to ask what was considered.
+    """
     from ._lib.native_env import ensure_native_env as _impl
-    _impl(_PKG)
+    return _impl(_PKG)
 
 
 def get_kernel(fresh=False):
@@ -87,9 +92,10 @@ def get_kernel(fresh=False):
 def native_info():
     """Native backend resolution facts (no private imports cross the boundary).
 
-    Returns {'disabled': bool, 'dll': str|None, 'dll_exists': bool}.
-    Whether the engine actually engages the DLL is proven by the
-    native enabled/disabled parity tests, not by this probe.
+    Returns {'disabled': bool, 'dll': str|None, 'dll_exists': bool}, plus
+    'probed': the paths discovery considered, in order, when it found nothing.
+    Whether the engine actually engages the DLL is proven by the native
+    enabled/disabled parity tests, not by this probe.
     """
     import os
     get_kernel()
@@ -100,10 +106,14 @@ def native_info():
         # The name is the platform's own, derived where the kernel is built --
         # never a list of candidate names, which on Linux picked the Windows
         # .dll that a checkout keeps in src/numfast/_native/.
-        from ._lib.native_env import default_native_path
+        from ._lib.native_env import default_native_path, probed_paths
         dll = default_native_path(_PKG)
-    if dll is None:
-        return {"disabled": False, "dll": None, "dll_exists": False}
+        if dll is None:
+            # Absent is a supported state, but "absent" alone says nothing
+            # about WHERE it looked, which is the question a reader then has
+            # to ask in prose.
+            return {"disabled": False, "dll": None, "dll_exists": False,
+                    "probed": [str(p) for p in probed_paths(_PKG)]}
     from pathlib import Path
     return {"disabled": False, "dll": dll,
             "dll_exists": bool(dll and Path(dll).exists())}
