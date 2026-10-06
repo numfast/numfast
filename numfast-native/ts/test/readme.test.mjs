@@ -45,6 +45,7 @@ import { dirname, join } from "node:path";
 import { test, before } from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { artefact, EXPECTED_FUNC_COUNT } from "./artifact.mjs";
 import { bridgeFor } from "./artifact.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -255,4 +256,57 @@ test("the README no longer shows an unreachable lane in the quick-start", () => 
   assert.ok(/Uint32Array \[ 0, 10, 30 \]/.test(quick),
     "the quick-start example no longer shows the three lanes the kernel " +
     "returns");
+});
+// --- the GENERATED counter, against the prose that quotes it ---------------
+//
+// Item 7's question was whether a cheap self-checking counter would have caught
+// the four-lane defect above. It would not have -- that was a wrong VALUE, not
+// a moved one -- so this is here for the counters that ARE cheap and already
+// generated, on the evidence that they were never pinned:
+//
+//   SCOPE.statement is built from TOTAL_EXPORTS and WRAPPED.length at module
+//   load. The README quotes it word for word and says so. Nothing checked that.
+//   Three numbers move together (86 / 17 / 69) and the README states each of
+//   them in three more places; a kernel added without a wrapper breaks the
+//   quote and nothing notices.
+//
+// The comparison is markdown-normalised (blockquote markers stripped, runs of
+// whitespace collapsed, `code` marks removed) because the README wraps the
+// quote across lines and marks `callRaw` in code. It is compared as TEXT, not
+// re-typed: a number copied into this file is a number only its author can keep
+// right, which is what abi-surface.mjs exists to replace.
+test("the README quotes SCOPE.statement word for word", async () => {
+  const { SCOPE } = await import("../dist/index.js");
+  const readme = readFileSync(join(HERE, "..", "README.md"), "utf8");
+  const quoted = readme.split("\n")
+    .filter((l) => l.startsWith("> "))
+    .map((l) => l.slice(2))
+    .join(" ");
+  const norm = (s) => s.replace(/\s+/g, " ").replace(/`/g, "").trim();
+  assert.ok(norm(quoted).includes(norm(SCOPE.statement)),
+    "the README no longer reproduces SCOPE.statement verbatim. That paragraph is " +
+    "GENERATED from TOTAL_EXPORTS and WRAPPED.length; regenerate it from " +
+    "dist/index.js rather than editing it, or the counter and the prose drift " +
+    "apart silently.");
+});
+
+test("the counters the statement is built from are the ones the ABI table asserts", async () => {
+  const { TOTAL_EXPORTS, WRAPPED } = await import("../dist/kernels.js");
+  const { SCOPE } = await import("../dist/index.js");
+  // TOTAL_EXPORTS is pinned to the source-derived census in abi.test.mjs, and
+  // WRAPPED.length to 17. This asserts the two constants the generated sentence
+  // interpolates are the same two the README's own coverage table claims, so a
+  // wrapper added without a README edit fails HERE, naming both numbers.
+  assert.equal(TOTAL_EXPORTS, EXPECTED_FUNC_COUNT,
+    "TOTAL_EXPORTS is the number SCOPE.statement and the README both quote");
+  const unwrapped = TOTAL_EXPORTS - WRAPPED.length;
+  assert.equal(unwrapped, 69,
+    `the README says ${unwrapped} kernels are reachable by name through ` +
+    "callRaw; if that is now wrong, the count above changed with the README");
+  // The derived sentence states the same arithmetic, so it cannot disagree
+  // with the numbers even if the prose around it does.
+  assert.ok(SCOPE.statement.includes(`${TOTAL_EXPORTS}-function`));
+  assert.ok(SCOPE.statement.includes(`wraps ${WRAPPED.length} of those ` +
+                                      `${TOTAL_EXPORTS}`));
+  assert.ok(SCOPE.statement.includes(`remaining ${unwrapped} kernels`));
 });
