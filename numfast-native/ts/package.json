@@ -52,7 +52,7 @@
     "test": "node --test \"test/*.test.mjs\"",
     "test:packed": "node scripts/packed-smoke.mjs",
     "abi": "node build.mjs --check-only",
-    "prepack": "node corresp-src.mjs",
+    "prepack": "node build.mjs && node corresp-src.mjs",
     "corresp": "node corresp-src.mjs --check"
   },
   "devDependencies": {
