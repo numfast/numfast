@@ -27,6 +27,13 @@
 export { loadBridge, Bridge, probeStaticDataEnd, GUARD, CANARY } from "./bridge.js";
 export type { WasmExports } from "./bridge.js";
 
+// `BuildInfo` and `SCOPE` are host-independent and shared with the browser
+// entry (`index.browser.ts`, reached through the `browser` condition). They live
+// in `identity.ts` so there is one generated sentence and one BUILD.json shape
+// rather than two copies that have to be kept in step by hand.
+export type { BuildInfo } from "./identity.js";
+export { SCOPE } from "./identity.js";
+
 export {
   NumFastError, NumFastTrap, NumFastArgumentError,
   callGuarded, checkLengths, requireBigInt, MAX_LEN,
@@ -52,25 +59,13 @@ import { createHash } from "node:crypto";
 
 import { loadBridge, type Bridge } from "./bridge.js";
 import { TOTAL_EXPORTS, WRAPPED } from "./kernels.js";
-
-export interface BuildInfo {
-  /** sha256 of the exact .wasm these wrappers were built against. */
-  readonly sha256: string;
-  readonly bytes: number;
-  readonly exportCount: number;
-  readonly funcCount: number;
-  readonly importCount: number;
-  /** 21 on the current build: exports whose FuncType touches i64, so a
-   *  JavaScript `Number` is rejected rather than truncated. */
-  readonly i64Count: number;
-  readonly i64Exports: readonly string[];
-  readonly version: string;
-}
+import type { BuildInfo } from "./identity.js";
 
 /** Identity of the shipped artefact, written by `build.mjs` into
  *  `dist/BUILD.json`. Every test prints it, so a failure is attributable to
  *  one build rather than to "the wasm". Absent only in a tree where
- *  `npm run build` has not been run. */
+ *  `npm run build` has not been run. Declared in `identity.ts`, which the
+ *  browser entry shares. */
 export function buildInfo(): BuildInfo | undefined {
   const require = createRequire(import.meta.url);
   try {
@@ -116,25 +111,12 @@ export async function loadKernels(): Promise<Bridge> {
   return bridge;
 }
 
-/** One line stating exactly what this package is and is not. */
-export const SCOPE = Object.freeze({
-  wrapped: WRAPPED.length,
-  total: TOTAL_EXPORTS,
-  // The host sentence is deliberately narrower than "any host with a
-  // WebAssembly runtime", which is what this said until it was measured. The
-  // .wasm itself has zero imports and does instantiate anywhere; this module
-  // does not, because index.ts reads its own .wasm through node:fs. Measured
-  // against the packed tarball: `dist/index.js` fails to bundle for the browser
-  // on node:module / node:fs / node:crypto. So the kernel module is portable
-  // and this package's entry point is Node-only, and the sentence says both.
-  statement:
-    `NumFast compiles its compute kernels to WebAssembly: an ${TOTAL_EXPORTS}-function ` +
-    `module with one memory and no imports, so the module itself instantiates in any ` +
-    `host with a WebAssembly runtime. This package wraps ${WRAPPED.length} of those ` +
-    `${TOTAL_EXPORTS} kernels with typed wrappers and is a portable kernel library, ` +
-    `not a compute core: orchestration, buffer management and the type layer stay in ` +
-    `the host. Its own entry point is Node-only (it reads the packaged .wasm with ` +
-    `node:fs); the browser-facing module is dist/bridge.js, which takes the bytes ` +
-    `you give it. The remaining ${TOTAL_EXPORTS - WRAPPED.length} kernels are ` +
-    `reachable by name through callRaw and have no documented argument order.`,
-});
+// `SCOPE` is re-exported from `identity.ts` at the top of this file. Its
+// sentence is deliberately narrower than "any host with a WebAssembly runtime",
+// which is what it said until it was measured: the .wasm itself has zero imports
+// and does instantiate anywhere, but dist/index.js reads its own .wasm through
+// node:fs. Measured against the packed tarball with esbuild `--platform=browser`,
+// dist/index.js fails to bundle on node:module / node:fs / node:crypto -- and a
+// browser bundler that honours the `browser` condition reaches
+// dist/index.browser.js instead, which takes the bytes. So the kernel module is
+// portable, this file is the Node face of the entry, and the sentence says so.

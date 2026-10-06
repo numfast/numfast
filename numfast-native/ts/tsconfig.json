@@ -21,6 +21,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["bridge.ts", "errors.ts", "abi.ts", "kernels.ts", "index.ts", "webassembly.d.ts"],
+  "include": ["bridge.ts", "errors.ts", "abi.ts", "kernels.ts", "identity.ts", "index.ts", "index.browser.ts", "webassembly.d.ts"],
   "exclude": ["dist", "node_modules", "qlookup.ts", "test"]
 }
