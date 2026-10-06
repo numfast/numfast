@@ -85,10 +85,11 @@ ENCODING = "dictionary-sorted-v1"
 TEXT_DTYPE = "text"
 
 
-def _err(format_error, what, fix, doc="specs/05-storage-encoding.md"):
+def _err(format_error, what, fix, doc=""):
     if format_error is not None:
         raise format_error(what, fix=fix, doc=doc)
-    raise ValueError(f"{what} Fix: {fix}. See {doc}")
+    raise ValueError(f"{what} Fix: {fix}."
+          + (f" See {doc}" if doc else ""))
 
 
 def _values_as_strings(values, op, format_error=None):
@@ -175,7 +176,7 @@ def regex_replace_dict_impl(codes, values, validity, pattern, repl,
             _err(format_error,
                  f"{op} validity size {va.size} != codes {n}.",
                  "pass validity matching codes length",
-                 doc="specs/delta-3-null-contract.md")
+                 doc="")
         valid = np.ascontiguousarray(valid & va)
     if d == 0:
         # No distinct value at all: every row is invalid by definition.

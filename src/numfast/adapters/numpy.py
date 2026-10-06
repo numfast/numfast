@@ -32,7 +32,7 @@ def _logical_for(arr, kernel):
             return "float64"
         raise ValueError(
             f"from_numpy: float width {arr.dtype} unsupported: use float32/float64. "
-            "Fix: arr.astype(np.float32). See specs/05-storage-encoding.md"
+            "Fix: arr.astype(np.float32)."
         )
     if kind in "iu":
         if arr.dtype == np.dtype(np.int64):
@@ -42,7 +42,7 @@ def _logical_for(arr, kernel):
         return "bool"
     raise ValueError(
         f"from_numpy: dtype {arr.dtype} (kind '{kind}') has no Series mapping. "
-        "Fix: pass int32/float32/float64/bool/str. See specs/05-storage-encoding.md"
+        "Fix: pass int32/float32/float64/bool/str."
     )
 
 
@@ -129,7 +129,7 @@ def _ingest_1d(kernel, arr, name):
                 raise OverflowError(
                     f"from_numpy column '{name}': uint64->int64 out of range "
                     f"(max {hi} exceeds int64 max {2 ** 63 - 1}). Fix: pass values "
-                    "within int64 range. See specs/05-storage-encoding.md"
+                    "within int64 range."
                 )
             data = np.ascontiguousarray(data, dtype=np.int64)
             shared = False

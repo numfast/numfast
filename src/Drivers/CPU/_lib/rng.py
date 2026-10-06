@@ -98,14 +98,12 @@ def validate_seed(seed):
     if isinstance(seed, bool) or not isinstance(seed, int):
         raise ValueError(
             f"rng_seed must be an int in [0, 2**64), got {seed!r}. "
-            "Fix: pass seed=42 (or any uint64 int). "
-            "See specs/02-semantic-ir.md"
+            "Fix: pass seed=42 (or any uint64 int)."
         )
     if not 0 <= seed < 2 ** 64:
         raise ValueError(
             f"rng_seed must be an int in [0, 2**64), got {seed!r}. "
-            "Fix: pass seed=42 (or any uint64 int). "
-            "See specs/02-semantic-ir.md"
+            "Fix: pass seed=42 (or any uint64 int)."
         )
     return int(seed)
 

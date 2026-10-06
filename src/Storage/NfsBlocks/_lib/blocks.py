@@ -25,13 +25,13 @@ FORMAT = "nfs-block-v1"
 COLS = ("k1", "k2", "k3", "id4", "id6", "v1", "v2", "v3")
 
 
-def _err(format_error, what, fix="", doc="specs/09-serialization-nfs.md"):
+def _err(format_error, what, fix="", doc=""):
     if format_error is not None:
         raise format_error(what, fix=fix, doc=doc)
     msg = str(what)
     if fix:
         msg += f" Fix: {fix}."
-    return ValueError(msg + f" See {doc}")
+    return ValueError(msg + (f" See {doc}" if doc else ""))
 
 
 def _rss_gb():

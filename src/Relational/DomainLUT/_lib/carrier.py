@@ -52,7 +52,7 @@ _NATIVE_KEYS = (("utf8_data", "offsets"), ("data", "offsets"))
 
 
 def _err(what, fix):
-    raise ValueError(f"{what} Fix: {fix}. See specs/05-storage-encoding.md")
+    raise ValueError(f"{what} Fix: {fix}.")
 
 
 def _is_int_scalar(v):

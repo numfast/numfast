@@ -102,8 +102,9 @@ _GROUP_OPS = ("count",)
 PACK_BITS_MAX = 63
 
 
-def _err(what, fix, doc="specs/delta-2-composite-keys.md"):
-    return ValueError(f"{what} Fix: {fix}. See {doc}")
+def _err(what, fix, doc=""):
+    return ValueError(f"{what} Fix: {fix}."
+           + (f" See {doc}" if doc else ""))
 
 
 def _norm_ops(values, ops, group_ops):

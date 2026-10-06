@@ -55,10 +55,10 @@ def _body_to_list(data, offsets, format_error):
         if format_error is not None:
             raise format_error("dictionary body is not valid UTF-8 (%s)." % e,
                                fix="pass a body from dictionary_encode",
-                               doc="specs/05-storage-encoding.md")
+                               doc="")
         raise ValueError(f"dictionary body is not valid UTF-8 ({e}). "
                          "Fix: pass a body from dictionary_encode. "
-                         "See specs/05-storage-encoding.md")
+                         "")
 
 
 def _is_int_scalar(v):
@@ -96,10 +96,11 @@ def _reject_i64_for_text_op(lut, op, hint, format_error):
              hint)
 
 
-def _err(format_error, what, fix, doc="specs/05-storage-encoding.md"):
+def _err(format_error, what, fix, doc=""):
     if format_error is not None:
         raise format_error(what, fix=fix, doc=doc)
-    raise ValueError(f"{what} Fix: {fix}. See {doc}")
+    raise ValueError(f"{what} Fix: {fix}."
+          + (f" See {doc}" if doc else ""))
 
 
 def _u(values, format_error):
@@ -621,7 +622,7 @@ def codes_member_mask_impl(codes, allowed, validity=None, format_error=None):
             _err(format_error,
                  f"codes_member_mask validity size {v.size} != codes {c.size}.",
                  "pass validity matching codes length",
-                 doc="specs/delta-3-null-contract.md")
+                 doc="")
         mask = mask & v
     return np.ascontiguousarray(mask)
 
@@ -679,7 +680,7 @@ def codes_count_allowed_impl(codes, allowed, validity=None, D=None,
         _err(format_error,
              f"codes_count_allowed validity size {v.size} != codes {n}.",
              "pass validity matching codes length",
-             doc="specs/delta-3-null-contract.md")
+             doc="")
     if in_range_all:
         bc = np.bincount(c, minlength=D)
         raw = int(np.asarray(bc[a_f].sum()).ravel()[0])

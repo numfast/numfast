@@ -16,14 +16,12 @@ def check_seed(seed):
     if isinstance(seed, bool) or not isinstance(seed, int):
         raise ValueError(
             f"rng_seed must be an int in [0, 2**64), got {seed!r}. "
-            "Fix: pass seed=42 (or any uint64 int). "
-            "See specs/02-semantic-ir.md"
+            "Fix: pass seed=42 (or any uint64 int)."
         )
     if not 0 <= seed < 2 ** 64:
         raise ValueError(
             f"rng_seed must be an int in [0, 2**64), got {seed!r}. "
-            "Fix: pass seed=42 (or any uint64 int). "
-            "See specs/02-semantic-ir.md"
+            "Fix: pass seed=42 (or any uint64 int)."
         )
     return int(seed)
 
@@ -239,8 +237,7 @@ def lookup(kernel, build, probe, name=None):
             raise ValueError(
                 f"lookup {label} needs int32 keys, got {s.dtype!r}. "
                 "Fix: encode categoricals to int32 codes first "
-                "(float/bool/text have no key semantics). "
-                "See specs/02-semantic-ir.md"
+                "(float/bool/text have no key semantics)."
             )
     bvals = np.ascontiguousarray(build.to_numpy(), dtype=np.int32)
     bvalid = build.validity

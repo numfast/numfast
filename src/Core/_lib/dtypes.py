@@ -58,7 +58,7 @@ def check_int32_range(values, what="series"):
                     f"cannot narrow to int32 range [{_INT32_MIN}, {_INT32_MAX}]. "
                     "Fix: pass finite values within int32 range, use dtype='int64' "
                     "for BIGINT int64-capable ops, or scaled-int "
-                    "via Schema (scale/offset). See specs/05-storage-encoding.md"
+                    "via Schema (scale/offset)."
                 )
             lo, hi = float(arr.min()), float(arr.max())
         elif kind == "b":
@@ -77,8 +77,7 @@ def check_int32_range(values, what="series"):
             f"exceeds int32 range [{_INT32_MIN}, {_INT32_MAX}] "
             f"(offending value {bad}). Fix: keep values within int32 range, "
             "pass dtype='int64' for BIGINT int64-capable ops, or "
-            "use scaled-int via Schema (scale/offset). "
-            "See specs/05-storage-encoding.md"
+            "use scaled-int via Schema (scale/offset)."
         )
     return None
 
@@ -100,7 +99,6 @@ def canonical_dtype(name):
                 "int64 logical allowed for BIGINT int64-capable ops "
                 "(group/filter/sort/compare/agg-payload, stays int64)",
                 fix="pass dtype='bool'/'enum:2'/'enum:4'/'enum:8'",
-                doc="specs/delta-5-bitmask-enum.md",
             )
         return {"itemsize": width / 8, "logical": name, "accum": "int64",
                 "width": width, "kind": "enum"}
@@ -111,7 +109,6 @@ def canonical_dtype(name):
             "int64 stays int64 on int64-capable ops; int32 narrowing is "
             "range-checked (OverflowError, never wrap)",
             fix="pass dtype='int32'/'int64'/'float32'/'float64'",
-            doc="specs/05-storage-encoding.md",
         )
     return dict(info)
 
@@ -141,6 +138,5 @@ def check_overflow(values, scale=1, offset=0):
             f"scaled-int overflow: physical range [{phys.min()}, {phys.max()}] "
             "exceeds int32",
             fix="choose larger scale or smaller offset",
-            doc="specs/05-storage-encoding.md",
         )
     return None

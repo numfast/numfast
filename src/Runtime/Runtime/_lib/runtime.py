@@ -32,8 +32,7 @@ def evaluate_impl(graph, backend, n, select_backend, cpu_execute,
         missing = ", ".join(sel.get("gpu_blockers", ["?"]))
         raise RuntimeError(
             f"backend='gpu' ineligible: ops not on GPU: {missing}. "
-            "Fix: use backend='cpu' (or 'auto') for this graph. "
-            "See specs/delta-6-runtime-gpu-groupby.md"
+            "Fix: use backend='cpu' (or 'auto') for this graph."
         )
     actual = backend if backend in ("cpu", "gpu") else sel["backend"]
     if backend in ("cpu", "gpu"):

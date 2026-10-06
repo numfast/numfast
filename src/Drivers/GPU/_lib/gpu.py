@@ -1963,19 +1963,19 @@ def _f64_to_physical(values, scale, offset, err, what):
         raise err(f"GPU driver: {what} scaled-float64 has non-finite values "
                   "(needs backend='cpu')",
                   fix="pass finite values or backend='cpu'",
-                  doc="specs/delta-7-scaled-f64-gpu.md")
+                  doc="")
     phys = _np.rint((v - float(offset)) / float(scale))
     plo, phi = float(phys.min()), float(phys.max())
     if plo < _I32_MIN or phi > _I32_MAX:
         raise err(f"GPU driver: {what} scaled physical range [{plo:.0f}, "
                   f"{phi:.0f}] exceeds int32 (needs backend='cpu')",
                   fix="choose larger scale via Schema or backend='cpu'",
-                  doc="specs/delta-7-scaled-f64-gpu.md")
+                  doc="")
     if int(v.size) * int(max(abs(plo), abs(phi))) >= 2 ** 63:
         raise err(f"GPU driver: {what} scaled int64 total bound exceeded "
                   "N*max|phys| >= 2**63 (needs backend='cpu')",
                   fix="use backend='cpu' for this range",
-                  doc="specs/delta-7-scaled-f64-gpu.md")
+                  doc="")
     return phys.astype(_np.int32)
 
 
@@ -2007,7 +2007,7 @@ def _gb_reject_scaled_keys(bufs, key_names, err, what):
             raise err(f"GPU driver: {what} scaled-float64 keys unsupported "
                       "(encode keys to int32 first or backend='cpu')",
                       fix="pass int32 key codes or backend='cpu'",
-                      doc="specs/delta-7-scaled-f64-gpu.md")
+                      doc="")
 
 
 def _gb_reject_scaled_op(bufs, names, err, what):
@@ -2016,7 +2016,7 @@ def _gb_reject_scaled_op(bufs, names, err, what):
         raise err(f"GPU driver: {what} scaled-float64 owns groupby only "
                   f"(got {bad}, needs backend='cpu')",
                   fix="run this op with backend='cpu'",
-                  doc="specs/delta-7-scaled-f64-gpu.md")
+                  doc="")
 
 
 def _gb_vkind(values, err, what):
@@ -2029,10 +2029,10 @@ def _gb_vkind(values, err, what):
         raise err(f"GPU driver: {what} float64 needs CPU or float32 "
                   "(MapF64 guard, spec 06)",
                   fix="pass dtype='float32' or backend='cpu'",
-                  doc="specs/06-drivers-gpu-cpu.md")
+                  doc="")
     raise err(f"GPU driver: {what} needs int32/float32 values, got {dt}",
               fix="pass int32/float32 columns or backend='cpu'",
-              doc="specs/delta-6-runtime-gpu-groupby.md")
+              doc="")
 
 
 def _gb_compact(counts, sums_list):
@@ -2161,13 +2161,13 @@ def _as_col(values, dtype, err, what):
         raise err(f"GPU driver: {what} float64 needs CPU or float32 "
                   "(MapF64 guard, spec 06)",
                   fix="pass dtype='float32' or backend='cpu'",
-                  doc="specs/06-drivers-gpu-cpu.md")
+                  doc="")
     try:
         return (_f32(values) if dtype == "float32" else _i32(values))
     except (TypeError, ValueError):
         raise err(f"GPU driver: {what} needs rank-1 numeric",
                   fix="pass a flat int32/float32 column",
-                  doc="specs/02-semantic-ir.md") from None
+                  doc="") from None
 
 
 # ---- Standalone Scan / Reduction primitives (portable WGSL, no subgroups) ----
@@ -2842,7 +2842,7 @@ def gpu_execute_impl(nodes, canonical_dtype=None, format_error=None):
                     raise err(f"GPU driver: series '{p['out']}' needs "
                               "rank-1 numeric",
                               fix="pass a flat int64 column",
-                              doc="specs/02-semantic-ir.md") from None
+                              doc="") from None
             else:
                 bufs[p["out"]] = _as_col(params["values"], dt, err,
                                          f"series '{p['out']}'")
@@ -2876,7 +2876,7 @@ def gpu_execute_impl(nodes, canonical_dtype=None, format_error=None):
                 raise err(f"GPU driver: pack_keys mode '{mode}' x{len(ins)} "
                           "needs 1-2 int32 code columns (hash/CPU-only)",
                           fix="use mode='pack'/'radix' with 1-2 int32 cols",
-                          doc="specs/delta-2-composite-keys.md")
+                          doc="")
         elif op == "compare":
             _gb_reject_scaled_op(bufs, p["inputs"], err,
                                  f"compare '{p['out']}'")
@@ -2888,7 +2888,7 @@ def gpu_execute_impl(nodes, canonical_dtype=None, format_error=None):
                 if _np.asarray(b).dtype == _np.dtype(_np.float64):
                     raise err("GPU driver: compare float64 needs CPU/float32",
                               fix="cast to float32 or backend='cpu'",
-                              doc="specs/06-drivers-gpu-cpu.md")
+                              doc="")
                 r = compare(a, _np.ascontiguousarray(b), params["op"], dt)
             else:
                 v = params.get("value")
@@ -2938,7 +2938,7 @@ def gpu_execute_impl(nodes, canonical_dtype=None, format_error=None):
                           f"got {adt}",
                           fix="pass int32/float32/int64 columns or "
                               "backend='cpu'",
-                          doc="specs/02-semantic-ir.md")
+                          doc="")
             bufs[p["out"]] = filter_compact(a, eff, dt)
             v_valid = bufs.get(p["inputs"][0] + "#validity")
             if v_valid is not None:
@@ -2948,7 +2948,7 @@ def gpu_execute_impl(nodes, canonical_dtype=None, format_error=None):
                 if eff_b.size != vv.size:
                     raise err("GPU driver: filter values/mask size mismatch",
                               fix="pass equal-length values and mask",
-                              doc="specs/02-semantic-ir.md")
+                              doc="")
                 bufs[p["out"] + "#validity"] = vv[eff_b]
         elif op == "gather":
             _gb_reject_scaled_op(bufs, p["inputs"], err,
@@ -2960,7 +2960,6 @@ def gpu_execute_impl(nodes, canonical_dtype=None, format_error=None):
                 raise err(
                     f"GPU driver: gather needs integer indices, got {_ix.dtype}",
                     fix="pass int32/int64 positions",
-                    doc="specs/02-semantic-ir.md",
                 )
             _n = int(_np.asarray(a).size)
             if int(_ix.size) and (bool((_ix < 0).any())
@@ -2968,7 +2967,6 @@ def gpu_execute_impl(nodes, canonical_dtype=None, format_error=None):
                 raise err(
                     "GPU driver: gather index out of range",
                     fix="pass 0 <= i < n",
-                    doc="specs/02-semantic-ir.md",
                 )
             dt = ("float32" if _np.asarray(a).dtype == _np.dtype(_np.float32)
                   else "int32")
@@ -2997,13 +2995,13 @@ def gpu_execute_impl(nodes, canonical_dtype=None, format_error=None):
                 raise err(f"GPU driver: reduce '{fn}' CPU-only "
                           "(min/max/var/std need scan/native path)",
                           fix="use sum/count/mean on GPU or backend='cpu'",
-                          doc="specs/06-drivers-gpu-cpu.md")
+                          doc="")
         elif op == "groupby":
             if params.get("result", "dict") == "carry":
                 raise err("GPU driver: groupby result='carry' CPU-only "
                           "(Carry lives in the CPU extension)",
                           fix="use result='dict' or backend='cpu'",
-                          doc="specs/delta-6-runtime-gpu-groupby.md")
+                          doc="")
             v = _np.asarray(bufs[p["inputs"][0]])
             k = _np.asarray(bufs[p["inputs"][1]])
             if v.size != k.size:
@@ -3011,13 +3009,13 @@ def gpu_execute_impl(nodes, canonical_dtype=None, format_error=None):
                     f"GPU driver: groupby values/keys size mismatch "
                     f"{v.size} != {k.size}",
                     fix="pass equal-length values and keys",
-                    doc="specs/02-semantic-ir.md")
+                    doc="")
             gop = params["op"]
             if gop not in ("sum", "count", "mean"):
                 raise err(f"GPU driver: unknown groupby op '{gop}'",
                           fix="use one of sum/count/mean "
                               "(or groupby_multi for fused)",
-                          doc="specs/02-semantic-ir.md")
+                          doc="")
             keep = _gb_keep(p["inputs"], bufs)
             if keep is not None:
                 ix = _np.flatnonzero(keep)
@@ -3046,7 +3044,7 @@ def gpu_execute_impl(nodes, canonical_dtype=None, format_error=None):
                 raise err("GPU driver: groupby_multi result='carry' CPU-only "
                           "(Carry lives in the CPU extension)",
                           fix="use result='dict' or backend='cpu'",
-                          doc="specs/delta-6-runtime-gpu-groupby.md")
+                          doc="")
             cols = params.get("cols")
             if cols is None:
                 cols, multi = [p["inputs"][0]], False
@@ -3065,7 +3063,7 @@ def gpu_execute_impl(nodes, canonical_dtype=None, format_error=None):
                     raise err(
                         "GPU driver: groupby_multi values/keys size mismatch",
                         fix="pass equal-length values and keys",
-                        doc="specs/delta-1-fused-aggregate.md")
+                        doc="")
             keep = _gb_keep(p["inputs"], bufs)
             if keep is not None:
                 ix = _np.flatnonzero(keep)
@@ -3117,18 +3115,18 @@ def gpu_execute_impl(nodes, canonical_dtype=None, format_error=None):
                 raise err(f"GPU driver: sort of {len(p['inputs'])} keys CPU-only "
                           "(pack_keys radix/int32-direct + single sort owns it)",
                           fix="pack composite keys first, then sort the packed col",
-                          doc="specs/delta-2-composite-keys.md")
+                          doc="")
             kk = _np.asarray(bufs[p["inputs"][0]])
             if kk.dtype == _np.dtype(bool) or kk.dtype.kind not in "if":
                 raise err(f"GPU driver: sort needs int32/float32 keys, "
                           f"got {kk.dtype} (encode TEXT first or backend='cpu')",
                           fix="pass int32/float32 keys or backend='cpu'",
-                          doc="specs/02-semantic-ir.md")
+                          doc="")
             if kk.dtype == _np.dtype(_np.float64) or kk.dtype == _np.dtype(_np.int64):
                 raise err(f"GPU driver: sort of {kk.dtype} CPU-only "
                           "(int64 exactness / f64 MapF64 guard, spec 06)",
                           fix="pass int32/finite-float32 keys or backend='cpu'",
-                          doc="specs/06-drivers-gpu-cpu.md")
+                          doc="")
             desc = params.get("descending", [False])
             one = bool(desc[0]) if isinstance(desc, (list, tuple)) else bool(desc)
             keep = bufs.get(p["inputs"][0] + "#validity")
@@ -3144,7 +3142,7 @@ def gpu_execute_impl(nodes, canonical_dtype=None, format_error=None):
                 except ValueError as e:
                     raise err(f"GPU driver: sort {e}",
                               fix="run this sort with backend='cpu'",
-                              doc="specs/06-drivers-gpu-cpu.md") from None
+                              doc="") from None
                 bufs[p["out"]] = _np.ascontiguousarray(
                     _np.concatenate([vpos[sub], ipos]), dtype=_np.int32)
             else:
@@ -3153,14 +3151,14 @@ def gpu_execute_impl(nodes, canonical_dtype=None, format_error=None):
                 except ValueError as e:
                     raise err(f"GPU driver: sort {e}",
                               fix="run this sort with backend='cpu'",
-                              doc="specs/06-drivers-gpu-cpu.md") from None
+                              doc="") from None
         elif op == "slice":
             a = _np.asarray(bufs[p["inputs"][0]])
             dt = ("float32" if a.dtype == _np.dtype(_np.float32) else "int32")
             if dt == "int32" and a.dtype != _np.dtype(_np.int32):
                 raise err(f"GPU driver: slice needs int32/float32, got {a.dtype}",
                           fix="pass int32/float32 columns or backend='cpu'",
-                          doc="specs/02-semantic-ir.md")
+                          doc="")
             bufs[p["out"]] = slice_take(a, params.get("limit"),
                                         params.get("offset", 0), dt)
             v_valid = bufs.get(p["inputs"][0] + "#validity")
@@ -3184,7 +3182,6 @@ def gpu_execute_impl(nodes, canonical_dtype=None, format_error=None):
                 raise err(
                     "GPU driver: map pow with array exponent: '**' scalar-exp only (spec 01)",
                     fix="pass a scalar exponent",
-                    doc="specs/01-public-api.md",
                 )
             if a.dtype == _np.dtype(_np.int32):
                 dt = "int32"
@@ -3194,18 +3191,18 @@ def gpu_execute_impl(nodes, canonical_dtype=None, format_error=None):
                 raise err(f"GPU driver: map needs int32/float32, got {a.dtype} "
                           "(float64: MapF64 guard, use CPU)",
                           fix="pass int32/float32 columns or backend='cpu'",
-                          doc="specs/06-drivers-gpu-cpu.md")
+                          doc="")
             if arr and _np.asarray(b).dtype != a.dtype:
                 raise err(f"GPU driver: map array-array needs matching dtypes, "
                           f"got {a.dtype} vs {_np.asarray(b).dtype} (CPU promotion owns mixed)",
                           fix="cast to one dtype or run with backend='cpu'",
-                          doc="specs/02-semantic-ir.md")
+                          doc="")
             try:
                 bufs[p["out"]] = map_elem(a, b, fn, dt)
             except ValueError as e:
                 raise err(f"GPU driver: map {e}",
                           fix="run this fn/dtype with backend='cpu'",
-                          doc="specs/06-drivers-gpu-cpu.md") from None
+                          doc="") from None
             keep = _gb_keep(p["inputs"], bufs)  # DELTA-3: validity=AND
             if keep is not None:
                 bufs[p["out"] + "#validity"] = keep
@@ -3232,7 +3229,7 @@ def gpu_execute_impl(nodes, canonical_dtype=None, format_error=None):
                     raise err(f"GPU driver: shift needs int32/float32, "
                               f"got {a.dtype}",
                               fix="pass int32/float32 columns or backend='cpu'",
-                              doc="specs/02-semantic-ir.md")
+                              doc="")
                 if per >= n:
                     bufs[p["out"]] = _np.zeros(n, dtype=a.dtype)
                 else:
@@ -3251,7 +3248,7 @@ def gpu_execute_impl(nodes, canonical_dtype=None, format_error=None):
             if params:
                 raise err(f"GPU driver: cumsum takes no params, got {params!r}",
                           fix="pass ir_cumsum(out, inp) (always inclusive, v1)",
-                          doc="specs/02-semantic-ir.md")
+                          doc="")
             a = _np.asarray(bufs[p["inputs"][0]])
             n = int(a.size)
             v_in = bufs.get(p["inputs"][0] + "#validity")
@@ -3259,7 +3256,7 @@ def gpu_execute_impl(nodes, canonical_dtype=None, format_error=None):
                 raise err(f"GPU driver: cumsum needs int32, got {a.dtype} "
                           "(no float scan lanes on GPU, f32/f64 CPU-only)",
                           fix="pass int32 columns or backend='cpu'",
-                          doc="specs/02-semantic-ir.md")
+                          doc="")
             if n == 0:
                 bufs[p["out"]] = _np.ascontiguousarray(a.copy())
                 if v_in is not None:
@@ -3282,11 +3279,11 @@ def gpu_execute_impl(nodes, canonical_dtype=None, format_error=None):
                 raise err(f"GPU driver: rng_fill_i32 mode "
                           f"'{params.get('mode')}' needs CPU (bits only on GPU)",
                           fix="pass mode='bits' or backend='cpu'",
-                          doc="specs/06-drivers-gpu-cpu.md")
+                          doc="")
             if not hi > lo:
                 raise err("GPU driver: rng_fill_i32 needs lo<hi (rc=-2)",
                           fix="pass lo<hi or backend='cpu'",
-                          doc="specs/02-semantic-ir.md")
+                          doc="")
             bufs[p["out"]] = rng_fill_i32(
                 n, int(params["seed"]), int(params["stream"]),
                 int(params["offset"]), lo, hi)
@@ -3296,7 +3293,7 @@ def gpu_execute_impl(nodes, canonical_dtype=None, format_error=None):
                       "(f64 lanes need the explicit-f64 contract; "
                       "sample/permutation/compat/unique are sequential/global)",
                       fix="run this op with backend='cpu'",
-                      doc="specs/06-drivers-gpu-cpu.md")
+                      doc="")
         else:
             raise err(f"GPU driver: op '{op}' CPU-only in v0.2 "
                       "(encode/gather-text need CPU path)",
@@ -3457,7 +3454,7 @@ def gpu_chunked_execute(nodes, n, chunk_size, format_error=None):
                     f"GPU chunked: groupby '{gb_out}' inputs unavailable "
                     "in chunk prefix (chained groupby needs backend='cpu')",
                     fix="run chained groupby graphs with backend='cpu'",
-                    doc="specs/04-runtime-execution.md")
+                    doc="")
             k_arr = _np.asarray(chunk_bufs.get(key_name, []), dtype=_np.int32)
             # Validity (DELTA-3, same as single chunk): NA rows out first.
             mix = None

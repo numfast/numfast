@@ -61,13 +61,11 @@ def compile_impl(jobs, capability, format_error=None):
                 raise err(
                     f"job missing '{key}': jobs are {{op,inputs,params,out}}",
                     fix="build jobs via ir_* constructors",
-                    doc="specs/02-semantic-ir.md",
                 )
         if j["op"] not in _ops(capability):
             raise err(
                 f"unknown op '{j['op']}': capability covers {sorted(_ops(capability))}",
                 fix="add a Planner capability entry first for explicit new ops",
-                doc="specs/06-drivers-gpu-cpu.md",
             )
         nodes.append({
             "kernel_id": j["op"],
@@ -292,7 +290,6 @@ def plan_pack_impl(kmin1, kmax1, kmin2, kmax2, m2=None):
         raise _fallback_err(
             f"plan_pack needs M2>=1, got {m2}",
             fix="pass radix=None for auto or positive ints per input",
-            doc="specs/delta-2-composite-keys.md",
         )
     if kmin1 < 0 or kmin2 < 0:
         return {"strategy": "radix",
@@ -502,7 +499,6 @@ def chunk_plan_impl(op, n, backend_limit=None, capability=None, itemsize=4,
             raise _fallback_err(
                 "chunk_plan needs backend_limit or driver capability",
                 fix="pass backend_limit or wire capability()",
-                doc="specs/04-runtime-execution.md",
             )
         backend_limit = max(1, int(capability["max_buffer_bytes"] // itemsize))
 

@@ -129,15 +129,13 @@ class Expr:
         if not seq:
             raise ValueError(
                 f"isin on column {self.name!r} got an empty needle list. "
-                "Fix: pass at least one value, or drop the predicate. "
-                "See specs/core/07-builder-extension.md")
+                "Fix: pass at least one value, or drop the predicate.")
         for v in seq:
             if not isinstance(v, str):
                 raise ValueError(
                     f"isin on text column {self.name!r} needs str values, got "
                     f"{type(v).__name__}. v0 lowers isin through the "
-                    "dictionary path only. Fix: pass str values. "
-                    "See specs/core/07-builder-extension.md")
+                    "dictionary path only. Fix: pass str values.")
         return Expr("isin", self.name, seq)
 
     # -- NULL test -- NOT the negation of a predicate --------------------
@@ -311,7 +309,7 @@ def ref(name):
     if not isinstance(name, str) or not name:
         raise ValueError(
             f"column reference needs a non-empty str, got {name!r}. "
-            "Fix: q.c('price'). See specs/core/07-builder-extension.md")
+            "Fix: q.c('price').")
     return Expr("col", name)
 
 

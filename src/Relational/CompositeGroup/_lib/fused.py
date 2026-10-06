@@ -59,8 +59,9 @@ _INT32_MAX = 2 ** 31 - 1
 _INT64_MAX = 2 ** 63 - 1
 
 
-def _err(what, fix, doc="specs/delta-1-fused-aggregate.md"):
-    return ValueError(f"{what} Fix: {fix}. See {doc}")
+def _err(what, fix, doc=""):
+    return ValueError(f"{what} Fix: {fix}."
+           + (f" See {doc}" if doc else ""))
 
 
 def _as_int_column(name, col):
@@ -143,7 +144,7 @@ def _pack_layout(key_arrays):
             f"which does not fit in int64.",
             "group fewer columns at a time, or key on a single "
             "dictionary-coded column",
-            doc="specs/delta-2-composite-keys.md")
+            doc="")
     return {"mode": "radix", "radix": radix, "shift": shift, "mins": mins}
 
 

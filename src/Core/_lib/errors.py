@@ -7,7 +7,7 @@ it via kernel.alias (depends), never via private imports (import-guard).
 """
 
 
-def format_error(what, fix="", doc="specs/00-principles.md"):
+def format_error(what, fix="", doc=""):
     """format_error(what, fix, doc) -> ValueError with contract shape."""
     msg = str(what)
     if fix:

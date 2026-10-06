@@ -62,14 +62,12 @@ class Series:
             if self._values.ndim != 1:
                 raise ValueError(
                     f"Series '{self._name}' must be rank-1, got shape {self._values.shape}. "
-                    "Fix: pass a flat column (2D -> nf.table/from_numpy 2D). "
-                    "See specs/02-semantic-ir.md"
+                    "Fix: pass a flat column (2D -> nf.table/from_numpy 2D)."
                 )
         if self._values.ndim != 1:
             raise ValueError(
                 f"Series '{self._name}' must be rank-1, got shape {self._values.shape}. "
-                "Fix: pass a flat column (2D -> nf.table/from_numpy 2D). "
-                "See specs/02-semantic-ir.md"
+                "Fix: pass a flat column (2D -> nf.table/from_numpy 2D)."
             )
         if validity is None:
             self._validity = None
@@ -79,8 +77,7 @@ class Series:
                 raise ValueError(
                     f"Series '{self._name}' validity shape {mask.shape} != "
                     f"values shape {self._values.shape}. "
-                    "Fix: pass validity matching values length. "
-                    "See specs/delta-3-null-contract.md"
+                    "Fix: pass validity matching values length."
                 )
             self._validity = mask
         if schema is None:
@@ -244,8 +241,7 @@ class Series:
             )
         if op not in _CMP_OPS:
             raise ValueError(
-                f"unknown compare op {op!r}: use one of {list(_CMP_OPS)}. "
-                "See specs/02-semantic-ir.md"
+                f"unknown compare op {op!r}: use one of {list(_CMP_OPS)}."
             )
         a = self._kernel.alias
         jobs = [self._source("s")]
@@ -470,8 +466,7 @@ class Series:
             )
         if op not in _REDUCE_OPS:
             raise ValueError(
-                f"unknown reduce op {op!r}: use one of {list(_REDUCE_OPS)}. "
-                "See specs/02-semantic-ir.md"
+                f"unknown reduce op {op!r}: use one of {list(_REDUCE_OPS)}."
             )
         a = self._kernel.alias
         jobs = [self._source("s"), a["ir_reduce"]("r", "s", op)]

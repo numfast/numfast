@@ -21,10 +21,11 @@ _INT32_MIN = -(2 ** 31)
 _INT32_MAX = 2 ** 31 - 1
 
 
-def _err(format_error, what, fix, doc="specs/05-storage-encoding.md"):
+def _err(format_error, what, fix, doc=""):
     if format_error is not None:
         raise format_error(what, fix=fix, doc=doc)
-    raise ValueError(f"{what} Fix: {fix}. See {doc}")
+    raise ValueError(f"{what} Fix: {fix}."
+          + (f" See {doc}" if doc else ""))
 
 
 def _to_epoch_s(values, format_error):
@@ -83,7 +84,7 @@ def date_encode_impl(values, validity=None, format_error=None):
         if vb.size != n:
             _err(format_error, f"date_encode validity size {vb.size} != values {n}.",
                  "pass validity matching values length",
-                 doc="specs/delta-3-null-contract.md")
+                 doc="")
     else:
         vb = None
     if n and (bool((ep[nonnull] < _INT32_MIN).any()) or bool((ep[nonnull] > _INT32_MAX).any())):
@@ -111,7 +112,7 @@ def date_decode_impl(codes, validity=None, format_error=None):
         if v.size != c.size:
             _err(format_error, f"date_decode validity size {v.size} != codes {c.size}.",
                  "pass validity matching codes length",
-                 doc="specs/delta-3-null-contract.md")
+                 doc="")
     else:
         v = None
     out = []

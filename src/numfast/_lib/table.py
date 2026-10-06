@@ -11,8 +11,7 @@ class Table:
     def __init__(self, kernel, columns: dict):
         if not columns:
             raise ValueError(
-                "Table needs >=1 column. Fix: pass {name: Series}. "
-                "See specs/01-public-api.md"
+                "Table needs >=1 column. Fix: pass {name: Series}."
             )
         names = list(columns)
         n = len(columns[names[0]])

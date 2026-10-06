@@ -9,9 +9,10 @@ _MASK_OPS = ("and", "or", "not")
 _GROUPBY_OPS = ("sum", "count", "mean", "min", "max")
 
 
-def _err(what, fix, doc="specs/02-semantic-ir.md"):
+def _err(what, fix, doc=""):
     """Single error-format helper (contract: what + how-to-fix + doc-link)."""
-    return ValueError(f"{what} Fix: {fix}. See {doc}")
+    return ValueError(f"{what} Fix: {fix}."
+           + (f" See {doc}" if doc else ""))
 
 
 def _keep_column(values):

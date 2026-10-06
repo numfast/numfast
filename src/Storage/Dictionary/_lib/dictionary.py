@@ -62,12 +62,12 @@ class DictionaryBody:
         if offs.ndim != 1 or offs.size == 0 or int(offs[0]) != 0:
             raise ValueError(
                 "DictionaryBody needs offsets int32[D+1] starting at 0. "
-                "Fix: build via dictionary_encode. See specs/05-storage-encoding.md"
+                "Fix: build via dictionary_encode."
             )
         if int(offs[-1]) != len(bytes(data)):
             raise ValueError(
                 "DictionaryBody offsets must end at len(utf8_data). "
-                "Fix: build via dictionary_encode. See specs/05-storage-encoding.md"
+                "Fix: build via dictionary_encode."
             )
         self._data = bytes(data)
         self._offsets = offs
@@ -376,7 +376,7 @@ def _encode_int64_impl(flat, nonnull, validity, format_error):
         if vb.size != n:
             _err(format_error, f"dictionary_encode validity size {vb.size} != values {n}.",
                  "pass validity matching values length",
-                 doc="specs/delta-3-null-contract.md")
+                 doc="")
     if not bool(nonnull.any()):
         eff = vb if vb is not None else np.zeros(n, dtype=bool)
         lut = np.zeros(0, dtype=np.int64)
@@ -439,10 +439,11 @@ def _coerce_int64_lut(values, format_error=None):
     return None
 
 
-def _err(format_error, what, fix, doc="specs/05-storage-encoding.md"):
+def _err(format_error, what, fix, doc=""):
     if format_error is not None:
         raise format_error(what, fix=fix, doc=doc)
-    raise ValueError(f"{what} Fix: {fix}. See {doc}")
+    raise ValueError(f"{what} Fix: {fix}."
+          + (f" See {doc}" if doc else ""))
 
 
 def _arrow_text_layout(arr):
@@ -518,7 +519,7 @@ def _arrow_cxx_sorted_encode(arr, validity, format_error):
             _err(format_error,
                  f"dictionary_encode validity size {vb.size} != values {n}.",
                  "pass validity matching values length",
-                 doc="specs/delta-3-null-contract.md")
+                 doc="")
     try:
         _d = _pc.dictionary_encode(arr)
     except Exception:
@@ -594,7 +595,7 @@ def _encode_arrow_text(arr, validity, format_error):
             _err(format_error,
                  f"dictionary_encode validity size {vb.size} != values {n}.",
                  "pass validity matching values length",
-                 doc="specs/delta-3-null-contract.md")
+                 doc="")
 
     # 3. Handle all-empty case
     if not bool(nonnull.any()):
@@ -878,7 +879,7 @@ def dictionary_encode_impl(values, validity=None, format_error=None):
         if vb.size != n:
             _err(format_error, f"dictionary_encode validity size {vb.size} != values {n}.",
                  "pass validity matching values length",
-                 doc="specs/delta-3-null-contract.md")
+                 doc="")
     else:
         vb = None
     if u_all is None:
@@ -962,7 +963,7 @@ def _all_null(codes, d, validity, format_error):
             _err(format_error,
                  f"dictionary_decode validity size {v.size} != codes {codes.size}.",
                  "pass validity matching codes length",
-                 doc="specs/delta-3-null-contract.md")
+                 doc="")
     return [None] * int(codes.size)
 
 
@@ -1011,7 +1012,7 @@ def dictionary_decode_impl(codes, values, validity=None, format_error=None):
         if v.size != c.size:
             _err(format_error, f"dictionary_decode validity size {v.size} != codes {c.size}.",
                  "pass validity matching codes length",
-                 doc="specs/delta-3-null-contract.md")
+                 doc="")
         for i, k in enumerate(c.tolist()):
             out[i] = int(lut[int(k)]) if bool(v[i]) else None
         return out
@@ -1032,7 +1033,7 @@ def dictionary_decode_impl(codes, values, validity=None, format_error=None):
     if v.size != c.size:
         _err(format_error, f"dictionary_decode validity size {v.size} != codes {c.size}.",
              "pass validity matching codes length",
-             doc="specs/delta-3-null-contract.md")
+             doc="")
     for i, k in enumerate(c.tolist()):
         out[i] = vals[int(k)] if bool(v[i]) else None
     return out

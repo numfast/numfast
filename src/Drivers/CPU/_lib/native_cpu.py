@@ -1065,7 +1065,7 @@ def _fb_map(a, fn, b):
     if fn == "pow" and is_array_exp:
         raise ValueError("CPU driver: map pow with array exponent: '**' scalar-exp only "
                          "(spec 01). Fix: pass a scalar exponent. "
-                         "See specs/01-public-api.md")
+                         "")
     if fn == "add":
         r = a + bb
     elif fn == "sub":
@@ -1087,7 +1087,7 @@ def _fb_map(a, fn, b):
     else:
         raise ValueError(f"CPU driver: unknown map fn '{fn}'. "
                          "Fix: use one of add/sub/mul/div/pow/floor_div/mod. "
-                         "See specs/02-semantic-ir.md")
+                         "")
     return r.astype(a.dtype, copy=False) if fn in ("add", "sub", "mul") else r
 
 
@@ -1106,7 +1106,7 @@ def map_scatter(values, fn, other):
     if fn not in _MAP_OPS:
         raise ValueError(f"CPU driver: unknown map fn '{fn}'. "
                          "Fix: use one of add/sub/mul/div/pow/floor_div/mod. "
-                         "See specs/02-semantic-ir.md")
+                         "")
     op = _MAP_OPS[fn]
     a = np.asarray(values)
     dt = a.dtype
@@ -1189,7 +1189,7 @@ def map_scatter(values, fn, other):
         # Scalar-exp only (spec 01): same rejection as the CPU driver.
         raise ValueError("CPU driver: map pow with array exponent: '**' scalar-exp only "
                          "(spec 01). Fix: pass a scalar exponent. "
-                         "See specs/01-public-api.md")
+                         "")
     aa = np.ascontiguousarray(a, dtype=cdt)
     bb = np.ascontiguousarray(b, dtype=cdt)
     if aa.size != bb.size:

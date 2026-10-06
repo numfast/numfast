@@ -114,14 +114,13 @@ _NO_FUSE_HINT = (
     "f32 series (sma/rsum/rmin/rmax/rstd/mom/roc/returns/rsi/boll_up/boll_lo/"
     "zscore/stoch_k/axpb/map_div + i32 signals above_sma/rsi_lt/rsi_gt/"
     "cond_and). NOT fused v1: groupby (key spaces), sort (global order), "
-    "join/lookup, scalar reductions, EMA (sequential). "
-    "See specs/delta-11-fused-elementwise.md"
+    "join/lookup, scalar reductions, EMA (sequential)."
 )
 
 
-def _err(what, fix):
+def _err(what, fix, doc=""):
     return ValueError(f"{what} Fix: {fix}. "
-                      "See specs/delta-11-fused-elementwise.md")
+                      + (f" See {doc}" if doc else ""))
 
 
 def _is_finite_float(v):

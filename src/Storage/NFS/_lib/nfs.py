@@ -39,7 +39,6 @@ def persist_impl(table, path, canonical_dtype, format_error=None, check_int32_ra
         raise err(
             f"persist: table must be non-empty dict, got {type(table).__name__}",
             fix="pass {column: {'values': [...], 'dtype': 'int32'}}",
-            doc="specs/09-serialization-nfs.md",
         )
     payload = {}
     columns = []
@@ -51,7 +50,6 @@ def persist_impl(table, path, canonical_dtype, format_error=None, check_int32_ra
             raise err(
                 f"persist: column '{name}' must be {{'values', 'dtype'}}",
                 fix="pass {'values': [...], 'dtype': 'int32'}",
-                doc="specs/09-serialization-nfs.md",
             ) from None
         info = canonical_dtype(dtype)  # int64 allowed (stays int64); scaled-int via Schema
         if isinstance(info, dict) and info.get("kind") == "enum":
@@ -59,7 +57,6 @@ def persist_impl(table, path, canonical_dtype, format_error=None, check_int32_ra
                 f"persist: packed enum '{dtype}' not in npz-staging-v0 "
                 "(bool masks persist as bool columns)",
                 fix="unpack to uint8 codes or persist as bool",
-                doc="specs/delta-5-bitmask-enum.md",
             )
         if info["logical"] == "int32" and check_int32_range is not None:
             check_int32_range(values, f"persist column '{name}'")
@@ -70,7 +67,6 @@ def persist_impl(table, path, canonical_dtype, format_error=None, check_int32_ra
             raise err(
                 f"persist: column '{name}' length {arr.size} != {n}",
                 fix="pass equal-length columns",
-                doc="specs/09-serialization-nfs.md",
             )
         payload[name] = arr
         columns.append({"name": name, "dtype": info["logical"], "n": int(arr.size)})
@@ -93,7 +89,6 @@ def load_impl(path, canonical_dtype, format_error=None):
         raise err(
             f"load: file not found '{path}'",
             fix="persist the table first via persist_table(table, path)",
-            doc="specs/09-serialization-nfs.md",
         ) from None
     for col in table.values():
         canonical_dtype(col["dtype"])

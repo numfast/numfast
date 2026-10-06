@@ -37,8 +37,9 @@ _VALUE_OPS = ("sum", "count", "mean", "min", "max")
 _GROUP_OPS = ("count",)
 
 
-def _err(what, fix, doc="specs/delta-1-fused-aggregate.md"):
-    return ValueError(f"{what} Fix: {fix}. See {doc}")
+def _err(what, fix, doc=""):
+    return ValueError(f"{what} Fix: {fix}."
+           + (f" See {doc}" if doc else ""))
 
 
 def _dtype_of(name, col):
@@ -112,7 +113,7 @@ def composite_group_plan(out, keys, values, ops, group_ops=("count",)):
             raise _err(f"composite grouping does not support {unsupported}.",
                        "min/max are single-column only in the composite lane; "
                        "use them through a single-column grouping",
-                       doc="specs/delta-2-composite-keys.md")
+                       doc="")
         norm_ops[name] = list(col_ops)
     # Group-level aggregates ride on one measure column: the frozen
     # composite groupby_multi materialises group values inside a measure

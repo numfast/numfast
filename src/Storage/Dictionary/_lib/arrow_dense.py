@@ -77,10 +77,11 @@ from _lib.dictionary import BODY_FORMAT, ENCODING, TEXT_DTYPE, DictionaryBody, _
 ORDERS = ("sorted", "first_seen")
 
 
-def _err(format_error, what, fix, doc="specs/05-storage-encoding.md"):
+def _err(format_error, what, fix, doc=""):
     if format_error is not None:
         raise format_error(what, fix=fix, doc=doc)
-    raise ValueError(f"{what} Fix: {fix}. See {doc}")
+    raise ValueError(f"{what} Fix: {fix}."
+          + (f" See {doc}" if doc else ""))
 
 
 def _reject(what, fix, format_error=None):
@@ -162,7 +163,7 @@ def _validity(arr, validity, n, op, format_error=None):
         _err(format_error,
              f"{op} validity size {vb.size} != values {n}.",
              "pass validity matching values length",
-             doc="specs/delta-3-null-contract.md")
+             doc="")
     return np.ascontiguousarray(valid & vb)
 
 

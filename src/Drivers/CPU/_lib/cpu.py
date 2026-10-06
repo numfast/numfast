@@ -980,7 +980,6 @@ def _as_dtype(name, canonical_dtype):
     raise _fallback_err(
         f"CPU driver: unsupported dtype '{name}': use int32/float32/float64",
         fix="pass dtype='int32'/'float32'/'float64'",
-        doc="specs/06-drivers-gpu-cpu.md",
     ) from None
 
 
@@ -1002,7 +1001,6 @@ def _pack_i32_direct(k1, k2, m2, k1max, k2max, err):
             f"({k1max}*{m2}+{k2max}={bound}>2**31-1)",
             fix="Planner routes unsafe shapes to int64 radix; pass "
                 "mode='pack' for stable bitpack labels",
-            doc="specs/delta-2-composite-keys.md",
         )
     # Native pack primitive (same contract, one API); numpy below is the
     # fallback when the backend is absent. Bit-identical by construction.
@@ -1035,7 +1033,6 @@ def _pack_radix_i64(ins, rad, err):
             raise err(
                 "CPU driver: pack_keys radix composite overflows int64",
                 fix="use pack_keys(mode='hash') tuple path for wide composites",
-                doc="specs/delta-2-composite-keys.md",
             )
         comp = comp * np.int64(mi) + ci64
     return comp
@@ -1121,14 +1118,12 @@ def _gather_ref(values, indices, err):
         raise err(
             f"CPU driver: gather needs integer indices, got {idx.dtype}",
             fix="pass int32/int64 positions",
-            doc="specs/02-semantic-ir.md",
         )
     n = values.size
     if idx.size and (bool((idx < 0).any()) or bool((idx >= n).any())):
         raise err(
             "CPU driver: gather index out of range",
             fix="pass 0 <= i < n",
-            doc="specs/02-semantic-ir.md",
         )
     # Fast path: contiguous range -> zero-copy slice (O(1), no alloc).
     if idx.size > 0:
@@ -1153,7 +1148,6 @@ def _sort_key_array(col, err, what):
     raise err(
         f"CPU driver: sort needs numeric keys, got {a.dtype} for {what}",
         fix="encode TEXT via dictionary_encode and sort its int32 rank codes",
-        doc="specs/02-semantic-ir.md",
     )
 
 
@@ -1191,7 +1185,6 @@ def _sort_perm(cols, descending, valid_mask, err):
             raise err(
                 f"CPU driver: sort keys size mismatch {c.size} != {n}",
                 fix="pass equal-length key columns",
-                doc="specs/02-semantic-ir.md",
             )
     if valid_mask is not None:
         m = np.asarray(valid_mask, dtype=bool).reshape(-1)
@@ -1199,7 +1192,6 @@ def _sort_perm(cols, descending, valid_mask, err):
             raise err(
                 f"CPU driver: sort validity size {m.size} != keys {n}",
                 fix="pass validity matching key length",
-                doc="specs/delta-3-null-contract.md",
             )
         vpos = np.flatnonzero(m)
         ipos = np.flatnonzero(~m)
@@ -1261,14 +1253,12 @@ def _shift_ref(values, validity, periods, err):
         raise err(
             "CPU driver: shift needs numeric series, got packed bool/enum",
             fix="shift v1 covers int32/float32/float64 only",
-            doc="specs/02-semantic-ir.md",
         )
     a = np.ascontiguousarray(np.asarray(values))
     if a.ndim != 1:
         raise err(
             f"CPU driver: shift needs rank-1, got shape {a.shape}",
             fix="pass a flat column",
-            doc="specs/02-semantic-ir.md",
         )
     n = int(a.size)
     if n == 0:
@@ -1290,7 +1280,6 @@ def _shift_ref(values, validity, periods, err):
         raise err(
             f"CPU driver: shift validity size {m.size} != values {n}",
             fix="pass validity matching values length",
-            doc="specs/delta-3-null-contract.md",
         )
     ov = np.zeros(n, dtype=bool)
     if periods < n:
@@ -1321,14 +1310,12 @@ def _cumsum_ref(values, validity, err):
         raise err(
             "CPU driver: cumsum needs numeric series, got packed bool/enum",
             fix="cumsum v1 covers int32/float32/float64 only",
-            doc="specs/02-semantic-ir.md",
         )
     a = np.ascontiguousarray(np.asarray(values))
     if a.ndim != 1:
         raise err(
             f"CPU driver: cumsum needs rank-1, got shape {a.shape}",
             fix="pass a flat column",
-            doc="specs/02-semantic-ir.md",
         )
     if a.dtype != np.dtype(np.int32) and a.dtype != np.dtype(np.float32) \
             and a.dtype != np.dtype(np.float64):
@@ -1336,7 +1323,6 @@ def _cumsum_ref(values, validity, err):
             f"CPU driver: cumsum needs int32/float32/float64, got {a.dtype}",
             fix="cumsum v1 covers int32/float32/float64 only "
             "(bool/text/int64 have no cumsum semantics)",
-            doc="specs/02-semantic-ir.md",
         )
     n = int(a.size)
     if n == 0:
@@ -1364,7 +1350,6 @@ def _cumsum_ref(values, validity, err):
         raise err(
             f"CPU driver: cumsum validity size {m.size} != values {n}",
             fix="pass validity matching values length",
-            doc="specs/delta-3-null-contract.md",
         )
     if a.dtype == np.dtype(np.int32):
         filled = np.where(m, a, np.int32(0))
@@ -1419,14 +1404,12 @@ def _series_packed(values, width, err, what):
         raise err(
             f"CPU driver: {what} has unsupported packed width {width!r}",
             fix="pass dtype='bool'/'enum:2'/'enum:4'/'enum:8'",
-            doc="specs/delta-5-bitmask-enum.md",
         ) from None
     if isinstance(values, _BitPack):
         if values.width != w:
             raise err(
                 f"CPU driver: {what} packed width {values.width} != dtype width {w}",
                 fix="repack to the series dtype width first",
-                doc="specs/delta-5-bitmask-enum.md",
             )
         return values
     if _HAS_PA and isinstance(values, (pa.ChunkedArray, pa.Array)):
@@ -1439,7 +1422,6 @@ def _series_packed(values, width, err, what):
         raise err(
             f"CPU driver: {what} must be rank-1, got shape {arr.shape}",
             fix="pass a flat column",
-            doc="specs/02-semantic-ir.md",
         )
     if w == 1:
         if arr.dtype == np.dtype(bool):
@@ -1450,20 +1432,17 @@ def _series_packed(values, width, err, what):
                 raise err(
                     f"CPU driver: {what} bool series needs 0/1 values",
                     fix="pass bools or 0/1 ints (2 does not mean True)",
-                    doc="specs/delta-5-bitmask-enum.md",
                 )
             return _BitPack.from_bool(v.astype(bool, copy=False))
         raise err(
             f"CPU driver: {what} bool series needs bool/0/1 values, "
             f"got {arr.dtype}",
             fix="pass bools or 0/1 ints",
-            doc="specs/delta-5-bitmask-enum.md",
         )
     if arr.dtype.kind not in "iu":
         raise err(
             f"CPU driver: {what} enum:{w} series needs int codes, got {arr.dtype}",
             fix="pass int codes in [0, 2**w)",
-            doc="specs/delta-5-bitmask-enum.md",
         )
     try:
         return _BitPack.from_codes(np.ascontiguousarray(arr.ravel()), w)
@@ -1471,7 +1450,6 @@ def _series_packed(values, width, err, what):
         raise err(
             f"CPU driver: {what} {e}",
             fix=f"pass int codes in [0, {(1 << w) - 1}]",
-            doc="specs/delta-5-bitmask-enum.md",
         ) from None
 
 
@@ -1513,7 +1491,6 @@ def _as_column(values, dtype, err, what, check_int32_range=None):
         raise err(
             f"CPU driver: {what} must be rank-1, got shape {arr.shape}",
             fix="pass a flat column",
-            doc="specs/02-semantic-ir.md",
         )
     return arr
 
@@ -1525,7 +1502,6 @@ def _as_pa_string(values, err):
         raise err(
             "CPU driver: encode_pattern needs pyarrow for bulk strings",
             fix="install pyarrow or pass small lists (fallback path)",
-            doc="specs/delta-4-pattern-strings.md",
         )
     if isinstance(values, pa.ChunkedArray):
         s = values.combine_chunks()
@@ -1540,7 +1516,6 @@ def _as_pa_string(values, err):
             raise err(
                 f"CPU driver: encode_pattern needs a string column, got object mix ({e})",
                 fix="pass prefix+int strings or None (nullable), never raw numbers",
-                doc="specs/delta-4-pattern-strings.md",
             ) from None
     elif isinstance(values, (list, tuple)):
         try:
@@ -1549,19 +1524,16 @@ def _as_pa_string(values, err):
             raise err(
                 f"CPU driver: encode_pattern needs a string column ({e})",
                 fix="pass prefix+int strings or None (nullable), never raw numbers",
-                doc="specs/delta-4-pattern-strings.md",
             ) from None
     else:
         raise err(
             f"CPU driver: encode_pattern needs a string column, got {type(values).__name__}",
             fix="pass a numpy <U / arrow string / list[str|None] column",
-            doc="specs/delta-4-pattern-strings.md",
         )
     if not (pa.types.is_string(s.type) or pa.types.is_large_string(s.type)):
         raise err(
             f"CPU driver: encode_pattern needs a string column, got {s.type}",
             fix="encode categoricals as prefix+int strings first",
-            doc="specs/delta-4-pattern-strings.md",
         )
     return s
 
@@ -1610,7 +1582,6 @@ def _encode_pattern_vec(values, prefix, err):
                 raise err(
                     f"CPU driver: encode_pattern int32 overflow for prefix '{prefix}': {e}",
                     fix="use a wider code dtype path or shorter pattern ints",
-                    doc="specs/delta-4-pattern-strings.md",
                 ) from None
             codes_all = ints.to_numpy(zero_copy_only=False)
             codes[idx] = codes_all[idx]
@@ -1638,14 +1609,12 @@ def _encode_pattern_vec(values, prefix, err):
             raise err(
                 f"CPU driver: encode_pattern needs a string column, got {type(values).__name__}",
                 fix="pass a numpy <U / list[str|None] column",
-                doc="specs/delta-4-pattern-strings.md",
             ) from None
     arr = np.asarray(values, dtype=object)
     if arr.ndim != 1:
         raise err(
             f"CPU driver: encode_pattern needs a rank-1 column, got shape {arr.shape}",
             fix="pass a flat string column",
-            doc="specs/02-semantic-ir.md",
         )
     n = arr.size
     codes = np.zeros(n, dtype=np.int32)
@@ -1659,7 +1628,6 @@ def _encode_pattern_vec(values, prefix, err):
         raise err(
             f"CPU driver: encode_pattern needs a string column (exotic scalars: {e})",
             fix="pass prefix+int strings or None (nullable), never raw numbers",
-            doc="specs/delta-4-pattern-strings.md",
         ) from None
     if not bool(nonnull.any()):
         return codes, valid, width
@@ -1670,7 +1638,6 @@ def _encode_pattern_vec(values, prefix, err):
         raise err(
             f"CPU driver: encode_pattern needs a string column ({e})",
             fix="pass prefix+int strings or None (nullable), never raw numbers",
-            doc="specs/delta-4-pattern-strings.md",
         ) from None
     if isinstance(values, np.ndarray) and values.dtype.kind == "U":
         is_str = np.ones(s.size, dtype=bool)
@@ -1681,7 +1648,6 @@ def _encode_pattern_vec(values, prefix, err):
             raise err(
                 f"CPU driver: encode_pattern needs a string column (exotic scalars: {e})",
                 fix="pass prefix+int strings or None (nullable), never raw numbers",
-                doc="specs/delta-4-pattern-strings.md",
             ) from None
     if not bool(is_str.any()):
         return codes, valid, width
@@ -1711,7 +1677,6 @@ def _encode_pattern_vec(values, prefix, err):
             raise err(
                 f"CPU driver: encode_pattern int32 overflow for value '{bad}'",
                 fix="use a wider code dtype path or shorter pattern ints",
-                doc="specs/delta-4-pattern-strings.md",
             )
         # Vectorized Horner over absolute codepoint columns (W vector steps,
         # no N loop). Each row's core is contiguous and columns ascend, so a
@@ -1733,7 +1698,6 @@ def _encode_pattern_vec(values, prefix, err):
             raise err(
                 f"CPU driver: encode_pattern int32 overflow for value '{bad}'",
                 fix="use a wider code dtype path or shorter pattern ints",
-                doc="specs/delta-4-pattern-strings.md",
             )
         value = np.where(neg_v, -mag, mag).astype(np.int32)
         full_idx = np.nonzero(nonnull)[0][np.nonzero(is_str)[0][np.nonzero(valid_c)[0]]]
@@ -1757,7 +1721,6 @@ def _text_norm(values, err):
             "CPU driver: TEXT op got a dict carrier (ENC shape or mapping).",
             fix="pass the flat str column, or route ENC shapes via the op's "
             "dictionary path (text_contains / text_regex_replace)",
-            doc="specs/05-storage-encoding.md",
         )
     if not isinstance(values, (np.ndarray, list, tuple)):
         try:
@@ -1766,14 +1729,12 @@ def _text_norm(values, err):
             raise err(
                 f"CPU driver: TEXT op needs a string column, got {type(values).__name__}",
                 fix="pass a numpy <U / list[str|None] column",
-                doc="specs/05-storage-encoding.md",
             ) from None
     arr = np.asarray(values, dtype=object)
     if arr.ndim != 1:
         raise err(
             f"CPU driver: TEXT op needs a rank-1 column, got shape {arr.shape}",
             fix="pass a flat string column",
-            doc="specs/02-semantic-ir.md",
         )
     n = arr.size
     if n == 0:
@@ -1784,7 +1745,6 @@ def _text_norm(values, err):
         raise err(
             f"CPU driver: TEXT op needs a string column (exotic scalars: {e})",
             fix="pass str or None per row, never raw numbers",
-            doc="specs/05-storage-encoding.md",
         ) from None
     if not bool(nonnull.any()):
         return n, np.zeros(0, dtype=np.int64), np.zeros(0, dtype="U1")
@@ -1795,7 +1755,6 @@ def _text_norm(values, err):
         raise err(
             f"CPU driver: TEXT op needs a string column ({e})",
             fix="pass str or None per row, never raw numbers",
-            doc="specs/05-storage-encoding.md",
         ) from None
     if isinstance(values, np.ndarray) and values.dtype.kind == "U":
         is_str = np.ones(s.size, dtype=bool)
@@ -1806,7 +1765,6 @@ def _text_norm(values, err):
             raise err(
                 f"CPU driver: TEXT op needs a string column (exotic scalars: {e})",
                 fix="pass str or None per row, never raw numbers",
-                doc="specs/05-storage-encoding.md",
             ) from None
     if not bool(is_str.all()):
         bad = s[np.nonzero(~is_str)[0][0]]
@@ -1814,7 +1772,6 @@ def _text_norm(values, err):
             f"CPU driver: TEXT op needs a string column, got "
             f"{type(bad).__name__} value {bad!r}",
             fix="pass str or None per row, never raw numbers",
-            doc="specs/05-storage-encoding.md",
         )
     full_idx = np.nonzero(nonnull)[0]
     return n, full_idx, U
@@ -2137,7 +2094,6 @@ def _text_contains_vec(values, substr, err):
         raise err(
             f"CPU driver: text_contains substr must be str, got {type(substr).__name__}",
             fix="pass a str literal",
-            doc="specs/05-storage-encoding.md",
         )
     via_dict = _dict_contains_codes(values, substr)
     if via_dict is not None:
@@ -2164,7 +2120,6 @@ def _text_affix_vec(values, needle, kind, err):
         raise err(
             f"CPU driver: text_{kind} needle must be str, got {type(needle).__name__}",
             fix="pass a str literal",
-            doc="specs/05-storage-encoding.md",
         )
     n, full_idx, U = _text_norm(values, err)
     hit = np.zeros(n, dtype=bool)
@@ -2209,13 +2164,11 @@ def _text_regex_replace_vec(values, pattern, repl, err):
         raise err(
             f"CPU driver: text_regex_replace pattern must be str, got {type(pattern).__name__}",
             fix="pass a str literal",
-            doc="specs/05-storage-encoding.md",
         )
     if not isinstance(repl, str):
         raise err(
             f"CPU driver: text_regex_replace repl must be str, got {type(repl).__name__}",
             fix="pass a str literal",
-            doc="specs/05-storage-encoding.md",
         )
     try:
         rx = _re.compile(pattern)
@@ -2223,7 +2176,6 @@ def _text_regex_replace_vec(values, pattern, repl, err):
         raise err(
             f"CPU driver: text_regex_replace bad pattern {pattern!r}: {e}",
             fix="pass a valid Python/DuckDB-compatible regex",
-            doc="specs/05-storage-encoding.md",
         ) from None
     _tv_ms = (_t.perf_counter() - _tv) * 1000
 
@@ -2291,7 +2243,6 @@ def _text_regex_replace_vec(values, pattern, repl, err):
                 raise err(
                     f"CPU driver: text_regex_replace repl failed: {e}",
                     fix="pass a valid replacement string",
-                    doc="specs/05-storage-encoding.md",
                 ) from None
         _tm = (_t.perf_counter() - _t0) * 1000
 
@@ -2326,14 +2277,12 @@ def _text_regex_replace_vec(values, pattern, repl, err):
             raise err(
                 f"CPU driver: TEXT op needs a string column, got {type(values).__name__}",
                 fix="pass a numpy <U / list[str|None] column",
-                doc="specs/05-storage-encoding.md",
             ) from None
     arr = np.asarray(values, dtype=object)
     if arr.ndim != 1:
         raise err(
             f"CPU driver: TEXT op needs a rank-1 column, got shape {arr.shape}",
             fix="pass a flat string column",
-            doc="specs/02-semantic-ir.md",
         )
     n = int(arr.size)
 
@@ -2345,7 +2294,6 @@ def _text_regex_replace_vec(values, pattern, repl, err):
         raise err(
             f"CPU driver: text_regex_replace repl failed: {e}",
             fix="pass a valid replacement string",
-            doc="specs/05-storage-encoding.md",
         ) from None
     _tm = (_t.perf_counter() - _t0) * 1000
 
@@ -2884,7 +2832,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                     raise err(
                         f"CPU driver: series validity size {mask.size} != values {bufs[p['out']].size}",
                         fix="pass validity matching values length",
-                        doc="specs/delta-3-null-contract.md",
                     )
                 bufs[p["out"] + "#validity"] = mask
         elif op == "encode_pattern":
@@ -2929,7 +2876,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                     raise err(
                         "CPU driver: pack_keys needs int32 code series",
                         fix="encode categoricals to int32 codes first (encode_pattern)",
-                        doc="specs/delta-2-composite-keys.md",
                     )
             mode = params.get("mode", "pack")
             if mode == "pack":
@@ -2959,7 +2905,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                     raise err(
                         f"CPU driver: pack_keys radix len {len(rad)} != inputs {len(ins)}",
                         fix="pass radix per input or radix=None for auto",
-                        doc="specs/delta-2-composite-keys.md",
                     )
                 comp = None
                 if _prod2:
@@ -3069,7 +3014,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                 raise err(
                     f"CPU driver: unknown pack_keys mode '{mode}'",
                     fix="use one of pack/radix/hash",
-                    doc="specs/delta-2-composite-keys.md",
                 )
             m = _valid_mask(bufs, *p["inputs"])
             if m is not None:
@@ -3082,7 +3026,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                 raise err(
                     "CPU driver: map pow with array exponent: '**' scalar-exp only (spec 01)",
                     fix="pass a scalar exponent",
-                    doc="specs/01-public-api.md",
                 )
             if fn == "add":
                 r = a + b
@@ -3127,7 +3070,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                 raise err(
                     f"CPU driver: unknown map fn '{fn}'",
                     fix="use one of add/sub/mul/div/pow/floor_div/mod",
-                    doc="specs/02-semantic-ir.md",
                 )
             bufs[p["out"]] = r.astype(a.dtype, copy=False) if fn in ("add", "sub", "mul") else r
             m = _valid_mask(bufs, *p["inputs"])
@@ -3153,7 +3095,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                 raise err(
                     f"CPU driver: unknown compare op '{cop}'",
                     fix="use one of ==/!=/</<=/>/>=",
-                    doc="specs/02-semantic-ir.md",
                 )
             bufs[p["out"]] = _BitPack.from_bool(
                 np.ascontiguousarray(np.asarray(r, dtype=bool)))
@@ -3170,7 +3111,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                 raise err(
                     f"CPU driver: filter {e}",
                     fix="pass a BoolMask (compare output) matching values length",
-                    doc="specs/02-semantic-ir.md",
                 ) from None
             native_r = _native_filter(a, eff)
             if native_r is not None:
@@ -3185,7 +3125,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                 raise err(
                     f"CPU driver: unknown mask op '{mop}'",
                     fix="use one of and/or/not",
-                    doc="specs/02-semantic-ir.md",
                 )
             a = bufs[p["inputs"][0]]
             b = bufs[p["inputs"][1]] if len(p["inputs"]) > 1 else None
@@ -3195,7 +3134,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                 raise err(
                     f"CPU driver: mask {e}",
                     fix="pass BoolMask inputs (compare outputs) of equal length",
-                    doc="specs/02-semantic-ir.md",
                 ) from None
             bufs[p["out"]] = r
             m = _valid_mask(bufs, *p["inputs"])
@@ -3206,7 +3144,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                 raise err(
                     f"CPU driver: where needs [mask, true, false], got {p['inputs']!r}",
                     fix="pass ir_where(out, 'm', 't', 'f')",
-                    doc="specs/02-semantic-ir.md",
                 )
             mk, tv, fv = (bufs[p["inputs"][0]], bufs[p["inputs"][1]],
                           bufs[p["inputs"][2]])
@@ -3217,7 +3154,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                 raise err(
                     f"CPU driver: where {e}",
                     fix="pass a BoolMask + equal-length true/false columns",
-                    doc="specs/02-semantic-ir.md",
                 ) from None
             bufs[p["out"]] = r
             t_valid = bufs.get(p["inputs"][1] + "#validity")
@@ -3246,7 +3182,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                 raise err(
                     f"CPU driver: sort descending len {len(desc)} != keys {len(cols)}",
                     fix="pass one bool per sort key",
-                    doc="specs/02-semantic-ir.md",
                 )
             bufs[p["out"]] = _sort_perm(cols, [bool(d) for d in desc],
                                         _valid_mask(bufs, *p["inputs"]), err)
@@ -3301,7 +3236,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                 raise err(
                     f"CPU driver: shift needs periods>=0 int, got {periods!r}",
                     fix="pass periods>=0 (negative is explicit v1 error)",
-                    doc="specs/02-semantic-ir.md",
                 )
             v_valid = bufs.get(p["inputs"][0] + "#validity")
             r, rv = _shift_ref(a, v_valid, int(periods), err)
@@ -3313,7 +3247,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                 raise err(
                     f"CPU driver: cumsum takes no params, got {params!r}",
                     fix="pass ir_cumsum(out, inp) (always inclusive, v1)",
-                    doc="specs/02-semantic-ir.md",
                 )
             a = bufs[p["inputs"][0]]
             v_valid = bufs.get(p["inputs"][0] + "#validity")
@@ -3330,7 +3263,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                 raise err(
                     f"CPU driver: groupby values/keys size mismatch {v.size} != {k.size}",
                     fix="pass equal-length values and keys",
-                    doc="specs/02-semantic-ir.md",
                 )
             _tcols = bufs.get(p["inputs"][1] + "#tuple_cols")
             if _tcols is not None:
@@ -3344,7 +3276,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                     raise err(
                         f"CPU driver: composite groupby op '{gop}' needs single-col keys",
                         fix="use sum/count/mean on tuple keys (min/max stay single-col)",
-                        doc="specs/delta-2-composite-keys.md",
                     )
                 t0 = time.perf_counter()
                 m = _valid_mask(bufs, *p["inputs"])
@@ -3376,7 +3307,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                 raise err(
                     f"CPU driver: unknown groupby op '{gop}'",
                     fix="use one of sum/count/mean/min/max (or groupby_multi for fused)",
-                    doc="specs/02-semantic-ir.md",
                 )
             m = _valid_mask(bufs, *p["inputs"])
             kk = k if m is None else k[np.nonzero(m)[0]]
@@ -3385,7 +3315,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                 raise err(
                     "CPU driver: groupby needs integer keys",
                     fix="encode categoricals to int codes first (encode_pattern/pack_keys)",
-                    doc="specs/02-semantic-ir.md",
                 )
             if gop in ("min", "max"):
                 # Grouped min/max: proven traversal + single-pass O(N)
@@ -3520,13 +3449,11 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                     raise err(
                         f"CPU driver: groupby_multi values/keys size mismatch {vv.size} != {k.size}",
                         fix="pass equal-length values and keys",
-                        doc="specs/delta-1-fused-aggregate.md",
                     )
             if not np.issubdtype(k.dtype, np.integer):
                 raise err(
                     "CPU driver: groupby_multi needs integer keys",
                     fix="encode categoricals to int codes first (encode_pattern/pack_keys)",
-                    doc="specs/delta-2-composite-keys.md",
                 )
             _tcols = bufs.get(key_name + "#tuple_cols")
             if _tcols is not None:
@@ -3540,7 +3467,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                     raise err(
                         "CPU driver: composite groupby_multi needs sum/count/mean",
                         fix="use sum/count/mean on tuple keys (min/max stay single-col)",
-                        doc="specs/delta-2-composite-keys.md",
                     )
                 t0 = time.perf_counter()
                 m = _valid_mask(bufs, *p["inputs"])
@@ -3789,19 +3715,16 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                 raise err(
                     f"CPU driver: group_count_distinct values/keys size mismatch {v.size} != {k.size}",
                     fix="pass equal-length values and keys",
-                    doc="specs/12-relational-family.md",
                 )
             if not np.issubdtype(np.asarray(k).dtype, np.integer):
                 raise err(
                     "CPU driver: group_count_distinct needs integer keys",
                     fix="encode categoricals to int codes first (encode_pattern/pack_keys)",
-                    doc="specs/12-relational-family.md",
                 )
             if not np.issubdtype(np.asarray(v).dtype, np.integer):
                 raise err(
                     f"CPU driver: group_count_distinct needs integer values, got {np.asarray(v).dtype}",
                     fix="encode categoricals (e.g. UserID factorize) to int codes first",
-                    doc="specs/12-relational-family.md",
                 )
             t_f = time.perf_counter()
             m = _valid_mask(bufs, *p["inputs"])
@@ -3877,7 +3800,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                     raise err(
                         f"CPU driver: fused map unknown fn '{_fn}'",
                         fix="use one of add/sub/mul/div/pow/floor_div/mod",
-                        doc="specs/02-semantic-ir.md",
                     )
                 # Validity: use map's input validity (same mask as the
                 # intermediate would have had).
@@ -3945,7 +3867,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                 raise err(
                     f"CPU driver: unknown reduce op '{rop}'",
                     fix="use one of sum/count/mean/min/max/var/std",
-                    doc="specs/02-semantic-ir.md",
                 )
         elif op == "rng_fill_i32":
             n = int(params["n"])
@@ -3964,7 +3885,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                     raise err(
                         f"CPU driver: rng_fill_i32 rc={rc} (n={n} lo={lo} hi={hi})",
                         fix="pass lo<hi with mode='bits'",
-                        doc="specs/02-semantic-ir.md",
                     )
                 bufs[p["out"]] = arr
         elif op == "rng_fill_f64":
@@ -3983,7 +3903,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                     raise err(
                         f"CPU driver: rng_fill_f64 rc={rc} (n={n} lo={lo} hi={hi})",
                         fix="pass finite lo<hi",
-                        doc="specs/02-semantic-ir.md",
                     )
                 bufs[p["out"]] = arr
         elif op == "rng_sample_no_replace":
@@ -4001,7 +3920,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                     raise err(
                         f"CPU driver: rng_sample_no_replace rc={rc} (n={n} k={k})",
                         fix="pass 0<=k<=n",
-                        doc="specs/02-semantic-ir.md",
                     )
                 bufs[p["out"]] = arr
         elif op == "rng_permutation":
@@ -4019,7 +3937,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                     raise err(
                         f"CPU driver: rng_permutation rc={rc} (n={n})",
                         fix="pass n>=0 within int32",
-                        doc="specs/02-semantic-ir.md",
                     )
                 bufs[p["out"]] = arr
         elif op == "rng_compat":
@@ -4039,7 +3956,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                         raise err(
                             f"CPU driver: rng_compat runif rc={rc} (n={n})",
                             fix="pass finite lo<hi",
-                            doc="specs/02-semantic-ir.md",
                         )
                     bufs[p["out"]] = arr
             else:
@@ -4055,7 +3971,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                         raise err(
                             f"CPU driver: rng_compat sample rc={rc} (n={n} m={m})",
                             fix="pass n>0",
-                            doc="specs/02-semantic-ir.md",
                         )
                     bufs[p["out"]] = arr
             bufs[p["out"] + "#compat"] = {"kind": kind, "chunkable": False}
@@ -4067,7 +3982,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                 raise err(
                     "CPU driver: map_round needs a numeric column",
                     fix="pass an int/float Series",
-                    doc="specs/02-semantic-ir.md",
                 )
             mv = bufs.get(p["inputs"][0] + "#validity")
             vu8 = (None if mv is None
@@ -4085,7 +3999,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                     raise err(
                         f"CPU driver: map_round rc={rc} (ndigits={nd})",
                         fix="pass ndigits=0..15",
-                        doc="specs/02-semantic-ir.md",
                     )
             bufs[p["out"]] = o
             bufs[p["out"] + "#validity"] = np.ascontiguousarray(
@@ -4101,7 +4014,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                 raise err(
                     f"CPU driver: unique_inverse needs int32/int64 keys, got {keys.dtype}",
                     fix="encode categoricals to int32 codes first",
-                    doc="specs/02-semantic-ir.md",
                 )
             mv = bufs.get(p["inputs"][0] + "#validity")
             if mv is None:
@@ -4141,7 +4053,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                 raise err(
                     f"CPU driver: unique needs int32/int64 keys, got {keys.dtype}",
                     fix="encode categoricals to int32 codes first",
-                    doc="specs/02-semantic-ir.md",
                 )
             mv = bufs.get(p["inputs"][0] + "#validity")
             if mv is None:
@@ -4168,7 +4079,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                     f"{np.asarray(bufs[p['inputs'][0]]).dtype}/"
                     f"{np.asarray(bufs[p['inputs'][1]]).dtype}",
                     fix="encode categoricals to int32 codes first",
-                    doc="specs/02-semantic-ir.md",
                 )
             order = np.argsort(b.astype(np.int64), kind="stable")
             u = b[order]
@@ -4177,7 +4087,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
                     "CPU driver: lookup build keys not unique: dupes collapse",
                     fix="dedupe the build side (unique_inverse) or use "
                         "groupby/Join for many-to-one",
-                    doc="specs/02-semantic-ir.md",
                 )
             k = int(u.size)
             pos = np.searchsorted(u, q)
@@ -4193,7 +4102,6 @@ def cpu_execute_impl(nodes, accum_dtype, canonical_dtype=None, format_error=None
             raise err(
                 f"CPU driver: unsupported op '{op}'",
                 fix="capability covers series/map/compare/filter/mask/where/gather/sort/slice/reduce/rolling_sum/shift/cumsum/groupby/groupby_multi/group_count_distinct/pack_keys/encode_pattern/text_length/text_contains/text_startswith/text_endswith/text_equals/text_regex_replace/rng_fill_i32/rng_fill_f64/rng_sample_no_replace/rng_permutation/rng_compat/map_round/unique_inverse/unique/lookup",
-                doc="specs/06-drivers-gpu-cpu.md",
             )
     return bufs
 

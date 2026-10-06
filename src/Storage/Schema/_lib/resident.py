@@ -104,7 +104,7 @@ def resident_prepare_impl(columns, cpu_execute, dictionary_encode=None, date_enc
             if not isinstance(prefix, str) or not prefix:
                 raise ValueError(
                     f"resident_prepare: prefix for '{name}' must be a non-empty str. "
-                    "Fix: pass prefix like 'id'. See specs/delta-4-pattern-strings.md"
+                    "Fix: pass prefix like 'id'."
                 )
             nodes.append({
                 "op": "encode_pattern", "inputs": [],
@@ -117,8 +117,7 @@ def resident_prepare_impl(columns, cpu_execute, dictionary_encode=None, date_enc
             if dictionary_encode is None:
                 raise ValueError(
                     f"resident_prepare: TEXT column '{name}' needs dictionary_encode. "
-                    "Fix: build kernel from full.toml (Schema depends Dictionary). "
-                    "See specs/05-storage-encoding.md"
+                    "Fix: build kernel from full.toml (Schema depends Dictionary)."
                 )
             enc = dictionary_encode(col["values"], col.get("validity"))
             kinds[name] = "dictionary"
@@ -142,8 +141,7 @@ def resident_prepare_impl(columns, cpu_execute, dictionary_encode=None, date_enc
             if date_encode is None:
                 raise ValueError(
                     f"resident_prepare: DATE column '{name}' needs date_encode. "
-                    "Fix: build kernel from full.toml (Schema provides date_encode). "
-                    "See specs/05-storage-encoding.md"
+                    "Fix: build kernel from full.toml (Schema provides date_encode)."
                 )
             enc = date_encode(col["values"], col.get("validity"))
             kinds[name] = "date"
