@@ -97,11 +97,11 @@ def native_info():
         return {"disabled": True, "dll": None, "dll_exists": False}
     dll = os.environ.get("NUMFAST_NATIVE_DLL")
     if dll is None:
-        for cand in (_PKG / "_native" / "numfast_native.dll",
-                     _PKG / "_native" / "numfast_native.so"):
-            if cand.exists():
-                dll = str(cand)
-                break
+        # The name is the platform's own, derived where the kernel is built --
+        # never a list of candidate names, which on Linux picked the Windows
+        # .dll that a checkout keeps in src/numfast/_native/.
+        from ._lib.native_env import default_native_path
+        dll = default_native_path(_PKG)
     if dll is None:
         return {"disabled": False, "dll": None, "dll_exists": False}
     from pathlib import Path
