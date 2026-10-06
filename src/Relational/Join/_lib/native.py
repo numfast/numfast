@@ -46,8 +46,11 @@ def _fork_root():
 
 _FORK = _fork_root()
 
-#: Cargo target triple the checkout build tree sits under.
-_TARGET_TRIPLE = "x86_64-pc-windows-gnu"
+# The cargo build tree's target triple is DISCOVERED, never hardcoded.
+# "x86_64-pc-windows-gnu" was a Windows-only default: on a Linux host this file
+# had no reachable candidate at all, and every candidate it could name pointed
+# at a build tree this machine does not have. The directory is the authority;
+# which triples are present is the build host's business, not this file's.
 
 
 def _candidates(name):
@@ -63,10 +66,39 @@ def _candidates(name):
     different order -- the precedence each file already had, so that neither
     changes which binary a checkout loads.
     """
-    return (str(_FORK / "numfast-native" / "target" / _TARGET_TRIPLE
+def _candidates(name):
+    """Every place `name` legitimately lives, in THIS file's established order.
+
+    ORDER IS LOAD-BEARING and is unchanged. The STAGED copy comes before the
+    build tree here and after it in native.py, because that is the precedence
+    each file already had: changing it would change which binary a checkout
+    loads. Only the SET widened -- the triples are enumerated instead of named,
+    and both the bare and `lib`-prefixed spelling is offered, because cargo
+    writes `libnumfast_native.so` on a Unix host and the staged copy is
+    whatever an operator copied.
+
+    The names and the triples come from numfast._lib.native_env, imported
+    INSIDE this function. This module is imported by the numfast boot while
+    numfast/__init__ is still executing and numfast/_lib/__init__ eagerly
+    builds Series/Table, so a module-scope import from here would be a cycle.
+    The fallback keeps the single hardcoded Windows candidate working, which is
+    what this function resolved to before.
+    """
+    try:
+        from numfast._lib.native_env import build_tree_release_dirs, platform_names
+        names = platform_names(_Path(name).stem) or (name,)
+        out = [str(d / n) for d in build_tree_release_dirs(_FORK) for n in names]
+        out += [str(_FORK / "src" / "numfast" / "_native" / n) for n in names]
+        out += [str(_FORK / "_native" / n) for n in names]
+        if out:
+            return tuple(out)
+    except Exception:
+        pass
+    return (str(_FORK / "src" / "numfast" / "_native" / name),
+            str(_FORK / "numfast-native" / "target" / "x86_64-pc-windows-gnu"
                 / "release" / name),
-            str(_FORK / "src" / "numfast" / "_native" / name),
             str(_FORK / "_native" / name))
+
 
 
 def _probe(name):

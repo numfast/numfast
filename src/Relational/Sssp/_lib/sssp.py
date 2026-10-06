@@ -21,11 +21,36 @@ import numpy as np
 
 _INF = 4294967295
 
-_ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                     "..", "..", "..", ".."))
-_DLL_DEFAULT = os.path.join(_ROOT, "numfast-native", "target",
-                            "x86_64-pc-windows-gnu", "release",
-                            "numfast_native.dll")
+
+def _default_native_dll():
+    """The native binary this PLATFORM may load, or the legacy name if unreachable.
+
+    This module is STANDALONE -- research scripts load it directly by path, with
+    no `numfast` package booted -- so the import is INSIDE the function. At
+    module scope it would run while `numfast/__init__` is still executing (this
+    file is what the boot imports), and `numfast._lib.__init__` eagerly builds
+    Series/Table: an eager import from here is a cycle. A lazy one is not -- by
+    the time any of this runs the package is either fully imported or not
+    imported at all, and both are safe.
+
+    The ImportError arm is the research-script case: this file loaded by path
+    with `numfast` not importable at all. There the literal is still the best
+    available answer, and keeping it is strictly better than raising at import.
+    """
+    try:
+        from numfast._lib.native_env import default_for
+    except ImportError:
+        return _LEGACY_DLL_DEFAULT
+    return default_for(__file__) or _LEGACY_DLL_DEFAULT
+
+
+#: Where the binary is: a Windows checkout path, kept ONLY as the last resort.
+_LEGACY_DLL_DEFAULT = os.path.abspath(os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "..", "..", "..", "..", "numfast-native", "target",
+    "x86_64-pc-windows-gnu", "release", "numfast_native.dll"))
+
+_DLL_DEFAULT = _default_native_dll()
 
 _lib = None
 _why = "unprobed"

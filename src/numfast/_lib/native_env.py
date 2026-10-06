@@ -28,6 +28,8 @@ build when a `.dll` is packed for a Linux host; that guard is build-time only an
 never covered this run-time path. setup.py is unchanged.
 """
 
+from pathlib import Path
+
 #: The fork root marker, the same one `_package_root` and
 #: `Runtime/Planner/_lib/calibrate.py:_fork_root` walk to. Nearest ancestor
 #: holding it: the repository in a checkout, the installed package directory
@@ -116,6 +118,79 @@ def default_native_path(pkg_dir):
         return None
     cand = pkg_dir / "_native" / name
     return str(cand) if cand.exists() else None
+
+
+def platform_names(stem="numfast_native"):
+    """(bare, `lib`-prefixed) filenames this platform's cdylib may carry.
+
+    Cargo names a cdylib `libnumfast_native.so` on a Unix host and
+    `numfast_native.dll` on Windows, while a staged copy is whatever an operator
+    `cp`'d. Both spellings are legal in every location, so both are offered.
+    Empty on a platform this project ships no binary for.
+    """
+    name = native_binary_name(stem)
+    return () if name is None else (name, "lib" + name)
+
+
+def build_tree_release_dirs(fork):
+    """Every cargo release dir under <fork>/numfast-native/target/, bare first.
+
+    `target/release/` is what a plain `cargo build --release` writes; each
+    `target/<triple>/release/` is what `--target <triple>` writes. The triples
+    are read off the directory rather than hardcoded, so a checkout built for
+    one host is still found from another -- and a build tree for a foreign
+    target contributes nothing, because the FILE name already pins the platform.
+    """
+    target = Path(fork) / "numfast-native" / "target"
+    out = []
+    if (target / "release").is_dir():
+        out.append(target / "release")
+    try:
+        triples = sorted(p for p in target.iterdir() if (p / "release").is_dir())
+    except OSError:
+        triples = []
+    out += [t / "release" for t in triples]
+    return out
+
+
+def package_dir_for(module_file):
+    """The numfast package directory that owns the module at `module_file`.
+
+    Two layouts, and a fixed relative path gets one of them right and the other
+    wrong -- the defect `Relational/Join/_lib/native.py:_fork_root` already
+    documents for a parents[4] fork root:
+
+      checkout  .../<repo>/src/Drivers/CPU/_lib/x.py   fork root <repo>
+      wheel     .../numfast/_ext/CPU/_lib/x.py         fork root numfast/
+
+    `fork_root` gives the repo root in the first and the package directory
+    itself in the second (numfast/full.toml is not an ANCESTOR of the package,
+    it IS the package), so the rule is one line: the checkout's package sits
+    under `<fork>/src/`, the wheel's IS the fork.
+    """
+    fork = fork_root(Path(module_file).resolve().parent)
+    in_checkout = fork / "src" / "numfast"
+    return in_checkout if in_checkout.is_dir() else fork
+
+
+def default_for(module_file):
+    """The native binary THIS platform may load, for the module at `module_file`.
+
+    The one-line answer for a caller that only needs a path and has no package
+    of its own to hand: the first `probed_paths` entry that exists, and when
+    NOTHING exists the FIRST entry -- never None, because `ctypes.CDLL(None)` is
+    not a failed load, it is a request to bind the running process itself. A
+    non-existent path raises OSError, which every caller already handles by
+    falling back to numpy. Returning a name that cannot load is the same
+    outcome as before, minus the Windows-specific string that caused it.
+    """
+    probed = probed_paths(package_dir_for(module_file))
+    if not probed:
+        return None
+    for cand in probed:
+        if cand.exists():
+            return str(cand)
+    return str(probed[0])
 
 
 def ensure_native_env(pkg_dir):

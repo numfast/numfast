@@ -17,6 +17,15 @@ compatibility: call the native path when it is present, otherwise a bit-exact
 fallback (integer arithmetic, the same INF / K-quart guard).
 """
 
+# ONE documented exception to the NO-INTERNAL-IMPORTS rule above:
+# `_default_native_dll` imports numfast._lib.native_env LAZILY, inside the
+# function body, because an eager module-scope import runs while
+# numfast/__init__ is still executing and numfast._lib/__init__ eagerly builds
+# Series/Table -- a cycle. The rule exists so this file stays loadable BY PATH;
+# a lazy import cannot break that, and without it this file's only candidate on
+# a non-Windows host is a Windows path.
+
+
 import ctypes
 import os
 
@@ -28,10 +37,35 @@ DEPARTURE_NOMINAL = 255
 N_BUCKETS = 24
 PROFILE_ID = {"pedestrian": 0, "scooter": 1, "bicycle": 2, "automobile": 3, "truck": 255}
 
-_DLL_DEFAULT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                            "..", "..", "..", "..", "numfast-native", "target",
-                            "x86_64-pc-windows-gnu", "release", "numfast_native.dll")
-_DLL_DEFAULT = os.path.abspath(_DLL_DEFAULT)
+def _default_native_dll():
+    """The native binary this PLATFORM may load, or the legacy name if unreachable.
+
+    This module is STANDALONE -- research scripts load it directly by path, with
+    no `numfast` package booted -- so the import is INSIDE the function. At
+    module scope it would run while `numfast/__init__` is still executing (this
+    file is what the boot imports), and `numfast._lib.__init__` eagerly builds
+    Series/Table: an eager import from here is a cycle. A lazy one is not -- by
+    the time any of this runs the package is either fully imported or not
+    imported at all, and both are safe.
+
+    The ImportError arm is the research-script case: this file loaded by path
+    with `numfast` not importable at all. There the literal is still the best
+    available answer, and keeping it is strictly better than raising at import.
+    """
+    try:
+        from numfast._lib.native_env import default_for
+    except ImportError:
+        return _LEGACY_DLL_DEFAULT
+    return default_for(__file__) or _LEGACY_DLL_DEFAULT
+
+
+#: Where the binary is: a Windows checkout path, kept ONLY as the last resort.
+_LEGACY_DLL_DEFAULT = os.path.abspath(os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "..", "..", "..", "..", "numfast-native", "target",
+    "x86_64-pc-windows-gnu", "release", "numfast_native.dll"))
+
+_DLL_DEFAULT = _default_native_dll()
 
 _lib = None
 _why = "unprobed"
