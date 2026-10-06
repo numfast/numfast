@@ -301,7 +301,7 @@ npm run build
 npm test
 ```
 
-`npm test` runs three suites and **refuses to run at all** unless `dist/` holds
+`npm test` runs four suites and **refuses to run at all** unless `dist/` holds
 the build it was written against — no fallback, no skip.
 
 * `test/abi.test.mjs` — the published numbers, the ABI table, and the memory
@@ -309,6 +309,34 @@ the build it was written against — no fallback, no skip.
 * `test/traps.test.mjs` — prevention, the two channels, the BigInt rule, and the
   partial-write property.
 * `test/parity.test.mjs` — 203 cases of Python ↔ JS/WASM.
+* `test/readme.test.mjs` — the documented results in **this file**, parsed out of
+  the prose and compared against the `.wasm`, so a documented example cannot
+  drift off the kernel without failing.
+
+### And against the packed tarball
+
+```bash
+npm run test:packed
+```
+
+`npm test` runs against `dist/` in this checkout. It is not the same thing as
+testing what a consumer installs: `files` ships `dist/` and not `test/`, so in an
+**installed** package the published `npm test` reports `tests 0, pass 0, fail 0`
+and exits 0 — it cannot fail. That script is left exactly as it is, because a
+consumer who installs the tarball has no test tree and a script that demanded
+one would break for exactly the people it exists to serve.
+
+`npm run test:packed` is the evidence instead. It `npm pack`s the real tarball
+(prepack included), installs **that file** into a clean project outside this
+repository, resolves `@numfast/kernels` by name through the `exports` map, and
+asserts 9 things against the installed package: the quick-start result above, the
+published counts read from the packed bytes, that the packed `.wasm` is the one
+`dist/BUILD.json` names, 47 `.rs` with 53/53 `SHA256SUMS` verifying, the
+browser-shaped subpaths resolving, `assertGuard()` passing, and **the shipped
+README's own documented result against the shipped kernel**. It is not shipped
+in the tarball and is not part of `npm test`.
+
+Current run: **9 checks passed**.
 
 The parity expectations are **not** written in JavaScript. They come from
 `test/fixtures/parity.json`, produced by `test/gen_fixtures.py` from **two**
