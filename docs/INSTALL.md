@@ -198,15 +198,43 @@ unversioned as a public API.
 
 ## 4. Linux native
 
-### **No artefact is published. Not supported as an install.**
+### **No artefact is published yet. Not supported as an install.**
 
-- There is no `py3-none-linux_x86_64` wheel, no `.so` in the repository, no
-  release job and no Linux CI job. Nothing to install.
-- **The native library is nevertheless buildable on Linux today**, and this was
-  verified rather than assumed. `numfast-native/.cargo/config.toml` is scoped to
-  `[target.x86_64-pc-windows-gnu]`, so a plain `cargo build --release` needs no
-  `zig` and no other host-specific tool. Measured on Ubuntu 24.04 x86-64 with
-  rustc 1.98.1, from the Corresponding Source the wheel already ships:
+- There is no release job and no Linux CI job, so nothing is published for you
+  to install.
+- **A portable wheel is now buildable and is built with a real
+  `auditwheel repair`**, not by renaming the linux-tagged one.
+  `tools/build_manylinux_wheel.sh` is the whole recipe:
+
+  ```bash
+  docker run -d --name nfbuild quay.io/pypa/manylinux_2_28_x86_64 sleep infinity
+  docker cp . nfbuild:/src
+  docker exec -w /src nfbuild bash tools/build_manylinux_wheel.sh
+  ```
+
+  It produces `numfast-0.2.1-py3-none-manylinux_2_28_x86_64.whl`. Measured, in
+  that image (AlmaLinux 8.10, glibc 2.28, Python 3.12.15, rustc 1.98.1):
+  `auditwheel show` reports the file *"is consistent with the following
+  platform tag: manylinux_2_28_x86_64"*, and the wheel carries
+  `numfast/_native/libnumfast_native.so`, 47 `.rs`, `SHA256SUMS` 53/53 and
+  `LICENSE` + `NOTICE` under `dist-info/licenses/`.
+
+  **The build must run inside that image.** What makes the wheel portable is the
+  build host's glibc: built on Ubuntu 24.04 (2.39) the same crate picks up
+  symbols the image's libc lacks and `auditwheel` refuses to lower the tag. The
+  image also carries no `rustc`, so the script installs the toolchain.
+
+  A tracked `src/numfast/_native/numfast_native.dll` rides along in every
+  `git archive HEAD`, and it is a Windows artefact. `setup.py:resolve_flavour`
+  hard-fails it under a linux tag — verified, exit 1: *"numfast_native.dll is a
+  .dll file but the build host is linux_x86_64"* — so the script stages the
+  `.so` explicitly instead of relying on what the archive happened to carry.
+
+- **The library is also buildable straight from the Corresponding Source** the
+  wheel ships, with no Docker at all. `numfast-native/.cargo/config.toml` is
+  scoped to `[target.x86_64-pc-windows-gnu]`, so a plain `cargo build --release`
+  needs no `zig` and no other host-specific tool. Measured on Ubuntu 24.04
+  x86-64 with rustc 1.98.1:
 
   ```bash
   cd "$(python -c 'import numfast,os;print(os.path.dirname(numfast.__file__))')/_corresp_src/numfast-native"
@@ -218,14 +246,9 @@ unversioned as a public API.
   used. The crate has no third-party dependencies and no build script, which is
   why this is a single command.
 
-- **Building it yourself is not the same as it being supported.** The Python
-  suite on Linux is red: with the library in place and `wgpu` installed, 10 tests
-  fail (8 of them native-lane tests in `test_ops_m7b_native_lanes`,
-  `test_ops_pairinsert_bitmasksweep` and `test_ops_text_affix`). Do not depend
-  on the Linux native path.
-
-**What a Linux user should do instead:** install the `py3-none-any` wheel. It is
-the complete engine; only the native kernels are absent.
+**A tag is not a test.** Whether the Linux native path passes the suite is
+measured separately, in [the table below](#what-was-verified-where), and is not
+implied by the wheel existing.
 
 ---
 
