@@ -25,20 +25,50 @@ _DLL_DEFAULT = os.path.abspath(_DLL_DEFAULT)
 _lib = None
 _why = "unprobed"
 _probe_env = None  # memoized (disable-flag, dll-path); same semantics, no CDLL reload
+_lib_gen = 0  # monotonic generation of the loaded CDLL; see _abi_key
 _select_ok = None  # memoized select/mask entry points (new ABI, optional until rebuilt)
 _shift_ok = None  # memoized shift entry points (same optional-ABI discipline)
 _map_ok = None  # memoized map entry points (same optional-ABI discipline)
 _cumsum_ok = None  # memoized cumsum entry points (same optional-ABI discipline)
 
 
+def _abi_key():
+    """Memo key for every optional-ABI memo: WHICH loaded object it describes.
+
+    argtypes/restype live ON the CDLL object (they are attributes of the
+    _FuncPtr entries ctypes caches in the CDLL's own __dict__), so such a memo
+    is valid only for the exact object it configured. `_probe_env` -- the
+    disable flag plus the dll path -- is NOT that identity: a disable/restore
+    cycle rebuilds a FRESH CDLL under the SAME environment key, so an
+    env-keyed memo handed back an un-argtyped CDLL and every 64-bit pointer
+    went through as a C int (truncated, sign-extended) into Rust -> SIGSEGV.
+    That is why the key is the object and not the environment.
+
+    `_lib_gen` is bumped on every rebind of `_lib` and never repeats within one
+    process, so a key recorded against an older CDLL can never compare equal to
+    a live one. `id(_lib)` does not have that property -- CPython reuses the
+    address of a freed object, so a new CDLL can land on the old one's id and a
+    stale memo would match again.
+
+    One key, one mechanism: every `_req_*` optional-ABI memo uses this, so a
+    memo added later cannot forget to be invalidated.
+    """
+    return (_lib_gen, _lib is not None)
+
+
 def _probe():
-    global _lib, _why, _probe_env, _select_ok, _shift_ok, _map_ok, _cumsum_ok
+    global _lib, _why, _probe_env, _lib_gen
+    global _select_ok, _shift_ok, _map_ok, _cumsum_ok
     global _rng_ok
     key = (os.environ.get("NUMFAST_NATIVE_DISABLE"),
            os.environ.get("NUMFAST_NATIVE_DLL", _DLL_DEFAULT))
     if key == _probe_env and _why != "unprobed":
         return
     _probe_env = key
+    # Reaching this point IS the rebind: a fresh CDLL, or None. Bump the
+    # generation so every `_req_*` memo keyed by _abi_key() re-probes against
+    # the new object instead of returning its stale verdict.
+    _lib_gen += 1
     _select_ok = None  # DLL identity changed -> re-probe select entry points
     _shift_ok = None  # DLL identity changed -> re-probe shift entry points
     _map_ok = None  # DLL identity changed -> re-probe map entry points
@@ -48,6 +78,9 @@ def _probe():
     # un-argtyped lib: every RNG call then raises ctypes.ArgumentError
     # ("int too long to convert"), which the driver's `except RuntimeError`
     # does not catch. One line, argument-type plumbing, no semantics.
+    # This memo has no key of its own, so it is invalidated here by hand; the
+    # keyed memos get the same guarantee from _abi_key() and must NOT be listed
+    # here as well -- a hand reset that left its stale _KEY would pin them None.
     _rng_ok = None  # DLL identity changed -> re-probe RNG entry points
     if os.environ.get("NUMFAST_NATIVE_DISABLE") == "1":
         _lib, _why = None, "disabled-by-env"
@@ -262,7 +295,7 @@ def _req_variant():
     """
     global _V_LIB_OK, _V_LIB_KEY
     _probe()
-    key = (_probe_env, _lib is not None)
+    key = _abi_key()
     if _V_LIB_KEY == key:
         return _lib if _V_LIB_OK else None
     _V_LIB_KEY = key
@@ -441,7 +474,7 @@ def _req_mixed():
     """
     global _MIX_LIB_OK, _MIX_LIB_KEY
     _probe()
-    key = (_probe_env, _lib is not None)
+    key = _abi_key()
     if _MIX_LIB_KEY == key:
         return _lib if _MIX_LIB_OK else None
     _MIX_LIB_KEY = key
@@ -486,7 +519,7 @@ def _req_owner():
     """
     global _OWNER_LIB_OK, _OWNER_LIB_KEY
     _probe()
-    key = (_probe_env, _lib is not None)
+    key = _abi_key()
     if _OWNER_LIB_KEY == key:
         return _lib if _OWNER_LIB_OK else None
     _OWNER_LIB_KEY = key
@@ -559,7 +592,7 @@ def _req_fused():
     """
     global _FUSE_LIB_OK, _FUSE_LIB_KEY
     _probe()
-    key = (_probe_env, _lib is not None)
+    key = _abi_key()
     if _FUSE_LIB_KEY == key:
         return _lib if _FUSE_LIB_OK else None
     _FUSE_LIB_KEY = key
@@ -1333,11 +1366,11 @@ def _req_unique():
     """Unique kernels (additive ABI): lib or None (fallback owns it).
 
     Never disables the proven paths: missing symbols only disable the
-    unique candidate lane. Memoized by DLL path (same key as siblings).
+    unique candidate lane. Memoized by loaded-object generation (see _abi_key).
     """
     global _U_LIB_OK, _U_LIB_KEY
     _probe()
-    key = (_probe_env, _lib is not None)
+    key = _abi_key()
     if _U_LIB_KEY == key:
         return _lib if _U_LIB_OK else None
     _U_LIB_KEY = key
@@ -1480,11 +1513,11 @@ def _req_sort():
     """Sort perm kernels (additive ABI): lib or None (fallback owns it).
 
     Never disables the proven paths: missing symbols only disable the
-    sort candidate lane. Memoized by DLL path (same key as siblings).
+    sort candidate lane. Memoized by loaded-object generation (see _abi_key).
     """
     global _S_LIB_OK, _S_LIB_KEY
     _probe()
-    key = (_probe_env, _lib is not None)
+    key = _abi_key()
     if _S_LIB_KEY == key:
         return _lib if _S_LIB_OK else None
     _S_LIB_KEY = key
@@ -1741,11 +1774,11 @@ def _req_text():
     """TEXT kernels (additive ABI): lib or None (fallback owns it).
 
     Never disables the proven paths: missing symbols only disable the
-    TEXT native lane. Memoized by DLL path (same key as siblings).
+    TEXT native lane. Memoized by loaded-object generation (see _abi_key).
     """
     global _TEXT_OK, _TEXT_KEY
     _probe()
-    key = (_probe_env, _lib is not None)
+    key = _abi_key()
     if _TEXT_KEY == key:
         return _lib if _TEXT_OK else None
     _TEXT_KEY = key
@@ -1902,7 +1935,7 @@ def _req_text_dedup():
     """
     global _DEDUP_OK, _DEDUP_KEY
     _probe()
-    key = (_probe_env, _lib is not None)
+    key = _abi_key()
     if _DEDUP_KEY == key:
         return _lib if _DEDUP_OK else None
     _DEDUP_KEY = key
@@ -1952,11 +1985,11 @@ def _req_segment():
     """Segmented P1 entry points (additive ABI): lib or None (fallback owns it).
 
     Never disables the proven paths: missing symbols only disable the
-    segmented candidate lane. Memoized by DLL path (same key as siblings).
+    segmented candidate lane. Memoized by loaded-object generation (see _abi_key).
     """
     global _SEG_OK, _SEG_KEY
     _probe()
-    key = (_probe_env, _lib is not None)
+    key = _abi_key()
     if _SEG_KEY == key:
         return _lib if _SEG_OK else None
     _SEG_KEY = key
@@ -1989,11 +2022,11 @@ def _req_adjacency():
     """Adjacency P2 entry points (additive ABI): lib or None (fallback owns it).
 
     Never disables the proven paths: missing symbols only disable the
-    adjacency candidate lane. Memoized by DLL path (same key as siblings).
+    adjacency candidate lane. Memoized by loaded-object generation (see _abi_key).
     """
     global _ADJ_OK, _ADJ_KEY
     _probe()
-    key = (_probe_env, _lib is not None)
+    key = _abi_key()
     if _ADJ_KEY == key:
         return _lib if _ADJ_OK else None
     _ADJ_KEY = key
