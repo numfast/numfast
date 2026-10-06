@@ -66,41 +66,80 @@ def _graph(alias, op):
     return g
 
 
-def _foreign_profile(tmp_path):
-    """A byte-valid copy of the shipped profile whose [hardware] is elsewhere."""
+#: A recorded value that cannot be this machine's, per identity field. Chosen
+#: to be different from ANY plausible live probe rather than from one host: the
+#: previous literal set hard-coded `python = "3.12.3"`, which is exactly what
+#: WSL2 reports, so the "every field disagrees" assertion passed with 4 of 5
+#: fields differing there and the test did not notice it was weaker.
+_NOT_THIS_MACHINE = {
+    "cpu": "not-this-machine (synthetic)",
+    "platform": "not-this-machine (synthetic platform)",
+    "python": "0.0.0-not-this-machine",
+    "gpu_device": "NOT THIS MACHINE GPU",
+    "gpu_backend": "NOT-THIS-MACHINE-BACKEND",
+}
+
+
+def _foreign_profile(tmp_path, capability):
+    """A byte-valid copy of the shipped profile whose [hardware] is elsewhere.
+
+    Every identity field is rewritten to a value derived from THIS machine's
+    live probe, so the copy is foreign by construction on whatever host runs
+    the test rather than foreign relative to one hard-coded one.
+    """
     d = tmp_path / "caldir"
     d.mkdir()
     text = (FORK / "calibration.toml").read_text(encoding="utf-8")
-    for old, new in (
-            ('cpu = "Intel64 Family 6 Model 79 Stepping 1, GenuineIntel"',
-             'cpu = "aarch64 (foreign host)"'),
-            ('platform = "Windows-11-10.0.26100-SP0"',
-             'platform = "Linux-6.8.0-x86_64"'),
-            ('python = "3.14.6"', 'python = "3.12.3"'),
-            ('gpu_device = "NVIDIA GeForce RTX 2060"',
-             'gpu_device = "AMD Radeon Pro 5500M"'),
-            ('gpu_backend = "Vulkan"', 'gpu_backend = "DX12"')):
-        assert old in text, f"shipped profile no longer says {old!r}"
-        text = text.replace(old, new)
+    now = hardware_now(capability)
+    for f in HARDWARE_IDENTITY:
+        foreign = _NOT_THIS_MACHINE[f]
+        assert foreign != str(now.get(f, "unknown")), (
+            f"the synthetic foreign value for {f} equals what this machine "
+            f"reports ({foreign!r}), so the copy would not be foreign here")
+        old = None
+        for line in text.splitlines():
+            if line.startswith(f + " ="):
+                old = line
+                break
+        assert old is not None, f"shipped profile no longer records {f}"
+        text = text.replace(old, '%s = "%s"' % (f, foreign), 1)
     (d / "calibration.toml").write_text(text, encoding="utf-8")
     return d
 
 
 # 1. The machine this profile was measured on still gets it. If this fails,
 #    the recorded ClickBench / H2O figures stop being reproducible here.
+#
+#    WHICH MACHINE this is, is the point. The shipped profile names one host,
+#    so on any other machine the correct answer is `prof is None` and a
+#    differ-list that names every field which disagrees. Pre-fix the test
+#    asserted the measuring machine's answer unconditionally, so it failed on
+#    every host that is not it -- measured on WSL2: 3 of 5 identity fields
+#    differ and the assertion was `dec["differ"] == []`. It now asserts the
+#    rule on whichever machine runs it, which is stronger: BOTH branches are
+#    checked, and the measuring machine is still covered because that is the
+#    branch it takes.
 @pytest.mark.fast
-def test_shipped_profile_applies_on_the_machine_that_measured_it(real_capability):
+def test_shipped_profile_applies_only_on_the_machine_that_measured_it(
+        real_capability):
     prof, dec = resolve_routing_profile(gpu_capability=real_capability)
-    assert prof is not None, (
-        "the shipped profile must still drive routing on the machine that "
-        f"measured it; refused: {dec['reason']}")
-    assert dec["routing"] is True and dec["origin"] == "shipped"
-    assert dec["differ"] == []
-    # The identity fields are exactly the ones compared, and all of them match.
-    recorded = dec["profile_hardware"]
-    for f in HARDWARE_IDENTITY:
-        assert str(recorded.get(f, "unknown")) == \
-            str(dec["hardware"].get(f, "unknown")), f
+    recorded, live = dec["profile_hardware"], dec["hardware"]
+    disagree = sorted(f for f in HARDWARE_IDENTITY
+                      if str(recorded.get(f, "unknown")) !=
+                      str(live.get(f, "unknown")))
+    if disagree:
+        # A foreign machine: refused, and the refusal names what differs.
+        assert prof is None, dec
+        assert dec["routing"] is False and dec["matched"] is False
+        assert dec["origin"] == "shipped", dec
+        assert [f for f, _, _ in dec["differ"]] == disagree, dec["differ"]
+    else:
+        # The measuring machine: honoured, and every identity field agrees.
+        assert prof is not None, dec
+        assert dec["routing"] is True and dec["origin"] == "shipped"
+        assert dec["differ"] == []
+    # Either way the compared fields are exactly the identity set.
+    assert sorted({f for f, _, _ in dec["differ"]}) == disagree
 
 
 # 2. vram is not an identity field. A profile measured where the capability
@@ -164,8 +203,17 @@ def test_shipped_profile_on_a_foreign_machine_routes_on_stub(kernel,
         info = a["calibrate_info"]()
         assert info["routing"]["routing"] is False
         assert info["routing"]["origin"] == "shipped"
-        assert {f for f, _, _ in info["routing"]["differ"]} == \
-            {"gpu_device", "gpu_backend"}, info["routing"]["differ"]
+        # The two GPU fields MUST be among the disagreements -- that is what
+        # this test changes. The set need not be exactly those two: when the
+        # host running the test is already not the machine that measured the
+        # shipped profile, cpu/platform/python differ as well, and pre-fix
+        # asserting `== {"gpu_device", "gpu_backend"}` made the test fail on
+        # every non-measuring host while pinning nothing extra. Membership, not
+        # equality: the GPU fields must be refused, and nothing may be
+        # silently accepted.
+        differ = {f for f, _, _ in info["routing"]["differ"]}
+        assert {"gpu_device", "gpu_backend"} <= differ, info["routing"]["differ"]
+        assert set(info["routing"]["profile_hardware"]) >= set(differ)
         # The FILE is still described -- complete, measured, just not ours.
         assert info["profile"]["version"] == "calibrated_v1"
         # And the same verdict, word for word, as the routing decision.
@@ -181,7 +229,7 @@ def test_shipped_profile_on_a_foreign_machine_routes_on_stub(kernel,
 def test_local_profile_is_authoritative_whatever_its_hardware_says(
         kernel, real_capability, tmp_path, monkeypatch):
     a = kernel.alias
-    d = _foreign_profile(tmp_path)
+    d = _foreign_profile(tmp_path, real_capability)
     monkeypatch.setenv("NUMFAST_CALIBRATION_DIR", str(d))
     prof, dec = resolve_routing_profile(gpu_capability=real_capability)
     assert prof is not None, dec
@@ -368,11 +416,11 @@ def test_calibrate_on_a_foreign_machine_is_not_reused_and_writes_nothing(
 
 @pytest.mark.fast
 def test_a_locally_measured_profile_is_authoritative_whatever_its_hardware_says(
-        kernel, tmp_path, monkeypatch):
+        kernel, real_capability, tmp_path, monkeypatch):
     """Rule 1 applies to calibrate() as it does to the router: naming the
     directory IS the assertion, so a foreign [hardware] block is still reused
     rather than reported as someone else's."""
-    d = _foreign_profile(tmp_path)
+    d = _foreign_profile(tmp_path, real_capability)
     monkeypatch.setenv("NUMFAST_CALIBRATION_DIR", str(d))
     out = C_calibrate(dict(kernel.alias))
     assert out["status"] == "reused", out

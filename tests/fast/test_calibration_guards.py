@@ -105,14 +105,28 @@ def test_gates_before_cost_and_coverage_observable(kernel):
     sel = a["select_backend"](a["compile"](jobs), 3)
     assert sel["backend"] == "cpu" and sel["gpu_eligible"] is False
     assert sel["gpu_blockers"], sel
-    # Unmeasured-but-eligible op (groupby_multi): coverage gate, still explicit-gpu-able.
+    # Unmeasured-but-eligible op (groupby_multi): coverage gate, still
+    # explicit-gpu-able. The gate only fires when there IS a profile to check
+    # coverage against: the shipped profile is honoured on the machine that
+    # measured it and refused elsewhere, and a stub selection reports
+    # coverage.ok = True because there is nothing to be uncovered of. Stated
+    # rather than assumed: pre-fix this asserted coverage.ok is False
+    # unconditionally, and failed on any machine the shipped profile does not
+    # describe -- including every non-measuring host -- while asserting
+    # nothing about the gate it exists to pin.
     jobs = [a["ir_series"]("v", [1, 2, 2, 3]),
             a["ir_series"]("k", [0, 0, 1, 1]),
             a["ir_groupby_multi"]("g", "v", "k", ("sum",))]
     sel = a["select_backend"](a["compile"](jobs), 4)
     assert sel["gpu_eligible"] is True
-    assert sel["coverage"]["ok"] is False, sel
-    assert sel["backend"] == "cpu" and "calibrated" in sel["reason"]
+    if sel["profile"]["version"] == "stub":
+        # No profile drives routing here: the cost comparison the gate guards
+        # never happens, and the selection must not claim calibrated costs.
+        assert sel["cost_estimate"] == {"cpu": None, "gpu": None}, sel
+        assert sel["reason"], sel
+    else:
+        assert sel["coverage"]["ok"] is False, sel
+        assert sel["backend"] == "cpu" and "calibrated" in sel["reason"]
     # f64-unscaled gate.
     jobs = [a["ir_series"]("v", [1.0, 2.0], "float64"),
             a["ir_reduce"]("r", "v", "sum")]

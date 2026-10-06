@@ -91,11 +91,27 @@ def test_planner_selects_cpu_with_why(kernel):
     sel = a["select_backend"](graph, 2)
     assert sel["backend"] == "cpu"
     assert sel["reason"]
-    if a["calibrate_info"]()["profile"]["version"] == "stub":
-        assert sel["profile"]["matched"] is False  # no measured calibration
-    else:
-        assert sel["profile"]["matched"] is True  # measured profile present
+    # The branch keys on the ROUTING verdict, not on whether a profile FILE
+    # exists. Those two are deliberately different since the profile-validity
+    # change: `calibrate_info()['profile']` describes the file, which is a
+    # complete measured profile on every machine, while
+    # `calibrate_info()['routing']` is whether it may drive routing HERE. On a
+    # foreign machine the old condition took the else-branch and asserted
+    # matched is True against a stub selection -- the file exists, the routing
+    # decision is stub, and the test was reading the wrong one.
+    info = a["calibrate_info"]()
+    if info["routing"]["routing"]:
+        assert sel["profile"]["matched"] is True, (info["routing"], sel["profile"])
         assert sel["profile"]["version"] == "calibrated_v1"
+        assert sel["cost_estimate"]["cpu"] is not None, sel["cost_estimate"]
+    else:
+        # Nothing may drive routing here, and the selection says so rather than
+        # reporting a calibrated profile it did not use.
+        assert sel["profile"]["matched"] is False, (info["routing"], sel["profile"])
+        assert sel["profile"]["version"] == "stub", sel["profile"]
+        assert sel["cost_estimate"] == {"cpu": None, "gpu": None}
+        assert "NUMFAST_CALIBRATION_DIR" in sel["profile"]["warning"], \
+            sel["profile"]
     assert "cost_estimate" in sel
     rep = a["explain"](graph, {"actual": "cpu", "requested": "auto",
                                "reason": sel["reason"], "cost_estimate": sel["cost_estimate"],

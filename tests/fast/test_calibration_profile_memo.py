@@ -61,14 +61,26 @@ def test_profile_memo_picks_up_on_disk_edit(tmp_path):
     assert again is not before
     assert again["_path"] == before["_path"] == str(cp)
 
-    raw = cp.read_text(encoding="utf-8")
+    # newline="" on BOTH the read and the write: this test's subject is a
+    # same-SIZE rewrite, so it must compare bytes and not let the text layer
+    # rewrite them. Without it the invariant holds only on Windows, and for an
+    # accident: read_text() folds CRLF to LF and write_text() then expands LF
+    # back to os.linesep, so a 5821-byte CRLF file round-trips to 5821 bytes on
+    # Windows and to 5659 bytes on Linux. The assertion below therefore failed
+    # on WSL2 (5821 != 5659) while the memo it was checking worked perfectly --
+    # a test measuring the platform's newline convention, not the engine.
+    #
+    # open() rather than Path.read_text(newline=...): that keyword arrived in
+    # 3.13, and pyproject declares >=3.11. Verified -- on WSL2's Python 3.12.3
+    # read_text(newline="") raises TypeError, which is how this was caught.
+    raw = cp.read_bytes().decode("utf-8")
     edited, new_tok = _same_size_edit(raw, COPY_KEY)
     # copy2 keeps the source mtime; pin it to now so the rewrite below lands
-    # in the same wall-clock second (Windows mtime granularity is coarse).
+    # in the same wall-clock second (mtime granularity is coarse on both hosts).
     os.utime(cp, None)
     for _ in range(64):
         st0 = cp.stat()
-        cp.write_text(edited, encoding="utf-8")
+        cp.write_bytes(edited.encode("utf-8"))
         st1 = cp.stat()
         if int(st0.st_mtime) == int(st1.st_mtime):
             break
@@ -76,7 +88,8 @@ def test_profile_memo_picks_up_on_disk_edit(tmp_path):
         _load_profile(str(cp))          # warm, so the retry is a real hit
     else:
         pytest.fail("could not land the edit within one wall-clock second")
-    assert st0.st_size == st1.st_size
+    assert st0.st_size == st1.st_size, (
+        f"the edit was not size-preserving: {st0.st_size} -> {st1.st_size}")
 
     after = _load_profile(str(cp))
     assert after is not None
@@ -84,12 +97,12 @@ def test_profile_memo_picks_up_on_disk_edit(tmp_path):
     assert after["cost"][COPY_KEY] != before["cost"][COPY_KEY]
 
     # Rejected content is never memoized: same answer on every call.
-    cp.write_text('model_version = "not_the_schema"\n', encoding="utf-8")
+    cp.write_bytes(b'model_version = "not_the_schema"\n')
     assert _load_profile(str(cp)) is None
     assert _load_profile(str(cp)) is None
 
     # A missing file is a miss, not a cached hit.
-    cp.write_text(raw, encoding="utf-8")
+    cp.write_bytes(raw.encode("utf-8"))
     assert _load_profile(str(cp))["cost"][COPY_KEY] == \
         before["cost"][COPY_KEY]
     cp.unlink()
