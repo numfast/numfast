@@ -490,6 +490,7 @@ green, so it is not published.
 | [docs/API.md](docs/API.md) | the 44-name surface, the kernel-level names, and every guard |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | how the pieces fit: IR, Builder, CPU, native, GPU, WASM |
 | [docs/EXAMPLES.md](docs/EXAMPLES.md) | runnable programs with their real output |
+| [showcase/](showcase/README.md) | five executable notebooks — `Table`/`Series`, the GPU path and its crossover, the WASM package, the comparative matrix, and a full task cross-checked against pandas |
 | [docs/README.md](docs/README.md) | what each document covers |
 | [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) | what does not work, tagged by certainty |
 | [README_PYPI.md](README_PYPI.md) | the PyPI long description, verbatim |

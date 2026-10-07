@@ -10,6 +10,7 @@ the truth and the document is the bug.
 | [API.md](API.md) | the 44-name consumer surface, the package boundary, the kernel-level names, and every guard |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | the IR, the Builder Extension model, the planner, the CPU driver, the native Rust kernels, the GPU split, the WASM path, and where the semantic contract lives |
 | [EXAMPLES.md](EXAMPLES.md) | runnable programs with their real output |
+| [`../showcase/README.md`](../showcase/README.md) | five executable notebooks: `Table`/`Series`, the GPU path, the WASM package, the comparative matrix, and a full task cross-checked against pandas |
 
 The repository root also carries [README.md](../README.md),
 [KNOWN_LIMITATIONS.md](../KNOWN_LIMITATIONS.md),

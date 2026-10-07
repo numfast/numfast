@@ -6,6 +6,13 @@ the code against this tree; nothing here is illustrative pseudocode.
 The quickstart is in the [README](../README.md) and as a runnable file at
 [`examples/quickstart.py`](../examples/quickstart.py).
 
+**Want to run it rather than read it?** The five notebooks in
+[`showcase/`](../showcase/README.md) demonstrate the same surface end to end —
+`Table`/`Series`, the GPU path and its honest crossover, the WASM package, the
+comparative matrix including where NumFast loses, and a full task cross-checked
+against pandas. Every notebook output was produced by executing it against this
+tree.
+
 ```python
 import pandas as pd
 import numfast as nf
