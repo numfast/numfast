@@ -78,7 +78,28 @@ mkdir -p "$OUT"
 auditwheel repair "$SRC"/dist/numfast-*.whl -w "$OUT"
 
 echo "=== 6. the verdict, quoted (not inferred from the filename) ==="
-auditwheel show "$OUT"/manylinux*.whl | head -8
+# The glob must match what step 4 actually produced. `auditwheel repair` names
+# its output after the distribution, so the file is
+# numfast-<ver>-py3-none-manylinux_<tag>.whl -- it does NOT begin with
+# "manylinux". The old `"$OUT"/manylinux*.whl` matched nothing, auditwheel
+# exited 2, and under `set -euo pipefail` the script died AFTER building a
+# correct wheel, with the verification that was supposed to prove the tag
+# never having run.
+set -- "$OUT"/numfast-*-manylinux*.whl
+if [ "$#" -ne 1 ]; then
+    echo "FAIL: expected exactly 1 repaired wheel in $OUT, found $#" >&2
+    ls -1 "$OUT" >&2
+    exit 1
+fi
+# auditwheel's own exit status is the verdict, so it must survive `set -e`.
+# It cannot go into `| head`: head closes the pipe after 8 lines, the writer
+# dies on SIGPIPE (141), and pipefail turns that into a build failure even on a
+# perfectly good wheel. Land the full output on disk, then excerpt it.
+AW_SHOW="$OUT/auditwheel-show.txt"
+auditwheel show "$1" >"$AW_SHOW"
+head -8 "$AW_SHOW"
+echo "--- required GLIBC symbols (highest first) ---"
+grep -oE 'GLIBC_2\.[0-9]+(\.[0-9]+)?' "$AW_SHOW" | sort -u -V | tail -3
 
 echo
 echo "Portable wheel: $OUT/numfast-*-manylinux_2_28_x86_64.whl"
