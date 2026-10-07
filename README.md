@@ -1,5 +1,8 @@
 # NumFast
 
+**Columnar compute for Python and JavaScript — native CPU and GPU,
+WebAssembly kernels, and browser execution.**
+
 NumFast is a columnar compute engine for Python with a small, NumPy- and
 pandas-shaped surface. You hand it columns; it hands you columns back. Integer
 columns are computed exactly in `int32`, NULLs are carried explicitly rather
