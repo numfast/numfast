@@ -210,8 +210,10 @@ The split is by operation, declared at run time, not by wish:
   single int32 or finite-float key over a power-of-two row count.
 * All GPU cost measurements in this repository come from **one** RTX 2060 over
   Vulkan through `wgpu-py`. The recorded GPU timings at the sizes measured were
-  slower than the CPU path. The GPU claim is parity and residency, **not
-  throughput**.
+  slower than the CPU path, so **no throughput claim is made**. The GPU backend
+  produces the same computed results and supports batch execution, but the
+  current API does **not** provide a GPU-resident Table/Series; operation
+  results are returned to host memory.
 
 ## The WASM kernel path
 

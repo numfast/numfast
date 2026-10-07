@@ -179,5 +179,5 @@ without a harness: one planner call per query means per-query overhead does not
 scale with the number of operations in the query, which favours small
 aggregate-shaped queries; high-cardinality grouping is several times behind
 DuckDB structurally, because the CPU driver is a NumPy reference executor; and
-the GPU buys parity and residency rather than speed.
+the GPU produces the same computed results rather than speed.
 

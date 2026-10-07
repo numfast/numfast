@@ -15,28 +15,35 @@
 - Optional deps: `pip install numfast[pandas]`, `numfast[arrow]`.
   Without pyarrow the CPU path keeps working (NumPy fallback).
 
-## Two wheels, one version
+## Three artefacts, one version
 
-The Rust binary is Windows-only today. A wheel that carries a `.dll` and is
-tagged `py3-none-any` installs on Linux and macOS and then cannot load its own
-native path, so the release is **two wheels at the same version**:
+The Rust binary is built per platform, so the release is **three distribution
+artefacts at the same version** — two wheels and the sdist. All three must
+exist before anything is published: PyPI rejects a filename that already
+exists, so a partial upload leaves users on a subset.
 
-| Artefact | Tag | Carries the DLL | Who gets it |
+| Artefact | Tag | Native payload | Who gets it |
 |---|---|---|---|
-| `numfast-0.2.1-py3-none-win_amd64.whl` | `py3-none-win_amd64` | yes | Windows x86-64: full engine, native path live |
-| `numfast-0.2.1-py3-none-any.whl` | `py3-none-any` | **no** | Linux, macOS: full engine, native path absent |
+| `numfast-0.2.1-py3-none-win_amd64.whl` | `py3-none-win_amd64` | `numfast_native.dll` | Windows x86-64: full engine, native path live |
+| `numfast-0.2.1-py3-none-manylinux_2_28_x86_64.whl` | `py3-none-manylinux_2_28_x86_64` | `libnumfast_native.so` | manylinux_2_28 x86-64: full engine, native path live |
 | `numfast-0.2.1.tar.gz` | sdist | source only | anyone building from source |
 
-`Root-Is-Purelib` is `true` in both. Nothing here is a CPython extension
-module — the `.dll` is loaded through `ctypes` — so the implementation tag
-stays `py3` and neither wheel is pinned to one interpreter.
+`Root-Is-Purelib` is `true` in both wheels. Nothing here is a CPython
+extension module — the native library is loaded through `ctypes` — so the
+implementation tag stays `py3` and neither wheel is pinned to one interpreter.
 
-**What a Linux/macOS user of `py3-none-any` gets:** the complete engine, all 30
-Extensions, the calibration profile, and the NumPy CPU path. The native path
-does not exist: `numfast/_native/` is absent, `native_info()` reports
-`{'disabled': False, 'dll': None, 'dll_exists': False}`, and every Rust-backed
-call falls back to NumPy. It is degraded, not broken, and the reason is
-visible in `native_info()` — not a `.dll` that fails to load at run time.
+There is no `py3-none-any` wheel and no macOS artefact. The manylinux wheel is
+not a renamed linux-tagged one: it is produced by
+`tools/build_manylinux_wheel.sh` inside
+`quay.io/pypa/manylinux_2_28_x86_64`, which does a real `auditwheel repair`.
+Its portability comes from the build host's glibc, so the build must happen in
+that image — see `docs/INSTALL.md` for the recipe and the measured
+`auditwheel show` output.
+
+The library is also buildable straight from the Corresponding Source the wheel
+ships, with no Docker at all: `numfast-native/.cargo/config.toml` is scoped to
+`[target.x86_64-pc-windows-gnu]`, so one `cargo build --release` needs no `zig`
+and no other host-specific tool.
 
 The native path can be forced off explicitly with `NUMFAST_NATIVE_DISABLE=1`, and
 overridden with `NUMFAST_NATIVE_DLL` when a locally built binary exists.
@@ -44,25 +51,37 @@ overridden with `NUMFAST_NATIVE_DLL` when a locally built binary exists.
 ## Building
 
 ```bash
-python -m build                      # sdist, then wheel from the sdist
-NUMFAST_WHEEL_NATIVE=0 python -m build   # the py3-none-any wheel
+python -m build                          # sdist, then the wheel from the sdist
+NUMFAST_WHEEL_NATIVE=0 python -m build   # a wheel with no native payload
 ```
 
 `python -m build` builds the wheel **from the sdist**, so an incomplete
 `MANIFEST.in` fails the build instead of producing a quietly broken artefact.
 
+The manylinux wheel is built in the container, not on the build host:
+
+```bash
+docker run -d --name nfbuild quay.io/pypa/manylinux_2_28_x86_64 sleep infinity
+docker cp . nfbuild:/src
+docker exec -w /src nfbuild bash tools/build_manylinux_wheel.sh
+```
+
 The flavour follows the contents of `src/numfast/_native/`: a binary present
-gives the platform-tagged wheel, nothing present gives `py3-none-any`.
-`NUMFAST_WHEEL_NATIVE=0` / `=1` override it. The tag comes from the build host
-and is cross-checked against the binary's suffix, so a `.dll` cannot be packed
-into a wheel tagged for another platform.
+gives the platform-tagged wheel, nothing present gives a wheel with no native
+payload. `NUMFAST_WHEEL_NATIVE=0` / `=1` override it. The tag comes from the
+build host and is cross-checked against the binary's suffix, so a `.dll` cannot
+be packed into a wheel tagged for another platform.
+
+`SHA256SUMS` over the Corresponding Source is generated **during the build**
+and is not a stored constant: no `SHA256SUMS` file is tracked in the repository.
+Verify it in the build that produced the artefact.
 
 ## Licence and Corresponding Source
 
 AGPL-3.0-only. `LICENSE` and `NOTICE` reach `dist-info/licenses/`; `METADATA`
 carries `License-Expression: AGPL-3.0-only`.
 
-The wheel conveys `numfast_native.dll` — object code — so AGPL-3.0 section 6
+Both wheels convey a native binary — object code — so AGPL-3.0 section 6
 requires the Corresponding Source to travel with it. It does:
 `numfast/_corresp_src/numfast-native/` carries the crate's 47 `.rs` files,
 `Cargo.toml`, `Cargo.lock`, the project-local `.cargo/config.toml`, the linker

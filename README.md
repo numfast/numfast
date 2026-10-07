@@ -281,7 +281,7 @@ What can be said without a harness, and is:
   behind. That is a property of the CPU driver being a NumPy reference executor
   (see the next section), not of missing effort. **If your workload is
   high-cardinality grouping, DuckDB is the better tool today.**
-* **The GPU buys parity and residency, not speed.** See below.
+* **The GPU produces the same results, not speed.** See below.
 
 Benchmark the operation mix you actually have. `examples/quickstart.py` runs in
 under a second and prints its own timings.
@@ -295,8 +295,10 @@ driving Vulkan.
 * **15 of 33** operations have a GPU implementation; **18 are CPU-only** and are
   listed by `nf.app().gpu_capabilities()`.
 * The recorded GPU measurements at the sizes measured were **slower than the CPU
-  path**. What the GPU buys today is **parity and residency**: the same
-  permutation, the same sums. **No GPU speedup is claimed.**
+  path**. The GPU backend produces the same computed results and supports batch
+  execution, but the current API does **not** provide a GPU-resident
+  Table/Series; operation results are returned to host memory. **No GPU speedup
+  is claimed.**
 * Asking for `backend='gpu'` on a graph that uses a CPU-only operation raises
   rather than falling back.
 
@@ -352,7 +354,9 @@ measurement this repository does not ship:
   per-node read-back, so a graph that stays on device is not expressible. Through
   the consumer surface the GPU is unreachable at all: `Chain.compile()` runs the
   CPU path and `Chain.explain()` prints `backend=n/a`. The GPU is reachable
-  through the kernel-level API, where it buys parity and residency.
+  through the kernel-level API, where it produces the same computed results and
+  supports batch execution, but results are returned to host memory: the current
+  API does **not** provide a GPU-resident Table/Series.
 
 ---
 

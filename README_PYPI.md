@@ -84,9 +84,11 @@ expressed at all: there is no such primitive.
 
 **The GPU does 15 of 33 operations**, measured on one RTX 2060 over Vulkan. The
 other 18 run on the CPU and are listed by `nf.app().gpu_capabilities()`. The
-recorded GPU timings at the sizes measured were **slower than the CPU path**; the
-GPU claim is parity and residency, **not speedup**. Asking for `backend='gpu'` on
-a CPU-only operation raises rather than falling back.
+recorded GPU timings at the sizes measured were **slower than the CPU path**. The
+GPU backend produces the same computed results and supports batch execution, but
+the current API does **not** provide a GPU-resident Table/Series; operation
+results are returned to host memory. **No GPU speedup is claimed.** Asking for
+`backend='gpu'` on a CPU-only operation raises rather than falling back.
 
 **One known silent case.** `group` drops a key whose measure is entirely NULL: no
 exception, no warning, one group missing. Check the output row count against the
