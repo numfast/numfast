@@ -127,13 +127,15 @@ It is not a short list, and it is not apologetics.
 
 ## Two wheels, one version
 
-| Wheel | Native library | Who gets it |
+| Artefact | Native library | Who gets it |
 |---|---|---|
-| `py3-none-win_amd64` | yes | Windows x86-64: full engine, native path live |
-| `py3-none-any` | no | Linux, macOS: full engine, native path absent |
+| `py3-none-win_amd64` | yes | Windows x86-64 |
+| `py3-none-manylinux_2_28_x86_64` | yes | Linux x86-64, glibc 2.28+ |
 
-Linux and macOS users get the complete engine and **no** native library. That is
-degraded, not broken, and it is visible rather than latent:
+Linux x86-64 users get the native library live, built inside
+`quay.io/pypa/manylinux_2_28_x86_64` and audited by `auditwheel repair`. On macOS there
+is no wheel yet: pip falls back to the sdist and the Rust-backed calls degrade to
+the numpy reference executor. That is visible rather than latent:
 
 ```python
 >>> import numfast as nf

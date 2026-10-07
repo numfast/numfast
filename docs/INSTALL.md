@@ -9,7 +9,7 @@ supported. The table is the honest summary:
 
 | Channel | Install | Native kernels | Status |
 |---|---|---|---|
-| [Python / PyPI](#1-python--pypi) | `pip install numfast` | on Windows x86-64 only | **supported** |
+| [Python / PyPI](#1-python--pypi) | `pip install numfast` | Windows x86-64 and manylinux x86-64 | **supported** |
 | [JavaScript / npm](#2-javascript--npm) | `npm install @numfast/kernels` | WebAssembly, Node host | **supported (Node only)** |
 | [Browser / WASM](#3-browser--wasm) | — | — | **not supported** |
 | [Linux native](#4-linux-native) | no artefact | buildable by hand, not shipped | **not supported** |
@@ -41,10 +41,11 @@ pip install "numfast[mem]"     # + psutil, for process/memory reporting
 
 Two wheels are published at the same version. `pip` picks the right one:
 
-| Wheel | Tag | Carries the native library | Who gets it |
+| Artefact | Tag | Carries the native library | Who gets it |
 |---|---|---|---|
-| `numfast-0.2.1-py3-none-win_amd64.whl` | `py3-none-win_amd64` | **yes** | Windows x86-64: full engine, native path live |
-| `numfast-0.2.1-py3-none-any.whl` | `py3-none-any` | **no** | Linux, macOS: full engine, native path absent |
+| `numfast-0.2.1-py3-none-win_amd64.whl` | `py3-none-win_amd64` | **yes** | Windows x86-64 |
+| `numfast-0.2.1-py3-none-manylinux_2_28_x86_64.whl` | `py3-none-manylinux_2_28_x86_64` | **yes** | Linux x86-64, glibc 2.28+ |
+| `numfast-0.2.1.tar.gz` | sdist | source | anyone building from source |
 
 The tag is `py3`, not `cp3xx`, on purpose: nothing in the distribution is a
 CPython extension module — the native library is loaded through `ctypes` — so
@@ -88,9 +89,10 @@ python -c "import numfast as nf; print(nf.__version__); print(nf.native_info())"
 {'disabled': False, 'dll': '.../site-packages/numfast/_native/numfast_native.dll', 'dll_exists': True}
 ```
 
-On Windows x86-64 `dll_exists` is `True`. **On Linux and macOS it is `False` and
-that is the expected result, not a failure**: `numfast/_native/` is simply not
-there, and every Rust-backed call falls back to the NumPy CPU path. It is not a
+On Windows x86-64 and on Linux x86-64 `dll_exists` is `True`. **On macOS there
+is no wheel, so `False` is the expected result, not a failure**: pip installs the
+sdist, and until the Rust library is built from it every Rust-backed call falls
+back to the NumPy CPU path. It is not a
 binary that fails to load at run time. `NUMFAST_NATIVE_DISABLE=1` forces the
 same path off on Windows; `NUMFAST_NATIVE_DLL` points at a locally built binary.
 
@@ -303,7 +305,7 @@ actually run.
 | Claim | How it was checked |
 |---|---|
 | Windows wheel installs and imports | built from a `git archive HEAD` extraction into an empty directory, installed into a clean venv, imported |
-| `native_info()` shape on Linux | the `py3-none-any` wheel installed on Ubuntu 24.04 / CPython 3.12 |
+| `native_info()` shape on Linux | the `py3-none-manylinux_2_28_x86_64` wheel installed on Ubuntu 24.04 / CPython 3.12 |
 | The quick-start output above | the README example run verbatim in both wheel flavours |
 | Corresponding Source rebuilds | `cargo build --release` in the wheel's own `_corresp_src/`, on Linux, no `zig` |
 | npm tarball works | `npm pack`, installed into a clean project, `loadKernels()` + `ssspCsr()` run against the packed tarball |
@@ -322,8 +324,9 @@ actually run.
 - **Python 3.11, 3.12 and 3.13.** `pyproject.toml` says `>=3.11` and the wheels
   carry `py3`, so pip will install them on those versions — but the suite has
   only ever been run on 3.14.
-- **macOS.** No macOS artefact is built or tested. The `py3-none-any` wheel is
-  platform-independent and will install; nothing beyond that is known.
+- **macOS.** No macOS artefact is built or tested. pip falls back to the sdist,
+  which builds the native library from source on the user's machine; nothing
+  beyond that is known here.
 - **Any browser.**
 - **A published Linux native wheel.** It builds, installs and passes the
   installed-package suite, but the single-process suite run above is not green,

@@ -235,8 +235,9 @@ print(nf.native_info())
 # {'disabled': False, 'dll': '.../numfast/_native/numfast_native.dll', 'dll_exists': True}
 ```
 
-On Linux and macOS `native_info()` reports `dll: None, dll_exists: False`: the
-native path is absent by construction, not broken. On the same machine, a GPU
+On Linux x86-64 the native path is live. On macOS `native_info()` reports
+`dll: None, dll_exists: False`, because there is no wheel for it yet: the native
+path is absent by construction, not broken. On the same machine, a GPU
 operation that is CPU-only raises rather than falling back:
 
 ```

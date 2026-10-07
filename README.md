@@ -57,15 +57,20 @@ npm install @numfast/kernels   # the same kernels as WebAssembly, Node host only
 
 `numpy>=1.24` is the only hard dependency.
 
-Two wheels are published at the same version:
+Two native wheels are published at the same version, alongside the sdist:
 
-| Wheel | Tag | Carries the native library | Who gets it |
+| Artefact | Tag | Carries the native library | Who gets it |
 |---|---|---|---|
-| `numfast-0.2.1-py3-none-win_amd64.whl` | `py3-none-win_amd64` | yes | Windows x86-64: full engine, native path live |
-| `numfast-0.2.1-py3-none-any.whl` | `py3-none-any` | no | Linux, macOS: full engine, native path absent |
+| `numfast-0.2.1-py3-none-win_amd64.whl` | `py3-none-win_amd64` | yes | Windows x86-64 |
+| `numfast-0.2.1-py3-none-manylinux_2_28_x86_64.whl` | `py3-none-manylinux_2_28_x86_64` | yes | Linux x86-64, glibc 2.28+ |
 
-**Linux and macOS get the complete engine and no native library.** That is
-degraded, not broken, and it is visible rather than latent:
+**Linux x86-64 gets the native library live**, built inside
+`quay.io/pypa/manylinux_2_28_x86_64` and audited by `auditwheel repair`.
+No Rust toolchain is needed to install either wheel.
+
+On **macOS** there is no wheel yet, so pip falls back to the sdist and the Rust
+backed calls degrade to the numpy reference executor. That is visible rather
+than latent:
 
 ```python
 >>> import numfast as nf
@@ -510,7 +515,7 @@ green, so it is not published.
 
 | | |
 |---|---|
-| PyPI | <https://pypi.org/project/numfast/> — `numfast-0.2.1-py3-none-win_amd64.whl`, `numfast-0.2.1-py3-none-any.whl`, `numfast-0.2.1.tar.gz` |
+| PyPI | <https://pypi.org/project/numfast/> — `numfast-0.2.1-py3-none-win_amd64.whl`, `numfast-0.2.1-py3-none-manylinux_2_28_x86_64.whl`, `numfast-0.2.1.tar.gz` |
 | npm | <https://www.npmjs.com/package/@numfast/kernels> — `@numfast/kernels-0.2.1` |
 
 Publishing is a **manual** step. There is no publish workflow in this
