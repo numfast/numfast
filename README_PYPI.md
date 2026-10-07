@@ -3,8 +3,8 @@
 **Columnar compute for Python and JavaScript — native CPU and GPU,
 WebAssembly kernels, and browser execution.**
 
-A columnar compute engine for Python with a small, NumPy- and pandas-shaped
-surface. Hand it columns; it hands you columns back. Integer columns are computed
+A columnar compute engine for Python and JavaScript, with a small, NumPy- and
+pandas-shaped Python surface. Hand it columns; it hands you columns back. Integer columns are computed
 exactly in `int32`, NULLs are carried explicitly rather than as `NaN`, and a
 query is one lazy chain that a single planner call turns into one execution graph.
 

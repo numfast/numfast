@@ -3,14 +3,14 @@
 **Columnar compute for Python and JavaScript — native CPU and GPU,
 WebAssembly kernels, and browser execution.**
 
-NumFast is a columnar compute engine for Python with a small, NumPy- and
-pandas-shaped surface. You hand it columns; it hands you columns back. Integer
-columns are computed exactly in `int32`, NULLs are carried explicitly rather
+NumFast is a columnar compute engine for Python and JavaScript, with a small,
+NumPy- and pandas-shaped Python surface. You hand it columns; it hands you columns
+back. Integer columns are computed exactly in `int32`, NULLs are carried explicitly rather
 than as `NaN`, and a query is one lazy chain that a single planner call turns
 into one execution graph.
 
 **Version 0.2.1.** AGPL-3.0-only. Python 3.11+. The native compute kernels are a
-Rust library that currently ships for Windows x86-64 only.
+Rust library shipping for Windows x86-64 and manylinux x86-64.
 
 | | |
 |---|---|
